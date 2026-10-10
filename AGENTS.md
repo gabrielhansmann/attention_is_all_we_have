@@ -3,6 +3,14 @@
 Project: BMW hackathon requirement-evidence engine. Architecture docs live in `docs/`
 (start at `docs/README.md`); those `.md` files are the source of truth.
 
+## UI design
+
+- Before generating or changing UI, read `design.md` and `docs/ui-design-guidelines.md`.
+- Use the BMW tokens and component rules in `design.md` for all UI.
+- Apply the anti-slop workflow in `docs/ui-design-guidelines.md`. BMW's explicit brand rules
+  take precedence over generic aesthetic defaults, including white surfaces, Inter fallback,
+  rectangular components, and dark hero bands.
+
 ## Pushing
 
 1. **Only push when the user asks.** Never push on your own initiative.
