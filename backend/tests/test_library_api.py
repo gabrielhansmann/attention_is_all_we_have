@@ -41,3 +41,20 @@ def test_outages_are_503_without_details(path, monkeypatch):
     monkeypatch.setattr(library_api.library, "coverage", boom)
     r = client.get(path)
     assert r.status_code == 503 and "secret" not in r.text and "db.example" not in r.text
+
+
+def test_context_shows_the_cited_passage_among_its_neighbours(db):
+    hit = client.get("/api/evidence/search", params={"q": "Leichtmetallräder", "source": "docs", "k": 1}).json()["hits"][0]["citation"]
+    body = client.get(f"/api/evidence/{hit['kind']}/{hit['id']}/context").json()
+    assert body["page"] and body["file"] == hit["file"]
+    assert [p["id"] for p in body["passages"] if p["cited"]] == [hit["id"]]
+    assert body["document"]["source_id"]
+
+    fb = client.get("/api/evidence/search", params={"q": "seat ventilation", "k": 1}).json()["hits"][0]["citation"]
+    rows = client.get(f"/api/evidence/feedback/{fb['id']}/context").json()["passages"]
+    assert 1 <= len(rows) <= 5 and sum(p["cited"] for p in rows) == 1
+
+
+def test_source_file_is_served_only_from_data_and_404_otherwise(db):
+    assert client.get("/api/sources/00000000-0000-0000-0000-000000000000/file").status_code == 404
+    assert client.get("/api/evidence/feedback/00000000-0000-0000-0000-000000000000/context").status_code == 404

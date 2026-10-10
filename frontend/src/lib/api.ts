@@ -4,6 +4,7 @@ import type {
   ConversationDetail,
   Conversation,
   Coverage,
+  EvidenceContext,
   EvidenceFilters,
   FilterOptions,
   GroupBy,
@@ -79,6 +80,8 @@ export const api = {
   login: (email: string, password: string) => request<LoginResult>('POST', '/auth/login', { email, password }),
   me: (signal?: AbortSignal) => get<AuthUser>('/auth/me', signal),
   logout: () => request<void>('POST', '/auth/logout'),
+  evidenceContext: (kind: string, id: string, signal?: AbortSignal) =>
+    get<EvidenceContext>(`/evidence/${kind}/${id}/context`, signal),
   sources: (signal?: AbortSignal) => get<SourceInfo[]>('/sources', signal),
   coverage: (signal?: AbortSignal) => get<Coverage>('/evidence/coverage', signal),
   conversations: (signal?: AbortSignal) => get<Conversation[]>('/conversations', signal),
@@ -87,4 +90,12 @@ export const api = {
     request<ConversationDetail>('POST', '/conversations', { request: requestText }),
   postRequest: (id: string, content: string) =>
     request<PostResult>('POST', `/conversations/${id}/messages`, { content }),
+}
+
+/** The original file as a blob: the download route needs the bearer token, so a plain link cannot open it. */
+export async function fetchSourceFile(sourceId: string): Promise<Blob> {
+  const token = getToken()
+  const res = await fetch(`/api/sources/${sourceId}/file`, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+  if (!res.ok) throw new ApiError(res.status, res.status === 404 ? 'The original file is not available on this server.' : 'Could not load the file.')
+  return res.blob()
 }
