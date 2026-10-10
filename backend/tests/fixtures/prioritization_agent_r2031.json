@@ -1,0 +1,66 @@
+{
+  "themes": ["comfort parity"],
+  "requirements": [
+    {
+      "id": "req-2031",
+      "code": "R-2031",
+      "title": "Fast-response seat ventilation",
+      "description": "Seat ventilation reaches a noticeable cooling effect quickly after activation.",
+      "vehicle_line": "G60",
+      "markets": ["EU"],
+      "status": "draft",
+      "themes": ["comfort parity"],
+      "effort_proxy": "low",
+      "effort_reason": "software/calibration change, not new hardware",
+      "linked_finding_ids": ["F-101", "F-102", "F-103", "F-104"]
+    }
+  ],
+  "findings": [
+    {
+      "id": "F-101",
+      "source": "G60_feedback_hackathon.xlsx",
+      "locator": "sheet Feedback_Explorer, row 4642 (G60-3695)",
+      "text": "Customer reports that seat ventilation takes too long to cool the seat.",
+      "signal_type": "complaint",
+      "evidence_level": "Verified",
+      "sentiment": -0.9,
+      "market": "EU",
+      "vehicle_line": "G60"
+    },
+    {
+      "id": "F-102",
+      "source": "G60_customer_studies.xlsx",
+      "locator": "sheet EU, cell D14",
+      "text": "Seat ventilation response is rated 2.9 of 5 in the EU customer study (n=340).",
+      "signal_type": "complaint",
+      "evidence_level": "Verified",
+      "sentiment": -0.7,
+      "sample_size": 340,
+      "prevalence": 0.6,
+      "market": "EU",
+      "vehicle_line": "G60"
+    },
+    {
+      "id": "F-103",
+      "source": "https://www.autocar.co.uk/reviews/rival-sedan",
+      "locator": "https://www.autocar.co.uk/reviews/rival-sedan · retrieved 2026-01-12",
+      "text": "A competitor review notes a faster seat-ventilation response time in a rival sedan.",
+      "signal_type": "competitor_advantage",
+      "evidence_level": "Interpreted",
+      "market": "EU",
+      "vehicle_line": "G60",
+      "assumptions": ["Response time is review-estimated, not lab-verified."]
+    },
+    {
+      "id": "F-104",
+      "source": "sales_volumes.xlsx",
+      "locator": "sheet G60_G68, row 7",
+      "text": "The seat-ventilation option is taken on 55% of EU G60 orders.",
+      "signal_type": "business_signal",
+      "evidence_level": "Verified",
+      "uptake_pct": 55,
+      "market": "EU",
+      "vehicle_line": "G60"
+    }
+  ]
+}

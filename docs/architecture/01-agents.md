@@ -1,6 +1,6 @@
 # Agents
 
-> Status: `draft` · Last updated: 2026-10-10 (web search through the LLM, see decision 0009)
+> Status: `building` · Last updated: 2026-10-10 (all roster agents implemented and run by the step runner, see decisions [0014](../decisions/0014-all-roster-agents-implemented.md) and [0015](../decisions/0015-step-runner-and-step-output-on-the-step.md))
 
 Every agent reads some slice of evidence and produces either new evidence (`Finding`s) or a
 synthesis of existing evidence (`Cluster`, `Requirement`, `Score`, dossier). None of them change a
@@ -36,9 +36,31 @@ its own doc: [`10-competitor-benchmarking.md`](10-competitor-benchmarking.md).
 
 ## Implementation status
 
-The first implemented agent is the **Market & Trend Agent** in
-[`backend/app/agents/market_trend_agent.py`](../../backend/app/agents/market_trend_agent.py). It covers the current demo path for
-web research:
+Every roster agent has a module in [`backend/app/agents/`](../../backend/app/agents/), runnable as
+`python -m app.agents.<module>` with a `--dry-run` path, and tests that need no OpenAI, web or database.
+A run calls them through `orchestration/agents.py` and the step runner, always behind the Critic
+([decision 0015](../decisions/0015-step-runner-and-step-output-on-the-step.md)); the runner keeps the output on
+the step and does not use the agents' own `store_result`, which is tested against a fake connection only. Where a
+doc left a point open, the choice made is in
+[decision 0014](../decisions/0014-all-roster-agents-implemented.md).
+
+| Agent | Module | Model use |
+|---|---|---|
+| Baseline Agent | `baseline_agent.py` | drafts wording against indexed evidence |
+| Customer Feedback Agent | `customer_feedback_agent.py` | drafts wording; signal type follows the cited comments' polarity |
+| Sales & Portfolio Agent | `sales_portfolio_agent.py` | none for findings (optional: search terms for options) |
+| Competitor Agent | `competitor_agent.py` | web search and extraction; bands, filters and comparison in code |
+| Market & Trend Agent | `market_trend_agent.py` | web search and extraction |
+| Clustering Agent | `clustering_agent.py` | proposes themes; code validates membership and domain |
+| Critic Agent | `critic_agent.py` | none (optional injected support check, downgrade only) |
+| Requirements Drafting Agent | `requirements_drafting_agent.py` | drafts statements; each must cite cluster findings |
+| Prioritization Agent | `prioritization_agent.py` | none |
+| Documentation Agent | `documentation_agent.py` | none |
+| Delta / Tracking Agent | `delta_tracking_agent.py` | none |
+
+The **Market & Trend Agent**
+([`market_trend_agent.py`](../../backend/app/agents/market_trend_agent.py)) was the first and is the pattern
+the others follow:
 
 - reads PM scope (`vehicle_line`, `market`) plus a research query
 - searches the web through the LLM's built-in search tool (OpenAI Responses API `web_search`, no
@@ -60,7 +82,7 @@ web research:
 
 The implementation is intentionally testable without external services: `--seed-sources`,
 `--draft-json` and `--dry-run` exercise the Source → Finding path without OpenAI, web access or
-Supabase. The remaining agents in the roster are still design-level until their own modules exist.
+Supabase.
 
 ## The Critic Agent
 

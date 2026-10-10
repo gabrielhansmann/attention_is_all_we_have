@@ -1,0 +1,60 @@
+{
+  "hits": [
+    {
+      "kind": "feedback",
+      "id": "00000000-0000-0000-0000-000000000101",
+      "file": "G60_feedback_hackathon.xlsx",
+      "locator": "sheet Feedback_Explorer, row 4642 (G60-3695)",
+      "quote": "The seat ventilation is far too weak on hot days.",
+      "text": "The seat ventilation is far too weak on hot days.",
+      "meta": {"vehicle_line": "G60", "market_code": "US", "polarity": "negative", "powertrain": "BEV"}
+    },
+    {
+      "kind": "feedback",
+      "id": "00000000-0000-0000-0000-000000000102",
+      "file": "G60_feedback_hackathon.xlsx",
+      "locator": "sheet Feedback_Explorer, row 5120 (G60-4173)",
+      "quote": "Ventilated seats barely blow any air, even on the highest setting.",
+      "text": "Ventilated seats barely blow any air, even on the highest setting.",
+      "meta": {"vehicle_line": "G60", "market_code": "US", "polarity": "negative", "powertrain": "ICE"}
+    },
+    {
+      "kind": "feedback",
+      "id": "00000000-0000-0000-0000-000000000103",
+      "file": "G60_feedback_hackathon.xlsx",
+      "locator": "sheet Feedback_Explorer, row 812 (G60-0711)",
+      "quote": "I would like a massage function for the rear seats.",
+      "text": "I would like a massage function for the rear seats.",
+      "meta": {"vehicle_line": "G60", "market_code": "US", "polarity": "request", "powertrain": "PHEV"}
+    },
+    {
+      "kind": "feedback",
+      "id": "00000000-0000-0000-0000-000000000104",
+      "file": "G60_feedback_hackathon.xlsx",
+      "locator": "sheet Feedback_Explorer, row 233 (G60-0198)",
+      "quote": "The front seats are superb on long drives.",
+      "text": "The front seats are superb on long drives.",
+      "meta": {"vehicle_line": "G60", "market_code": "US", "polarity": "positive", "powertrain": "ICE"}
+    },
+    {
+      "kind": "feedback",
+      "id": "00000000-0000-0000-0000-000000000105",
+      "file": "G60_feedback_hackathon.xlsx",
+      "locator": "sheet Feedback_Explorer, row 3001 (G60-2760)",
+      "quote": "The comfort seat option is too expensive for what it offers.",
+      "text": "The comfort seat option is too expensive for what it offers.",
+      "meta": {"vehicle_line": "G60", "market_code": "US", "polarity": "negative", "powertrain": "ICE"}
+    },
+    {
+      "kind": "study",
+      "id": "00000000-0000-0000-0000-000000000201",
+      "file": "F70_G60_G68_G70_customer_studies.xlsx",
+      "locator": "sheet US, cell D14",
+      "quote": "Satisfaction with seat comfort | G60 | Very satisfied share = 0.410",
+      "text": "Satisfaction with seat comfort",
+      "meta": {"vehicle_line": "G60", "market_code": "US", "model": "G60", "metric": "share", "answer_option": "Very satisfied", "value": 0.41}
+    }
+  ],
+  "counts": {"negative": 2140, "positive": 1310, "request": 615},
+  "gaps": ["The customer-study file has no respondent counts, so study findings carry no sample size."]
+}

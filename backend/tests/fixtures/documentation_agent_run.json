@@ -1,0 +1,151 @@
+{
+  "run_id": "run-42",
+  "steps": [
+    {
+      "id": "step-1",
+      "agent_name": "Customer Feedback Agent",
+      "stage": 1,
+      "position": 1,
+      "status": "accepted",
+      "attempt": 1,
+      "resolved_by": "pm",
+      "resolved_at": "2026-01-14T08:40:00+00:00",
+      "human_readable_summary": "Customer Feedback Agent looked at 3,292 EU G60 comments and the EU customer study.\n\nFindings:\n- Seat ventilation takes too long to cool the seat (Verified; G60_feedback_hackathon.xlsx, sheet Feedback_Explorer, row 4642 (G60-3695))\n\nConfidence and gaps:\n- EU only: there is no customer feedback for China.",
+      "output": {
+        "findings": [
+          {
+            "id": "F-101",
+            "source": "G60_feedback_hackathon.xlsx",
+            "locator": "sheet Feedback_Explorer, row 4642 (G60-3695)",
+            "text": "Customer reports that seat ventilation takes too long to cool the seat.",
+            "signal_type": "complaint",
+            "evidence_level": "Verified"
+          },
+          {
+            "id": "F-102",
+            "source": "G60_customer_studies.xlsx",
+            "locator": "sheet EU, cell D14",
+            "text": "Seat ventilation response is rated 2.9 of 5 in the EU customer study (n=340).",
+            "signal_type": "complaint",
+            "evidence_level": "Verified"
+          },
+          {
+            "id": "F-105",
+            "source": "G60_feedback_hackathon.xlsx",
+            "locator": "sheet Feedback_Explorer, row 911 (G60-0871)",
+            "text": "Customer finds the ventilated-seat package too expensive.",
+            "signal_type": "complaint",
+            "evidence_level": "Verified",
+            "out_of_scope_reason": "pricing topic"
+          },
+          {
+            "text": "Customers generally like the seats.",
+            "signal_type": "praise",
+            "evidence_level": "Unverified"
+          }
+        ]
+      }
+    },
+    {
+      "id": "step-2",
+      "agent_name": "Competitor Agent",
+      "stage": 1,
+      "position": 2,
+      "status": "rejected",
+      "attempt": 2,
+      "resolved_by": "pm",
+      "resolved_at": "2026-01-14T08:55:00+00:00",
+      "pm_note": "Only paywalled sources, proceed without competitor evidence",
+      "human_readable_summary": "Competitor Agent searched 4 review sources.",
+      "output": {
+        "findings": [
+          {
+            "id": "F-103",
+            "source": "https://www.autocar.co.uk/reviews/rival-sedan",
+            "locator": "https://www.autocar.co.uk/reviews/rival-sedan · retrieved 2026-01-12",
+            "text": "A competitor review notes a faster seat-ventilation response time in a rival sedan.",
+            "signal_type": "competitor_advantage",
+            "evidence_level": "Interpreted"
+          }
+        ]
+      }
+    },
+    {
+      "id": "step-3",
+      "agent_name": "Requirements Drafting Agent",
+      "stage": 3,
+      "position": 3,
+      "status": "accepted",
+      "attempt": 1,
+      "resolved_by": "pm",
+      "resolved_at": "2026-01-14T09:02:00+00:00",
+      "human_readable_summary": "Requirements Drafting Agent looked at 3 findings and drafted 2 requirements.",
+      "output": {
+        "requirements": [
+          {
+            "id": "req-2031",
+            "code": "R-2031",
+            "title": "Fast-response seat ventilation",
+            "description": "Seat ventilation reaches a noticeable cooling effect quickly after activation.",
+            "metric": "time to noticeable cooling",
+            "acceptance_criteria": "noticeable cooling within 75 s",
+            "assumptions": ["Rival response time is review-estimated"],
+            "linked_finding_ids": ["F-101", "F-102", "F-103"]
+          },
+          {
+            "id": "req-2032",
+            "code": "R-2032",
+            "title": "Match rival ventilation fan stages",
+            "description": "Offer as many ventilation stages as the rival sedan.",
+            "linked_finding_ids": ["F-103"]
+          }
+        ]
+      }
+    },
+    {
+      "id": "step-4",
+      "agent_name": "Prioritization Agent",
+      "stage": 4,
+      "position": 4,
+      "status": "accepted",
+      "attempt": 2,
+      "resolved_by": "pm",
+      "resolved_at": "2026-01-14T09:10:00+00:00",
+      "human_readable_summary": "Prioritization Agent looked at 1 draft requirement(s) and 2 citable finding(s) for G60 / EU.\n\nProposed scores:\n- R-2031: 0.38\n\nConfidence and gaps:\n- R-2031: missing: no competitor finding, competitor-coverage gap unknown",
+      "output": {
+        "scores": [
+          {
+            "requirement_id": "req-2031",
+            "requirement_code": "R-2031",
+            "composite": 0.38,
+            "confidence": 0.35,
+            "proposed_tier": "Tier 3 (watch-list)",
+            "rationale": "2 cited finding(s) from 2 independent source(s); composite 0.38 proposes Tier 3 (watch-list).",
+            "breakdown": [
+              {"name": "customer_relevance", "value": 0.68, "weight": 0.4, "contribution": 0.272},
+              {"name": "business_signal", "value": 0.0, "weight": 0.25, "contribution": 0.0},
+              {"name": "strategic_fit", "value": 0.6, "weight": 0.15, "contribution": 0.09},
+              {"name": "effort_proxy", "value": 0.05, "weight": 0.2, "contribution": -0.01}
+            ],
+            "finding_ids": ["F-101", "F-102"]
+          }
+        ]
+      }
+    },
+    {
+      "id": "step-5",
+      "agent_name": "Documentation Agent",
+      "stage": 5,
+      "position": 5,
+      "status": "running",
+      "attempt": 1
+    }
+  ],
+  "decisions": [
+    {"timestamp": "2026-01-14T08:30:00+00:00", "entity_type": "pipeline_run", "entity_id": "run-42", "actor": "orchestrator", "action": "plan_created", "rationale": "Agents chosen from the request by the planner"},
+    {"timestamp": "2026-01-14T08:40:00+00:00", "entity_type": "step", "entity_id": "step-1", "actor": "pm", "action": "step_accepted", "rationale": null},
+    {"timestamp": "2026-01-14T08:50:00+00:00", "entity_type": "step", "entity_id": "step-2", "actor": "pm", "action": "step_retried", "rationale": "drop the paywalled ones | find a free equivalent"},
+    {"timestamp": "2026-01-14T09:05:00+00:00", "entity_type": "score", "entity_id": "score-1", "actor": "Prioritization Agent", "action": "scored", "rationale": null},
+    {"timestamp": "2026-01-14T09:08:00+00:00", "entity_type": "step", "entity_id": "step-4", "actor": "pm", "action": "step_retried", "rationale": "nudged the business_signal weight"}
+  ]
+}

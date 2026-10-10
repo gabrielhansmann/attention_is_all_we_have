@@ -1,0 +1,11 @@
+{
+  "clusters": [
+    {"label": "Seat ventilation and cooling", "domain": "comfort_space", "finding_ids": ["f1", "f2", "f3", "f6", "f404"]},
+    {"label": "Charging-aware route planning", "domain": "infotainment", "finding_ids": ["f4", "f1"]},
+    {"label": "Climate control usability", "domain": "made_up_domain", "finding_ids": ["f5"]},
+    {"label": "Pricing pressure", "domain": "variant_package", "finding_ids": ["f7"]}
+  ],
+  "unassigned": [
+    {"finding_id": "f9", "reason": "praise for the design, no shared theme with other findings"}
+  ]
+}

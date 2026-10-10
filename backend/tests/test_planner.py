@@ -9,9 +9,9 @@ def names(plan):
     return [s.agent for s in plan]
 
 
-def test_catalog_is_in_pipeline_order_and_only_market_trend_is_built():
+def test_catalog_is_in_pipeline_order_and_every_agent_is_built():
     assert [a.stage for a in CATALOG] == sorted(a.stage for a in CATALOG)
-    assert [a.name for a in CATALOG if a.available] == ["Market & Trend Agent"]
+    assert all(a.available for a in CATALOG)
 
 
 def test_normalize_orders_dedupes_and_keeps_research_only_plans_small():

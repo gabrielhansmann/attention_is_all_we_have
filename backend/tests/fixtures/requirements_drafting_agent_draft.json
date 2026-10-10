@@ -1,0 +1,46 @@
+{
+  "requirements": [
+    {
+      "cluster_id": "f577bcaf-ea59-536d-94dd-e01f8fd26de1",
+      "title": "Stronger seat ventilation and cooling",
+      "description": {
+        "text": "US customers need seat ventilation that noticeably cools the seat on hot days and long summer drives.",
+        "finding_ids": ["f1", "f2"]
+      },
+      "metric": {
+        "text": "At least 80 % of surveyed US owners rate seat ventilation as satisfactory.",
+        "finding_ids": ["f1", "f999"]
+      },
+      "acceptance_criteria": [
+        {"text": "Ventilated front seats are available on the US base trim, as on the rival sedan.", "finding_ids": ["f3"]},
+        {"text": "The cooling function wins an independent comfort award.", "finding_ids": []}
+      ],
+      "assumptions": ["Survey ratings are a fair proxy for perceived cooling performance."],
+      "uncertainties": ["No measured airflow or temperature data is in the evidence."]
+    },
+    {
+      "cluster_id": "03c4763f-19cf-5522-9237-44f1919177e6",
+      "title": "Charging-aware route planning",
+      "description": {
+        "text": "Customers expect route planning that takes charging stops into account.",
+        "finding_ids": ["f4"]
+      },
+      "acceptance_criteria": [
+        {"text": "The navigation proposes charging stops as part of a planned route.", "finding_ids": ["f4"]}
+      ]
+    },
+    {
+      "cluster_id": "e42994c3-2e79-5d39-acd1-5d90550653b4",
+      "title": "Direct climate controls",
+      "description": {
+        "text": "Customers want climate functions that also cool the seats.",
+        "finding_ids": ["f1"]
+      }
+    },
+    {
+      "cluster_id": "not-a-cluster",
+      "title": "Invented requirement",
+      "description": {"text": "Customers want a feature nobody asked for.", "finding_ids": ["f1"]}
+    }
+  ]
+}

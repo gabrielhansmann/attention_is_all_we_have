@@ -1,0 +1,45 @@
+{
+  "known_findings": [
+    {
+      "id": "F-101",
+      "text": "Customers in the US report that seat ventilation is too weak on long drives.",
+      "signal_type": "complaint",
+      "evidence_level": "Verified",
+      "file": "G60_feedback_hackathon.xlsx",
+      "locator": "sheet Feedback_Explorer, row 4642 (G60-3695)",
+      "sample_size": 37,
+      "assumptions": [],
+      "out_of_scope_reason": null
+    },
+    {
+      "id": "F-102",
+      "text": "A rival midsize sedan ships ventilated rear seats as standard equipment.",
+      "signal_type": "competitor_advantage",
+      "evidence_level": "Interpreted",
+      "source_url": "https://www.caranddriver.com/example-rival-review",
+      "retrieved_at": "2026-10-10T08:00:00+00:00",
+      "locator": "https://www.caranddriver.com/example-rival-review · retrieved 2026-10-10",
+      "trust_tier": "trade_press",
+      "assumptions": [],
+      "out_of_scope_reason": null
+    }
+  ],
+  "output": {
+    "agent_name": "Clustering / Ontology Agent",
+    "vehicle_line": "G60",
+    "market": "US",
+    "summary": "Clustering / Ontology Agent grouped 2 accepted findings for G60 / US.\n\nClusters:\n- Seat ventilation: weak airflow reported by owners, rival ships it as standard (G60_feedback_hackathon.xlsx, sheet Feedback_Explorer, row 4642 (G60-3695); https://www.caranddriver.com/example-rival-review · retrieved 2026-10-10)\n\nConfidence and gaps:\n- One cluster only; rear-seat evidence rests on a single review.",
+    "clusters": [
+      {
+        "id": "C-1",
+        "label": "Seat ventilation",
+        "evidence_level": "Verified",
+        "member_finding_ids": ["F-101", "F-102"],
+        "locators": [
+          "sheet Feedback_Explorer, row 4642 (G60-3695)",
+          "https://www.caranddriver.com/example-rival-review · retrieved 2026-10-10"
+        ]
+      }
+    ]
+  }
+}

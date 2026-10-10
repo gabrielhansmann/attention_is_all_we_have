@@ -423,9 +423,10 @@ def ensure_step(conn: Any, run_id: str | None, step_id: str | None, summary: str
     if not run_id:
         return None
     return conn.execute(
-        "insert into public.step (run_id, agent_name, stage, status, human_readable_summary, launched_by, launched_at) "
-        "values (%s, %s, 1, 'awaiting_review', %s, %s, now()) returning id",
-        (run_id, AGENT_NAME, summary, AGENT_NAME),
+        "insert into public.step (run_id, agent_name, stage, position, status, human_readable_summary, launched_by, launched_at) "
+        "values (%s, %s, 1, (select coalesce(max(position), 0) + 1 from public.step where run_id = %s), "
+        "'awaiting_review', %s, %s, now()) returning id",
+        (run_id, AGENT_NAME, run_id, summary, AGENT_NAME),
     ).fetchone()[0]
 
 

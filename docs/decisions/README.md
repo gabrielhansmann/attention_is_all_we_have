@@ -18,3 +18,5 @@ changes — note the supersession in the new file and update the old one's statu
 | [0011](0011-local-demo-frontend-and-vercel.md) | Deliver a local demo PM workspace and Vercel hosting alongside the backend Evidence browser | accepted |
 | [0012](0012-planner-proposes-code-validates.md) | The planner model proposes agents; code validates, orders and completes the plan | accepted |
 | [0013](0013-frontend-uses-only-the-backend-api.md) | The frontend reaches data only through the backend API; live mode sits beside the demo | accepted |
+| [0014](0014-all-roster-agents-implemented.md) | All roster agents exist as modules; the interpretations they needed | accepted |
+| [0015](0015-step-runner-and-step-output-on-the-step.md) | The step runner: agents run in the background, output is kept on the step | accepted |

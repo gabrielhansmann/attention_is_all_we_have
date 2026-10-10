@@ -1,6 +1,6 @@
 # Orchestration & human-in-the-loop: a chat that plans, then runs one agent at a time
 
-> Status: `building` · Last updated: 2026-10-10 (demo UI boundary — see [decision 0011](../decisions/0011-local-demo-frontend-and-vercel.md); live orchestration remains proposed)
+> Status: `building` · Last updated: 2026-10-10 (step runner — see [decision 0015](../decisions/0015-step-runner-and-step-output-on-the-step.md); the frontend does not call it yet)
 
 This is the central mechanic of the whole system. The PM starts a **chat** with a research request.
 An **orchestrator** decides which agents are needed. They run **one at a time**, and each agent's
@@ -48,6 +48,30 @@ agents; a full requirement derivation runs the whole chain.
 - **The PM can edit the plan** (`PUT /api/runs/{id}/plan`) until an agent has started. An edit is checked, never
   silently completed: removing a prerequisite is refused with the reason. Each edit adds a `plan_change` message.
 - Plans and edits are written to the audit log (`plan_created`, `plan_edited`).
+
+## How a plan runs (implemented)
+
+`orchestration/runner.py` applies the state machine below; `orchestration/agents.py` holds one adapter per agent.
+
+| Call | Effect |
+|---|---|
+| `POST /api/runs/{id}/start` | The PM confirms the plan. The first step goes to `running` and the plan is locked |
+| `POST /api/steps/{id}/accept` | Step → `accepted`; the next planned step starts, or the run completes with a `final_result` message |
+| `POST /api/steps/{id}/retry` `{note}` | Same step back to `running` with the steering note; `attempt` + 1 |
+| `POST /api/steps/{id}/reject` `{note, proceed}` | Step → `rejected`; `proceed` true goes on with a coverage gap, false aborts the run |
+| `POST /api/steps/{id}/edit` `{summary}` | Rewrites the summary; the step stays in review |
+
+- **The agent runs after the response.** The call returns with the step `running`; the step card arrives in the
+  thread when the agent and the Critic are done, so the client polls `GET /api/conversations/{id}`.
+- **The Critic is inside every run**, with one automatic retry. Claims that stay uncited are dropped and listed on
+  the card. Synthesis steps are checked against the findings accepted earlier in the run.
+- **Output lives on the step** as JSON (`structured_output_refs`) and in the step card's payload. The next agent
+  receives only the output of accepted steps. Nothing is written to the finding, cluster, requirement or score
+  tables by a run yet.
+- **A failed agent** ends in `awaiting_review` with a card that says so, to retry or reject.
+- **An action outside its state is refused** with 409 and the reason (accepting a planned step, starting twice,
+  acting on a finished run).
+- Every start, finish, accept, edit, retry and reject is an audit event on the step.
 
 ## The unit of work: a Step
 
@@ -177,7 +201,8 @@ time. Accept advances to the next; rejection requires an explicit coverage-gap o
 decision, including after reload. A draft appears only after the final review.
 
 This UI currently uses a fixed three-step plan and local browser state. Retry stores steering
-against the same illustrative evidence, and Edit records the PM's revised summary. There is
-no live planner, agent invocation, Critic verification, or LangGraph checkpointer behind it.
-The preceding sections describe the intended backend behavior; the
+against the same illustrative evidence, and Edit records the PM's revised summary. The live mode beside it
+([decision 0013](../decisions/0013-frontend-uses-only-the-backend-api.md)) shows the backend's plan and plan editing,
+but does not call the step runner yet, and there is no LangGraph checkpointer.
+The preceding sections describe the backend behavior; the
 [frontend guide](../../frontend/README.md) documents the implemented demo.

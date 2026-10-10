@@ -1,6 +1,6 @@
 # Audit trail
 
-> Status: `draft` · Last updated: 2026-10-10 (plan events)
+> Status: `draft` · Last updated: 2026-10-10 (plan and step events)
 
 One append-only `AuditEvent` log underlies everything: every orchestrator plan and plan change, every `Step` start/accept/edit/retry/reject
 inside a run (a step "starts" automatically when the previous one is accepted, so the start event
@@ -15,6 +15,10 @@ a record in place without also writing one of these.
 - `rationale` — required for every PM-initiated action. The UI will not commit a status change
   without it (see [`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and-human-in-the-loop.md)).
 - `before` / `after` — enough of the record's state to render a diff, not the whole object.
+
+Step and run actions as written by the runner: `step_started`, `step_finished`, `step_failed`, `step_accepted`,
+`step_edited`, `step_retried`, `step_rejected`, `run_completed`, `run_aborted`, plus the Critic's
+`evidence_level_downgraded` and `claim_dropped` filed under the step.
 
 ## Worked example: R-2031
 

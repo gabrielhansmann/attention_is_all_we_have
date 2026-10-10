@@ -1,0 +1,58 @@
+[
+  {
+    "url": "https://www.bmw.de/example/i5-edrive40-technical-data",
+    "title": "BMW i5 eDrive40 technical data",
+    "snippet": "i5 eDrive40 saloon, 5 seats, 580 km WLTP range, 5,060 mm long, 10-80% charge in 30 min, list price 70,200 EUR.",
+    "trust_tier": "oem",
+    "language": "en"
+  },
+  {
+    "url": "https://www.mercedes-benz.de/example/eqe-350-plus",
+    "title": "Mercedes-Benz EQE 350+ data",
+    "snippet": "EQE 350+ saloon, 5 seats, 620 km WLTP range, 4,946 mm long, 10-80% in 32 min, rear-axle steering optional, 67,000 EUR.",
+    "trust_tier": "oem",
+    "language": "en"
+  },
+  {
+    "url": "https://www.audi.de/example/a6-e-tron",
+    "title": "Audi A6 Sportback e-tron data",
+    "snippet": "A6 Sportback e-tron, 5 seats, 650 km WLTP range, 4,928 mm long, 15.9 kWh/100 km WLTP, 75,600 EUR.",
+    "trust_tier": "oem",
+    "language": "en"
+  },
+  {
+    "url": "https://www.tesla.com/example/model-s",
+    "title": "Tesla Model S",
+    "snippet": "Model S liftback, 5 seats, 634 km WLTP range, 5,021 mm long, 92,990 EUR.",
+    "trust_tier": "oem",
+    "language": "en"
+  },
+  {
+    "url": "https://www.caranddriver.com/example/executive-ev-comparison",
+    "title": "Executive EV comparison test",
+    "snippet": "Comparison of the BMW i5 and Mercedes EQE: seat comfort, ride and consumption (i5: 16.5 kWh/100 km EPA).",
+    "trust_tier": "trade_press",
+    "language": "en"
+  },
+  {
+    "url": "https://www.autocar.co.uk/example/eqe-vs-i5-long-term",
+    "title": "EQE vs i5 long-term review",
+    "snippet": "Long-term impressions of seat comfort and infotainment in the EQE and i5.",
+    "trust_tier": "trade_press",
+    "language": "en"
+  },
+  {
+    "url": "https://example-forum.invalid/thread/eqe-i5-owners",
+    "title": "Owner thread: EQE or i5",
+    "snippet": "Owners discuss infotainment responsiveness.",
+    "trust_tier": "forum_social",
+    "language": "en"
+  },
+  {
+    "url": "https://www.nio.com/example/et7",
+    "title": "NIO ET7",
+    "snippet": "ET7 saloon, 5 seats, 580 km WLTP range, 5,101 mm long.",
+    "trust_tier": "oem",
+    "language": "en"
+  }
+]

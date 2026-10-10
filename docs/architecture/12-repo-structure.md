@@ -79,6 +79,8 @@ Makefile  .env.example    common tasks and the environment template (one .env at
 | `GET, PATCH /api/conversations/{id}` | the thread (messages and runs with steps), or rename / archive |
 | `POST /api/conversations/{id}/messages` | a PM request: the orchestrator plans and stores `planned` steps |
 | `PUT /api/runs/{id}/plan` | the PM edits the plan before any agent starts |
+| `POST /api/runs/{id}/start` | the PM confirms the plan; the first agent starts in the background |
+| `POST /api/steps/{id}/accept`, `retry`, `reject`, `edit` | the PM's four actions on a step in review; accept starts the next agent |
 
 Bad parameters give 422, unknown rows 404, and an unreachable database 503 with no internals in the
 message. Interactive docs are served at `/docs`.

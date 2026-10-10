@@ -1,6 +1,6 @@
 # Prioritization
 
-> Status: `draft` · Last updated: 2026-10-10
+> Status: `building` · Last updated: 2026-10-10 (implemented, see [decision 0014](../decisions/0014-all-roster-agents-implemented.md))
 
 A composite score the PM can see decomposed, re-weight, and override — never a black-box rank. It
 balances what BMW's own slide calls "Customer" against "Business," plus the brief's allowance for
@@ -25,6 +25,15 @@ Every stored `Score` keeps the weight vector used, each raw component value, who
 a timestamp, and a one-line generated rationale — see
 [`04-data-model.md`](04-data-model.md#score) — and is versioned, so re-scoring after new evidence
 never erases what a priority call used to look like.
+
+## Implementation
+
+[`backend/app/agents/prioritization_agent.py`](../../backend/app/agents/prioritization_agent.py) computes the
+formula in code, with no model. The sub-weights that turn findings into each component are constants at the top
+of the module and are a starting point like the weights above. Effort maps to low 0.05, medium 0.50, high 0.95.
+A missing input counts as zero, lowers confidence by 0.10 and is listed on the score. The provided data has no
+option take rate, so `business_signal` uses the share of variants where the option is standard, flagged as a
+proxy. The tier is proposed on the score and never written to the requirement.
 
 ## Worked example
 

@@ -18,15 +18,15 @@ class AgentSpec:
 
 
 CATALOG: tuple[AgentSpec, ...] = (
-    AgentSpec("Baseline Agent", 1, "Previous-generation feedback, portfolio documents and sales trend: what must carry over.", False),
-    AgentSpec("Customer Feedback Agent", 1, "What customers say: complaints, unmet needs and praise from the feedback and customer studies, with counts and sample sizes.", False),
-    AgentSpec("Sales & Portfolio Agent", 1, "Revealed preference: which options are standard or optional per variant, option uptake and sales volumes by market.", False),
-    AgentSpec("Competitor Agent", 1, "Rival vehicles: specs, reviews and teardown data from the web, to find competitor advantages.", False),
+    AgentSpec("Baseline Agent", 1, "Previous-generation feedback, portfolio documents and sales trend: what must carry over.", True),
+    AgentSpec("Customer Feedback Agent", 1, "What customers say: complaints, unmet needs and praise from the feedback and customer studies, with counts and sample sizes.", True),
+    AgentSpec("Sales & Portfolio Agent", 1, "Revealed preference: which options are standard or optional per variant, option uptake and sales volumes by market.", True),
+    AgentSpec("Competitor Agent", 1, "Rival vehicles: specs, reviews and teardown data from the web, to find competitor advantages.", True),
     AgentSpec("Market & Trend Agent", 1, "Where the market is heading: cited web trend research. Findings are assumptions, not facts.", True),
-    AgentSpec("Clustering Agent", 2, "Groups findings into themes and maps them onto the domain taxonomy, removing duplicates.", False),
-    AgentSpec("Requirements Drafting Agent", 3, "Turns clusters into draft requirements with a metric and acceptance criteria.", False),
-    AgentSpec("Prioritization Agent", 4, "Scores each draft requirement with an explainable breakdown.", False),
-    AgentSpec("Documentation Agent", 5, "Compiles the accepted steps into a dossier with the audit trail.", False),
+    AgentSpec("Clustering Agent", 2, "Groups findings into themes and maps them onto the domain taxonomy, removing duplicates.", True),
+    AgentSpec("Requirements Drafting Agent", 3, "Turns clusters into draft requirements with a metric and acceptance criteria.", True),
+    AgentSpec("Prioritization Agent", 4, "Scores each draft requirement with an explainable breakdown.", True),
+    AgentSpec("Documentation Agent", 5, "Compiles the accepted steps into a dossier with the audit trail.", True),
 )
 BY_NAME = {a.name: a for a in CATALOG}
 ORDER = {a.name: i for i, a in enumerate(CATALOG)}

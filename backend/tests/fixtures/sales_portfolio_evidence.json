@@ -1,0 +1,296 @@
+{
+  "sales": [
+    {
+      "citation": {
+        "kind": "sales",
+        "id": "00000000-0000-0000-0000-000000000101",
+        "file": "sales_volumes.xlsx",
+        "locator": "sheet G60_G68, row 2",
+        "quote": "G60 Europe 2023: 40000 units"
+      },
+      "text": "40000",
+      "meta": {
+        "vehicle_line": "G60",
+        "market_code": "EU",
+        "year": 2023,
+        "volume": 40000,
+        "is_forecast": false
+      },
+      "score": null
+    },
+    {
+      "citation": {
+        "kind": "sales",
+        "id": "00000000-0000-0000-0000-000000000102",
+        "file": "sales_volumes.xlsx",
+        "locator": "sheet G60_G68, row 3",
+        "quote": "G60 Europe 2025: 50000 units"
+      },
+      "text": "50000",
+      "meta": {
+        "vehicle_line": "G60",
+        "market_code": "EU",
+        "year": 2025,
+        "volume": 50000,
+        "is_forecast": false
+      },
+      "score": null
+    },
+    {
+      "citation": {
+        "kind": "sales",
+        "id": "00000000-0000-0000-0000-000000000103",
+        "file": "sales_volumes.xlsx",
+        "locator": "sheet G60_G68, row 4",
+        "quote": "G60 Europe 2030: 60000 units (forecast)"
+      },
+      "text": "60000",
+      "meta": {
+        "vehicle_line": "G60",
+        "market_code": "EU",
+        "year": 2030,
+        "volume": 60000,
+        "is_forecast": true
+      },
+      "score": null
+    },
+    {
+      "citation": {
+        "kind": "sales",
+        "id": "00000000-0000-0000-0000-000000000104",
+        "file": "sales_volumes.xlsx",
+        "locator": "sheet G60_G68, row 6",
+        "quote": "G60 United States 2023: 30000 units"
+      },
+      "text": "30000",
+      "meta": {
+        "vehicle_line": "G60",
+        "market_code": "US",
+        "year": 2023,
+        "volume": 30000,
+        "is_forecast": false
+      },
+      "score": null
+    },
+    {
+      "citation": {
+        "kind": "sales",
+        "id": "00000000-0000-0000-0000-000000000105",
+        "file": "sales_volumes.xlsx",
+        "locator": "sheet G60_G68, row 7",
+        "quote": "G60 United States 2025: 30000 units"
+      },
+      "text": "30000",
+      "meta": {
+        "vehicle_line": "G60",
+        "market_code": "US",
+        "year": 2025,
+        "volume": 30000,
+        "is_forecast": false
+      },
+      "score": null
+    },
+    {
+      "citation": {
+        "kind": "sales",
+        "id": "00000000-0000-0000-0000-000000000106",
+        "file": "sales_volumes.xlsx",
+        "locator": "sheet G60_G68, row 10",
+        "quote": "G68 China 2025: 90000 units"
+      },
+      "text": "90000",
+      "meta": {
+        "vehicle_line": "G68",
+        "market_code": "CN",
+        "year": 2025,
+        "volume": 90000,
+        "is_forecast": false
+      },
+      "score": null
+    }
+  ],
+  "options": [
+    {
+      "citation": {
+        "kind": "option",
+        "id": "00000000-0000-0000-0000-000000000201",
+        "file": "G60_OptionList.PDF",
+        "locator": "page 14, SA 0453",
+        "quote": "Aktive Sitzbelüftung vorn — für Fahrer und Beifahrer"
+      },
+      "text": "Aktive Sitzbelüftung vorn",
+      "meta": {
+        "vehicle_line": "G60",
+        "code": "0453",
+        "section": "Sitze",
+        "availability": [
+          {
+            "variant": "520i",
+            "powertrain": "ICE",
+            "status": "optional",
+            "price_gross": 890,
+            "condition": null
+          },
+          {
+            "variant": "530e",
+            "powertrain": "PHEV",
+            "status": "optional",
+            "price_gross": 890,
+            "condition": null
+          },
+          {
+            "variant": "i5 eDrive40",
+            "powertrain": "BEV",
+            "status": "optional",
+            "price_gross": 890,
+            "condition": null
+          },
+          {
+            "variant": "i5 eDrive40",
+            "powertrain": "BEV",
+            "status": "standard",
+            "price_gross": null,
+            "condition": "In Verbindung mit M Sportpaket Pro"
+          },
+          {
+            "variant": "i5 M60 xDrive",
+            "powertrain": "BEV",
+            "status": "standard",
+            "price_gross": null,
+            "condition": null
+          }
+        ]
+      },
+      "score": null
+    },
+    {
+      "citation": {
+        "kind": "option",
+        "id": "00000000-0000-0000-0000-000000000202",
+        "file": "G60_OptionList.PDF",
+        "locator": "page 15, SA 0402",
+        "quote": "Panorama-Glasdach"
+      },
+      "text": "Panorama-Glasdach",
+      "meta": {
+        "vehicle_line": "G60",
+        "code": "0402",
+        "section": "Exterieur",
+        "availability": [
+          {
+            "variant": "520i",
+            "powertrain": "ICE",
+            "status": "optional",
+            "price_gross": 1600,
+            "condition": null
+          },
+          {
+            "variant": "530e",
+            "powertrain": "PHEV",
+            "status": "optional",
+            "price_gross": 1600,
+            "condition": null
+          },
+          {
+            "variant": "i5 eDrive40",
+            "powertrain": "BEV",
+            "status": "optional",
+            "price_gross": 1600,
+            "condition": null
+          },
+          {
+            "variant": "i5 M60 xDrive",
+            "powertrain": "BEV",
+            "status": "optional",
+            "price_gross": 1600,
+            "condition": null
+          }
+        ]
+      },
+      "score": null
+    },
+    {
+      "citation": {
+        "kind": "option",
+        "id": "00000000-0000-0000-0000-000000000203",
+        "file": "G60_OptionList.PDF",
+        "locator": "page 16, SA 0261",
+        "quote": "Seitenairbags für Fondpassagiere"
+      },
+      "text": "Seitenairbags für Fondpassagiere",
+      "meta": {
+        "vehicle_line": "G60",
+        "code": "0261",
+        "section": "Sicherheit",
+        "availability": [
+          {
+            "variant": "520i",
+            "powertrain": "ICE",
+            "status": "optional",
+            "price_gross": 450,
+            "condition": null
+          },
+          {
+            "variant": "530e",
+            "powertrain": "PHEV",
+            "status": "optional",
+            "price_gross": 450,
+            "condition": null
+          }
+        ]
+      },
+      "score": null
+    },
+    {
+      "citation": null,
+      "text": "Option ohne Zitat",
+      "meta": {
+        "vehicle_line": "G60",
+        "code": "0999",
+        "section": "Sitze",
+        "availability": [
+          {
+            "variant": "520i",
+            "powertrain": "ICE",
+            "status": "standard",
+            "price_gross": null,
+            "condition": null
+          }
+        ]
+      },
+      "score": null
+    },
+    {
+      "citation": {
+        "kind": "option",
+        "id": "00000000-0000-0000-0000-000000000205",
+        "file": "F70_OptionList.PDF",
+        "locator": "page 9, SA 0710",
+        "quote": "M Lederlenkrad"
+      },
+      "text": "M Lederlenkrad",
+      "meta": {
+        "vehicle_line": "F70",
+        "code": "0710",
+        "section": "Interieur",
+        "availability": [
+          {
+            "variant": "118",
+            "powertrain": "ICE",
+            "status": "standard",
+            "price_gross": null,
+            "condition": null
+          },
+          {
+            "variant": "120",
+            "powertrain": "ICE",
+            "status": "standard",
+            "price_gross": null,
+            "condition": null
+          }
+        ]
+      },
+      "score": null
+    }
+  ]
+}

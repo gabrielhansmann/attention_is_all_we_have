@@ -1,0 +1,165 @@
+{
+  "batch_id": "ingest-2026-Q2",
+  "as_of": "2026-04-02",
+  "requirements": [
+    {
+      "id": "req-2031",
+      "code": "R-2031",
+      "title": "Fast-response seat ventilation",
+      "description": "Seat ventilation reaches a noticeable cooling effect quickly after activation.",
+      "status": "tracked",
+      "vehicle_line": "G60",
+      "markets": ["EU"],
+      "linked_finding_ids": ["F-101", "F-102"]
+    },
+    {
+      "id": "req-2040",
+      "code": "R-2040",
+      "title": "Wireless charging pad keeps the phone in place",
+      "description": "The phone stays on the wireless charging pad during cornering.",
+      "status": "tracked",
+      "vehicle_line": "G60",
+      "markets": ["EU"],
+      "linked_finding_ids": ["F-201"]
+    },
+    {
+      "id": "req-2050",
+      "code": "R-2050",
+      "title": "Charging stops in route planning",
+      "description": "Navigation plans charging stops along the route automatically.",
+      "status": "tracked",
+      "vehicle_line": "G60",
+      "markets": ["EU"],
+      "linked_finding_ids": ["F-301"]
+    },
+    {
+      "id": "req-2060",
+      "code": "R-2060",
+      "title": "Quieter seat ventilation fan",
+      "description": "Seat ventilation fan noise stays below cabin noise.",
+      "status": "draft",
+      "vehicle_line": "G60",
+      "markets": ["EU"],
+      "linked_finding_ids": ["F-101"]
+    }
+  ],
+  "existing_findings": [
+    {
+      "id": "F-101",
+      "source": "G60_feedback_hackathon.xlsx",
+      "locator": "sheet Feedback_Explorer, row 4642 (G60-3695)",
+      "text": "Customer reports that seat ventilation takes too long to cool the seat.",
+      "signal_type": "complaint",
+      "sentiment": -0.9,
+      "market": "EU",
+      "vehicle_line": "G60",
+      "created_at": "2026-01-10T09:00:00+00:00"
+    },
+    {
+      "id": "F-102",
+      "source": "G60_customer_studies.xlsx",
+      "locator": "sheet EU, cell D14",
+      "text": "Seat ventilation response is rated 2.9 of 5 in the EU customer study (n=340).",
+      "signal_type": "complaint",
+      "sentiment": -0.7,
+      "market": "EU",
+      "vehicle_line": "G60",
+      "created_at": "2026-01-12T09:00:00+00:00"
+    },
+    {
+      "id": "F-201",
+      "source": "G60_feedback_hackathon.xlsx",
+      "locator": "sheet Feedback_Explorer, row 120 (G60-0102)",
+      "text": "Phone slides off the wireless charging pad in corners.",
+      "signal_type": "complaint",
+      "sentiment": -0.6,
+      "market": "EU",
+      "vehicle_line": "G60",
+      "created_at": "2025-03-01T09:00:00+00:00"
+    },
+    {
+      "id": "F-301",
+      "source": "G60_feedback_hackathon.xlsx",
+      "locator": "sheet Feedback_Explorer, row 2210 (G60-1984)",
+      "text": "Navigation does not plan charging stops along the route.",
+      "signal_type": "unmet_need",
+      "sentiment": -0.5,
+      "market": "EU",
+      "vehicle_line": "G60",
+      "created_at": "2026-02-20T09:00:00+00:00"
+    }
+  ],
+  "new_findings": [
+    {
+      "id": "F-517",
+      "source": "https://www.autocar.co.uk/reviews/rival-sedan-launch",
+      "locator": "https://www.autocar.co.uk/reviews/rival-sedan-launch · retrieved 2026-04-01",
+      "text": "A competitor launch review measures a faster seat ventilation response in a rival sedan.",
+      "signal_type": "competitor_advantage",
+      "evidence_level": "Interpreted",
+      "market": "EU",
+      "vehicle_line": "G60",
+      "retrieved_at": "2026-04-01T22:00:00+00:00"
+    },
+    {
+      "id": "F-518",
+      "source": "G60_feedback_hackathon_2026Q1.xlsx",
+      "locator": "sheet Feedback_Explorer, row 88 (G60-9012)",
+      "text": "Owners like that the seat ventilation cools the seat quickly after the software update.",
+      "signal_type": "praise",
+      "evidence_level": "Verified",
+      "sentiment": 0.8,
+      "market": "EU",
+      "vehicle_line": "G60"
+    },
+    {
+      "id": "F-519",
+      "source": "G60_feedback_hackathon_2026Q1.xlsx",
+      "locator": "sheet Feedback_Explorer, row 97 (G60-9021)",
+      "text": "Cup holders are too small for large bottles.",
+      "signal_type": "complaint",
+      "evidence_level": "Verified",
+      "sentiment": -0.4,
+      "market": "EU",
+      "vehicle_line": "G60"
+    },
+    {
+      "id": "F-520",
+      "source": "G60_feedback_hackathon_2026Q1.xlsx",
+      "locator": "sheet Feedback_Explorer, row 101 (G60-9025)",
+      "text": "Seat ventilation is too expensive as an option.",
+      "signal_type": "complaint",
+      "evidence_level": "Verified",
+      "market": "EU",
+      "vehicle_line": "G60",
+      "out_of_scope_reason": "pricing topic"
+    },
+    {
+      "id": "F-521",
+      "source": "G60_feedback_hackathon_2026Q1.xlsx",
+      "text": "Seat ventilation takes too long to cool the seat.",
+      "signal_type": "complaint",
+      "market": "EU",
+      "vehicle_line": "G60"
+    },
+    {
+      "id": "F-522",
+      "source": "G60_feedback_hackathon_2026Q1.xlsx",
+      "locator": "sheet Feedback_Explorer, row 140 (G60-9070)",
+      "text": "Seat ventilation takes too long to cool the seat in summer.",
+      "signal_type": "complaint",
+      "evidence_level": "Verified",
+      "market": "US",
+      "vehicle_line": "G60"
+    },
+    {
+      "id": "F-101",
+      "source": "G60_feedback_hackathon.xlsx",
+      "locator": "sheet Feedback_Explorer, row 4642 (G60-3695)",
+      "text": "Customer reports that seat ventilation takes too long to cool the seat.",
+      "signal_type": "complaint",
+      "market": "EU",
+      "vehicle_line": "G60"
+    }
+  ]
+}

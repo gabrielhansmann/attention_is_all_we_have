@@ -90,4 +90,4 @@ general enquiries or service). Agents state these gaps instead of implying cover
 
 - `finding` rows are not derived yet (that is the first agent's job); `requirement` versioning
   ("versioned sets" in the architecture diagram) is not built.
-- Web research ingestion (Competitor and Market/Trend agents) needs a search API.
+- Web research (Competitor and Market/Trend agents) runs through the LLM's search tool (decision 0009); the pages are not fetched.

@@ -103,6 +103,8 @@ class StepOut(BaseModel):
     planned_by: Literal["orchestrator", "pm"]
     attempt: int
     available: bool
+    human_readable_summary: str | None = None
+    pm_note: str | None = None
 
 
 class RunOut(BaseModel):
@@ -179,3 +181,20 @@ class CoverageOut(BaseModel):
     cells: list[CoverageCell]
     options_by_line: dict[str, int]
     total_feedback: int
+
+class StepNote(BaseModel):
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class RetryStep(BaseModel):
+    note: str = Field(min_length=3, max_length=2000)
+
+
+class RejectStep(BaseModel):
+    note: str = Field(min_length=3, max_length=2000)
+    proceed: bool           # true: go on without this agent (coverage gap); false: abort the run
+
+
+class EditStep(BaseModel):
+    summary: str = Field(min_length=3, max_length=20000)
+    note: str | None = Field(default=None, max_length=2000)

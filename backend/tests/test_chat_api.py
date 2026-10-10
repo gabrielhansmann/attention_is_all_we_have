@@ -1,9 +1,12 @@
 """Chat API tests against the real database, rolled back after every test (see conftest.db)."""
+from dataclasses import replace
+
 import pytest
 from fastapi.testclient import TestClient
 
 from app.api.deps import get_conn, get_planner
 from app.main import app
+from app.orchestration import catalog
 from app.orchestration.planner import PlannedAgent, PlannerError, PlanProposal, normalize_plan
 
 
@@ -41,11 +44,12 @@ def kinds(messages):
 def test_agents_endpoint_lists_the_catalog_in_pipeline_order(client):
     body = client.get("/api/agents").json()
     assert [a["stage"] for a in body] == sorted(a["stage"] for a in body)
-    assert {a["name"]: a["available"] for a in body}["Market & Trend Agent"] is True
-    assert {a["name"]: a["available"] for a in body}["Competitor Agent"] is False
+    assert all(a["available"] for a in body)
 
 
-def test_a_request_becomes_a_stored_plan_of_planned_steps(client):
+def test_a_request_becomes_a_stored_plan_of_planned_steps(client, monkeypatch):
+    # every catalog agent is built now; mark one as not built to keep the "[not built yet]" path covered
+    monkeypatch.setitem(catalog.BY_NAME, "Competitor Agent", replace(catalog.get("Competitor Agent"), available=False))
     client.holder["planner"] = FakePlanner(proposal("Competitor Agent", "Market & Trend Agent", line="G60", market="US",
                                                     title="Competitive trends"))
     r = client.post("/api/conversations", json={"request": "What do we need to stay competitive in the US?"})
@@ -156,8 +160,9 @@ def test_plan_edits_are_checked_and_locked_once_an_agent_starts(client):
     assert locked.status_code == 409 and "already started" in locked.json()["detail"]
 
 
-def test_thread_order_is_stable_even_though_a_request_writes_several_messages_at_once(client):
+def test_thread_order_is_stable_even_though_a_request_writes_several_messages_at_once(client, monkeypatch):
     """Messages of one request share a transaction timestamp; the sequence number keeps their order."""
+    monkeypatch.setitem(catalog.BY_NAME, "Competitor Agent", replace(catalog.get("Competitor Agent"), available=False))
     client.holder["planner"] = FakePlanner(proposal("Competitor Agent", "Market & Trend Agent"))
     for _ in range(8):
         body = client.post("/api/conversations", json={"request": "competitive trends please"}).json()

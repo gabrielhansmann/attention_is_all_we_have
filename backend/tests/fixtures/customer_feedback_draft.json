@@ -1,0 +1,54 @@
+{
+  "findings": [
+    {
+      "evidence": [1, 2],
+      "text": "US G60 owners report that seat ventilation is too weak, even at the highest setting.",
+      "signal_type": "complaint",
+      "sentiment": -0.7,
+      "assumptions": []
+    },
+    {
+      "evidence": [3],
+      "text": "A US G60 owner asks for a massage function in the rear seats.",
+      "signal_type": "unmet_need",
+      "sentiment": 0.1,
+      "assumptions": []
+    },
+    {
+      "evidence": [4],
+      "text": "US G60 owners praise front-seat comfort on long drives.",
+      "signal_type": "complaint",
+      "sentiment": 0.8,
+      "assumptions": []
+    },
+    {
+      "evidence": [6],
+      "text": "In the US study, 0.410 of G60 respondents are very satisfied with seat comfort.",
+      "signal_type": "praise",
+      "sentiment": 0.4,
+      "assumptions": []
+    },
+    {
+      "evidence": [5],
+      "text": "A US G60 owner finds the comfort seat option too expensive.",
+      "signal_type": "complaint",
+      "sentiment": -0.5,
+      "assumptions": []
+    },
+    {
+      "evidence": [],
+      "text": "Customers generally want better seats.",
+      "signal_type": "unmet_need",
+      "sentiment": 0,
+      "assumptions": []
+    },
+    {
+      "evidence": [42],
+      "text": "Owners dislike the seat controls.",
+      "signal_type": "complaint",
+      "sentiment": -0.3,
+      "assumptions": []
+    }
+  ],
+  "skipped": []
+}

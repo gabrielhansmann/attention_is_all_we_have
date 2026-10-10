@@ -1,0 +1,60 @@
+{
+  "hits": [
+    {
+      "kind": "feedback",
+      "id": "00000000-0000-0000-0000-000000000301",
+      "file": "G60_feedback_hackathon.xlsx",
+      "locator": "sheet Feedback_Explorer, row 233 (G60-0198)",
+      "quote": "The front seats are superb on long drives.",
+      "text": "The front seats are superb on long drives.",
+      "meta": {"vehicle_line": "G60", "market_code": "EU", "polarity": "positive", "powertrain": "ICE"}
+    },
+    {
+      "kind": "feedback",
+      "id": "00000000-0000-0000-0000-000000000302",
+      "file": "G60_feedback_hackathon.xlsx",
+      "locator": "sheet Feedback_Explorer, row 977 (G60-0850)",
+      "quote": "Seat comfort is the best I have had in any car.",
+      "text": "Seat comfort is the best I have had in any car.",
+      "meta": {"vehicle_line": "G60", "market_code": "EU", "polarity": "positive", "powertrain": "BEV"}
+    },
+    {
+      "kind": "pdf_text",
+      "id": "00000000-0000-0000-0000-000000000303",
+      "file": "G60_OptionList.PDF",
+      "locator": "page 14",
+      "quote": "SPORTSITZE FÜR FAHRER UND BEIFAHRER mit elektrischer Sitzverstellung",
+      "text": "SPORTSITZE FÜR FAHRER UND BEIFAHRER mit elektrischer Sitzverstellung",
+      "meta": {"title": "BMW 5er Limousine Katalog", "vehicle_line": "G60", "heading": "SITZE"}
+    },
+    {
+      "kind": "option",
+      "id": "00000000-0000-0000-0000-000000000304",
+      "file": "G60_OptionList.PDF",
+      "locator": "page 16, SA 481",
+      "quote": "Sportsitze für Fahrer und Beifahrer",
+      "text": "Sportsitze für Fahrer und Beifahrer",
+      "meta": {"vehicle_line": "G60", "code": "481", "section": "Sitze", "standard_on": ["520i", "530e", "i5 eDrive40"]}
+    },
+    {
+      "kind": "sales",
+      "id": "00000000-0000-0000-0000-000000000305",
+      "file": "sales_volumes.xlsx",
+      "locator": "sheet G60_G68, row 4",
+      "quote": "G60 Europe 2024: 61000 units",
+      "text": "61000",
+      "meta": {"vehicle_line": "G60", "market_code": "EU", "year": 2024, "volume": 61000, "is_forecast": false}
+    },
+    {
+      "kind": "sales",
+      "id": "00000000-0000-0000-0000-000000000306",
+      "file": "sales_volumes.xlsx",
+      "locator": "sheet G60_G68, row 5",
+      "quote": "G60 Europe 2030: 70000 units (forecast)",
+      "text": "70000",
+      "meta": {"vehicle_line": "G60", "market_code": "EU", "year": 2030, "volume": 70000, "is_forecast": true}
+    }
+  ],
+  "counts": {"negative": 820, "positive": 540, "request": 210},
+  "gaps": ["Sales rows include a forecast year; a forecast is an assumption, not a trend so far."]
+}
