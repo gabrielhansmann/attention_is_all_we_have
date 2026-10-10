@@ -43,6 +43,9 @@ Each doc opens with a status line:
 
 ## Functional requirements
 
+The [frontend guide](../frontend/README.md) documents the delivered PM workspace, local setup,
+verification, Vercel hosting, and its explicit demo-data/backend limitations.
+
 What the system must do, as testable statements with IDs and priorities, in
 [`requirements/`](requirements/) — partly derived from the architecture docs above, partly new
 (PM overview, flexible feedback / website / social media inputs). Start at

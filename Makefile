@@ -1,4 +1,4 @@
-# Common tasks. Run `make help`. Needs Python 3.11+, Node 20+ and pnpm.
+# Common tasks. Run `make help`. Needs Python 3.11+, Node 24 LTS and npm.
 PY ?= .venv/bin/python
 BACKEND_PORT ?= 8000
 
@@ -21,7 +21,7 @@ install-backend:
 	.venv/bin/pip install -e "backend[dev]"
 
 install-frontend:
-	cd frontend && pnpm install
+	cd frontend && npm ci
 
 dev:
 	$(MAKE) -j2 backend frontend
@@ -30,7 +30,7 @@ backend:
 	$(PY) -m uvicorn app.main:app --app-dir backend --reload --port $(BACKEND_PORT)
 
 frontend:
-	cd frontend && VITE_API_PROXY=http://localhost:$(BACKEND_PORT) pnpm dev
+	cd frontend && VITE_API_PROXY=http://localhost:$(BACKEND_PORT) npm run dev
 
 test: test-backend
 
@@ -38,10 +38,10 @@ test-backend:
 	cd backend && $(abspath $(PY)) -m pytest -q
 
 build:
-	cd frontend && pnpm build
+	cd frontend && npm run build
 
 lint:
-	cd frontend && pnpm lint
+	cd frontend && npm run lint
 
 check-db:
 	$(PY) skills/database-setup/scripts/check_db.py --openai

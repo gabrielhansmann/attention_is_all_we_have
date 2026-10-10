@@ -1,7 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
-@import "@fontsource-variable/inter";
+@import "./shadcn-variants.css";
 
 /* Tokens come from design.md (BMW corporate system). Light base only: no dark theme is defined.
    Inter is the approved substitute while BMW Type Next Latin is unlicensed. */

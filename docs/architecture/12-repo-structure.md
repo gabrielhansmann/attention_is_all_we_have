@@ -1,6 +1,6 @@
 # Repository structure: frontend and backend
 
-> Status: `building` · Last updated: 2026-10-11 (see [decision 0010](../decisions/0010-frontend-backend-repo-structure.md))
+> Status: `building` · Last updated: 2026-10-10 (PM workspace and demo/live evidence boundary; see [decision 0011](../decisions/0011-local-demo-frontend-and-vercel.md))
 
 ```mermaid
 flowchart LR
@@ -33,11 +33,13 @@ backend/
   tests/                  pytest; no database or OpenAI key needed
 frontend/
   src/
-    components/ui/        shadcn/ui components (generated, restyled with BMW tokens)
+    App.tsx, data.ts      PM workspace shell, typed fixtures, local persistence and actions
+    components/           overview, requirements, research, evidence, reports and dialogs
+    components/ui/        retained shadcn/ui components (generated, restyled with BMW tokens)
     components/layout/    app shell, backend health badge
     components/evidence/  citation block, hit card, filter select
     features/evidence/    evidence explorer (live, uses the API)
-    features/chat/        chat workspace shell (orchestrator not connected yet)
+    features/chat/        earlier chat shell (retained, not the active workspace)
     lib/api.ts            typed API client
     types/api.ts          mirrors backend/app/api/schemas.py
 supabase/migrations/      schema, applied in filename order
@@ -60,7 +62,8 @@ Makefile  .env.example    common tasks and the environment template (one .env at
   approved substitute font, no dark theme. Components keep labels above fields and show loading, empty and
   error states.
 - **Tests:** `make test` for the backend (the API tests replace the knowledge tools with fakes). The
-  frontend is checked by `make build` (type-check and bundle) and `make lint`; it has no test runner yet.
+  frontend is checked by `make build` (type-check and bundle), `make lint`, and `npm test`
+  from `frontend/` (desktop/mobile Playwright workflows and automated accessibility checks).
 
 ## API today
 
@@ -81,3 +84,12 @@ message. Interactive docs are served at `/docs`.
   the new step states are in the database; the endpoints and the planner are next.
 - Authentication: the API is open, which is fine for a local demo and must change before it is exposed.
 - A Docker setup and CI.
+
+## Frontend delivery
+
+The active UI is the five-view PM workspace documented in [the frontend guide](../../frontend/README.md).
+Its portfolio, research, targets, and reports use explicitly illustrative fixtures and browser
+local storage. The retained API Evidence browser is available from Evidence library during
+local development, or with `VITE_LIVE_EVIDENCE=true` when the deployed origin serves `/api`.
+The static Vercel demo keeps live access disabled. Vite retains the backend proxy and `@` alias.
+Dependencies use the npm lockfile; the Makefile and Vercel install with `npm ci`.
