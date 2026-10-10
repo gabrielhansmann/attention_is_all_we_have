@@ -1,6 +1,6 @@
 # Data model
 
-> Status: `draft` · Last updated: 2026-10-10 (raw Excel tables and PDF citation columns added)
+> Status: `draft` · Last updated: 2026-10-10 (option availability and seeded ontology)
 
 Everything is traceable because everything points backward. A PM looking at a requirement can walk
 back to the exact cell or paragraph that produced it; a PM looking at the audit log can tell who or
@@ -92,7 +92,8 @@ is fully reconstructable from the audit log alone.
 Differences and additions relative to the sketch above:
 
 - **Extra tables:** `chunk` (Tier 2 heading-aware text chunks with their own locator, `page`,
-  `chunk_index` and embedding), `option` (Tier 1 deterministic option-list rows, **empty so far**),
+  `chunk_index` and embedding), `option` + `option_availability` (Tier 1 equipment rows with per-variant standard/optional status and
+  price, 198 + 1,352 rows),
   raw-data tables `feedback_raw`, `sales_volume`, `study_response` (see
   [`03-ingestion.md`](03-ingestion.md#as-implemented-decision-0006)), and join tables `cluster_finding`,
   `requirement_finding`, `requirement_cluster` in place of the `member_finding_ids[]` /
@@ -107,7 +108,10 @@ Differences and additions relative to the sketch above:
   delete, and truncate on `audit_event`.
 - **Search functions:** `match_chunks()` (PDF text) and `match_feedback()` (customer comments),
   both cosine distance over the HNSW indexes.
-- **Row counts today:** `chunk` 277, `feedback_raw` 13,771, `sales_volume` 36, `study_response`
+- **Ontology seeded:** 10 domains, 4 vehicle lines (F70, G60, G68, G70), 4 markets, and 222 customer-feedback
+  category labels as children of the domains (`ingest/seed_ontology.py`; labels classified by an
+  OpenAI model plus hand overrides, 3 non-product labels left unmapped).
+- **Row counts today:** `chunk` 149, `feedback_raw` 13,771, `sales_volume` 36, `study_response`
   1,627. `finding`, `cluster`, `requirement`, `score` are still empty.
 - **Docs mirror:** `design_decisions` and `architecture_docs` hold a copy of these docs after each
   push (see `AGENTS.md`). Git stays the source of truth.

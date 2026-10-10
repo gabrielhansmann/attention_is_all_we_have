@@ -10,7 +10,7 @@ change, not a rewrite.
 ## Domain taxonomy is config, not code
 
 Exterior / Interior / Powertrain / Driver Assistance / Infotainment / Comfort & Space / Usability
-/ Variant & Package — stored as an editable `Ontology` store (see
+/ Variant & Package / Range & Charging / Safety (flagged out of scope) — stored as an editable `Ontology` store (see
 [`04-data-model.md`](04-data-model.md#ontology)), not a hardcoded enum, so a future BEV-only line
 can extend it without a code change.
 
