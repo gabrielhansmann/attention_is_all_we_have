@@ -1,7 +1,10 @@
 """Evidence library endpoints: loaded sources and coverage. Read-only."""
 from __future__ import annotations
 
+from uuid import UUID
+
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 
 from app.knowledge import library
 
@@ -30,3 +33,15 @@ def coverage():
         return library.coverage()
     except Exception as e:
         raise _unavailable(e)
+
+
+@router.get("/sources/{source_id}/file")
+def source_file(source_id: UUID):
+    """The provided original (PDF or workbook), inline so the browser opens a PDF at `#page=N`."""
+    try:
+        path, name = library.source_file(str(source_id))
+    except LookupError:
+        raise HTTPException(status_code=404, detail="source file is not available")
+    except Exception as e:
+        raise _unavailable(e)
+    return FileResponse(path, filename=name, content_disposition_type="inline")

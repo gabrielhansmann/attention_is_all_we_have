@@ -6,13 +6,16 @@ import { Textarea } from '@/components/ui/textarea'
 import { api, ApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
 import type { ChatMessage, Conversation, ConversationDetail } from '@/types/api'
+import { Prose } from '@/features/sources/Prose'
+import { findingIndex, type Finding } from '@/features/sources/citations'
+import { SourceViewerProvider } from '@/features/sources/SourceViewer'
 import { StepCard } from './StepCard'
 
 const POLL_MS = 2500
 const aborted = (e: unknown) => e instanceof DOMException && e.name === 'AbortError'
 const errorText = (e: unknown) => (e instanceof ApiError ? e.message : 'Something went wrong.')
 
-function Bubble({ message }: { message: ChatMessage }) {
+function Bubble({ message, findings }: { message: ChatMessage; findings: Map<string, Finding> }) {
   const mine = message.role === 'pm'
   const result = message.kind === 'final_result'
   const decision = message.kind === 'system_note' && message.payload.decision !== undefined
@@ -21,7 +24,9 @@ function Bubble({ message }: { message: ChatMessage }) {
     <div className={cn('flex flex-col gap-1 border p-4', mine ? 'bg-muted' : 'bg-background', result ? 'border-primary' : 'border-border',
       decision && 'border-0 border-l-2 border-l-border py-1')}>
       {!decision && <span className="text-xs tracking-wide text-muted-foreground">{label}</span>}
-      <p className={cn('whitespace-pre-line text-sm', decision && 'text-muted-foreground')}>{message.content}</p>
+      {result
+        ? <Prose text={message.content} findings={findings} />
+        : <p className={cn('whitespace-pre-line text-sm', decision && 'text-muted-foreground')}>{message.content}</p>}
     </div>
   )
 }
@@ -87,9 +92,11 @@ export function LiveResearch() {
   }
 
   const stepById = new Map((detail?.runs ?? []).flatMap((r) => r.steps).map((st) => [st.id, st]))
+  const findings = findingIndex(detail?.messages ?? [])
   const running = detail?.runs.flatMap((r) => r.steps).find((st) => st.status === 'running')
 
   return (
+    <SourceViewerProvider>
     <div className="flex flex-col gap-6" data-testid="live-research">
       <div>
         <h1 className="text-2xl">Research</h1>
@@ -126,7 +133,7 @@ export function LiveResearch() {
           {!detailLoading && detail?.messages.map((m) =>
             m.kind === 'step_card' && m.step_id
               ? <StepCard key={m.id} message={m} step={stepById.get(m.step_id)} />
-              : <Bubble key={m.id} message={m} />)}
+              : <Bubble key={m.id} message={m} findings={findings} />)}
           {working && (
             <p role="status" className="text-sm text-muted-foreground">
               {running ? `${running.agent_name} is working. ` : 'The orchestrator is deciding. '}Results appear here as they arrive.
@@ -147,5 +154,6 @@ export function LiveResearch() {
         </section>
       </div>
     </div>
+    </SourceViewerProvider>
   )
 }
