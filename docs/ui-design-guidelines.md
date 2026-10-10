@@ -15,7 +15,8 @@ Explicit user instructions and BMW brand rules override generic taste defaults. 
 
 - Pure white canvas, BMW Blue `#1c69d4`, dark navy hero bands, and 700/300 typography remain.
 - Inter is an approved substitute when licensed BMW Type Next Latin is unavailable.
-- Rectangular buttons, cards, inputs, and chips are the default. No drop shadows.
+- Components are rounded (`--radius` 0.75rem) with soft `xs`/`sm`/`md` shadows, per [decision 0021](decisions/0021-rounded-chat-first-frontend.md).
+  This replaces the earlier rectangular, no-shadow default.
 - Light surfaces with dark hero or CTA bands are intentional BMW composition.
 - Do not invent a dark theme unless requested; the supplied brand system defines a light base.
 - M stripes belong only in M-model or motorsport contexts.

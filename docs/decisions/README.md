@@ -24,3 +24,5 @@ changes — note the supersession in the new file and update the old one's statu
 | [0017](0017-minimal-live-only-frontend.md) | Minimal, live-only frontend: the demo workspace and its fixtures are removed | accepted |
 | [0018](0018-orchestrator-decides-in-an-agentic-loop.md) | The orchestrator chooses agents in a loop from each result; nobody approves a step | accepted |
 | [0019](0019-orchestration-loop-runs-on-langgraph.md) | The orchestration loop runs as a LangGraph graph with a Postgres checkpointer, so runs survive a restart | accepted |
+| [0020](0020-source-viewer-for-citations.md) | Citations open a source viewer: the passage in context and the original file | accepted |
+| [0021](0021-rounded-chat-first-frontend.md) | Chat-first frontend with rounded components and soft elevation | accepted |

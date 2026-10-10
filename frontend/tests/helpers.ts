@@ -29,3 +29,22 @@ export async function withSession(page: Page) {
   await page.route('**/api/auth/me', (r) => json(r, user))
   await page.route('**/api/health', (r) => json(r, { status: 'ok', db: 'ok', openai_key: true, version: 'test' }))
 }
+
+/** The sidebar is always visible on desktop and lives in a sheet on small screens. */
+export async function openMenu(page: Page) {
+  const button = page.getByRole('button', { name: 'Open menu' })
+  if (await button.isVisible()) {
+    await button.click()
+    await expect(page.getByRole('dialog')).toBeVisible()
+  }
+}
+export async function closeMenu(page: Page) {
+  // A CSS locator: role queries skip content hidden by the open sheet.
+  if (!(await page.locator('button[aria-label="Open menu"]').isVisible())) return
+  // Escape is ignored until the sheet has finished opening, so press it again until the sheet is gone.
+  await expect(async () => {
+    await page.keyboard.press('Escape')
+    await expect(page.locator('[data-slot=sheet-content]')).toHaveCount(0, { timeout: 1000 })
+  }).toPass()
+  await expect(page.locator('#root')).not.toHaveAttribute('aria-hidden', 'true')
+}
