@@ -196,3 +196,120 @@ export interface EvidenceContext {
   market_code: string | null
   document: { source_id: string; type: string; openable: boolean } | null
 }
+
+// ---------------------------------------------------------------- requirements, tracking, dossiers
+
+export type RequirementStatus = 'draft' | 'pm_review' | 'tracked' | 'rejected' | 'challenged' | 'superseded'
+export type DecisionAction = 'approve' | 'reject' | 'challenge' | 'supersede' | 'reopen' | 'acknowledge'
+
+/** A statement an agent wrote: its text, the findings it rests on, and their citations. */
+export interface Statement {
+  text: string
+  finding_ids: string[]
+  citations: { finding_id?: string; source?: string; locator?: string }[]
+}
+
+export interface RequirementPayload {
+  title: string
+  description: Statement
+  metric: Statement | null
+  acceptance_criteria: Statement[]
+  domain_label: string | null
+  markets: string[]
+  evidence_level: string
+  assumptions: string[]
+  uncertainties: string[]
+  linked_finding_ids: string[]
+}
+
+export interface ScoreComponentOut {
+  name: string
+  value: number
+  weight: number
+  contribution: number
+}
+
+export interface RequirementScore {
+  composite: number
+  proposed_tier: string
+  confidence: number
+  customer_relevance: number
+  business_signal: number
+  strategic_fit: number
+  effort_proxy: number
+  weights: Record<string, number>
+  rationale: string
+  thin: string[]
+  missing: string[]
+  breakdown: ScoreComponentOut[]
+}
+
+export interface TrackingFlag {
+  flag_type: 'new_evidence' | 'contradicting' | 'stale'
+  reason: string
+  detected_at: string
+  citations: { finding_id?: string; source?: string; locator?: string }[]
+}
+
+export interface Requirement {
+  id: string
+  code: string
+  run_id: string | null
+  conversation_id: string | null
+  vehicle_line: string
+  market: string
+  title: string
+  status: RequirementStatus
+  payload: RequirementPayload
+  score: RequirementScore | null
+  decided_by: string | null
+  decided_at: string | null
+  decision_note: string | null
+  tracked_at: string | null
+  created_at: string
+  updated_at: string
+  actions: DecisionAction[]
+  flags: TrackingFlag[]
+  evidence: Record<string, unknown>[]
+}
+
+export interface RequirementHistoryEvent {
+  id: string
+  actor: string
+  action: string
+  rationale: string | null
+  timestamp: string
+}
+
+export interface RequirementDetail extends Requirement {
+  history: RequirementHistoryEvent[]
+}
+
+export interface RequirementList {
+  requirements: Requirement[]
+  counts: Partial<Record<RequirementStatus, number>>
+}
+
+export interface TrackingState {
+  requirements: Requirement[]
+  last_checked: string | null
+}
+
+export interface TrackingResult {
+  checked: number
+  summary: string
+  flags: { flag_type: string; requirement_code: string | null; reason: string }[]
+  skipped: { item: string; reason: string }[]
+  errors: string[]
+}
+
+export interface Dossier {
+  run_id: string
+  conversation_id: string | null
+  title: string
+  vehicle_line: string
+  market: string
+  created_at: string | null
+  dossier: string
+  findings: Record<string, unknown>[]
+}

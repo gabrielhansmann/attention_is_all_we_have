@@ -1,4 +1,4 @@
-import { Database, LogOut, MessageSquare, Plus, Search, type LucideIcon } from 'lucide-react'
+import { ClipboardCheck, Database, FileText, LogOut, MessageSquare, Plus, Radar, Search, type LucideIcon } from 'lucide-react'
 import { HealthBadge } from '@/components/layout/HealthBadge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -11,8 +11,13 @@ import { useAuth } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 import type { Conversation } from '@/types/api'
 
-export const NAV: { id: 'research' | 'evidence' | 'sources'; label: string; Icon: LucideIcon }[] = [
+export type PageId = 'research' | 'requirements' | 'tracking' | 'dossiers' | 'evidence' | 'sources'
+
+export const NAV: { id: PageId; label: string; Icon: LucideIcon }[] = [
   { id: 'research', label: 'Research', Icon: MessageSquare },
+  { id: 'requirements', label: 'Requirements', Icon: ClipboardCheck },
+  { id: 'tracking', label: 'Tracking', Icon: Radar },
+  { id: 'dossiers', label: 'Dossiers', Icon: FileText },
   { id: 'evidence', label: 'Evidence', Icon: Search },
   { id: 'sources', label: 'Sources', Icon: Database },
 ]
@@ -36,7 +41,7 @@ const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2)
 
 interface Props {
   page: string
-  onNavigate: (page: 'research' | 'evidence' | 'sources') => void
+  onNavigate: (page: PageId) => void
   onDone?: () => void
 }
 
@@ -44,7 +49,7 @@ export function Sidebar({ page, onNavigate, onDone }: Props) {
   const { user } = useAuth()
   const { list, listLoading, listError, activeId, select } = useChats()
 
-  const go = (p: 'research' | 'evidence' | 'sources', id: string | null = null) => {
+  const go = (p: PageId, id: string | null = null) => {
     select(id)
     onNavigate(p)
     onDone?.()

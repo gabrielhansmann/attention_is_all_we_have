@@ -33,7 +33,11 @@ function refsOf(f: Record<string, unknown>): SourceRef[] {
 }
 
 export function findingsOf(message: ChatMessage): Finding[] {
-  const raw = (message.payload.output as { findings?: unknown[] } | null | undefined)?.findings
+  return findingsFrom((message.payload.output as { findings?: unknown[] } | null | undefined)?.findings)
+}
+
+/** Findings from raw agent output (a step card, or the evidence the API attaches to a requirement). */
+export function findingsFrom(raw: unknown): Finding[] {
   if (!Array.isArray(raw)) return []
   return raw.flatMap((f) => {
     const r = f as Record<string, unknown>
@@ -47,3 +51,16 @@ export function findingIndex(messages: ChatMessage[]): Map<string, Finding> {
   for (const m of messages) if (m.kind === 'step_card') for (const f of findingsOf(m)) index.set(f.id, f)
   return index
 }
+
+/** The sources behind a statement. A statement cites finding ids; the finding supplies the openable source. */
+export function statementRefs(citations: { finding_id?: string; source?: string; locator?: string }[], index: Map<string, Finding>): SourceRef[] {
+  const out: SourceRef[] = []
+  for (const c of citations) {
+    const found = c.finding_id ? index.get(c.finding_id)?.refs : undefined
+    if (found?.length) out.push(...found.slice(0, 1))
+    else if (c.source && c.locator) out.push({ file: c.source, locator: c.locator })
+  }
+  return out
+}
+
+export const indexOf = (findings: Finding[]) => new Map(findings.map((f) => [f.id, f]))

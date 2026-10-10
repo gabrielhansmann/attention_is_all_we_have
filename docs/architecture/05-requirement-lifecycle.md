@@ -1,6 +1,6 @@
 # Requirement lifecycle & the two-year tracking loop
 
-> Status: `draft` · Last updated: 2026-10-10 (chat wording)
+> Status: `building` · Last updated: 2026-10-10 (register, decisions and tracking check implemented, see [0022](../decisions/0022-requirement-register-and-process-views.md))
 
 This is the *long-horizon* state of a requirement once it has made it out of a
 [run](02-orchestration-and-human-in-the-loop.md) — weeks to months, across the life of the
