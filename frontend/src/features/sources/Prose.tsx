@@ -88,7 +88,7 @@ function useInline({ findings }: Options) {
     const f = findings.get(id)
     if (!f || !f.refs.length) return `[${id}]`
     if (!numbers.has(id)) numbers.set(id, numbers.size + 1)
-    return f.refs.slice(0, 3).map((r, i) => <CitationChip key={i} n={i === 0 ? numbers.get(id)! : `${numbers.get(id)}.${i + 1}`} sourceRef={r} />)
+    return <CitationChip n={numbers.get(id)!} sourceRef={f.refs[0]} />
   }
   return (s: string): ReactNode[] =>
     s.split(/(\*\*[^*]+\*\*|`[^`]+`|\[[^\]\s]+\])/g).map((part, i) => {
