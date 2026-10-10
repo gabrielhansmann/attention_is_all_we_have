@@ -1,6 +1,6 @@
 # 0011 — Local demo PM workspace and static Vercel deployment
 
-Date: 2026-10-10 · Status: accepted
+Date: 2026-10-10 · Status: superseded by [0017](0017-minimal-live-only-frontend.md)
 
 ## Context
 

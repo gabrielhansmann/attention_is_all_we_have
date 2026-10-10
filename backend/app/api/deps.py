@@ -1,4 +1,4 @@
-"""Request-scoped dependencies: a database connection, the planner, and what a background step run needs."""
+"""Request-scoped dependencies: a database connection, the orchestrator, and what a background run needs."""
 from __future__ import annotations
 
 import os
@@ -13,8 +13,9 @@ from psycopg.rows import dict_row
 
 from app.auth import service as auth_service
 from app.config import get_settings
+from app.orchestration import loop
 from app.orchestration.agents import RUNNERS, AgentRunner
-from app.orchestration.planner import LLMPlanner, Planner, RulePlanner
+from app.orchestration.orchestrator import LLMOrchestrator, Orchestrator, RuleOrchestrator
 
 
 def get_conn() -> Iterator[psycopg.Connection]:
@@ -34,12 +35,12 @@ def get_conn() -> Iterator[psycopg.Connection]:
         conn.close()
 
 
-def get_planner() -> Planner:
-    """PLANNER=llm (default) uses the OpenAI planner; PLANNER=rules uses the keyword planner for local work
-    without a key. There is no automatic fallback: a missing key is an error the PM can see."""
-    if os.environ.get("PLANNER", "llm").lower() == "rules":
-        return RulePlanner()
-    return LLMPlanner()
+def get_orchestrator() -> Orchestrator:
+    """ORCHESTRATOR=llm (default) uses the OpenAI orchestrator; ORCHESTRATOR=rules uses the keyword orchestrator for
+    local work without a key. There is no automatic fallback: a missing key is an error the PM can see."""
+    if os.environ.get("ORCHESTRATOR", "llm").lower() == "rules":
+        return RuleOrchestrator()
+    return LLMOrchestrator()
 
 
 @contextmanager
@@ -56,6 +57,11 @@ def get_connect() -> Callable[[], AbstractContextManager[psycopg.Connection]]:
     """A connection factory for work that outlives the request: an agent runs after the response is sent,
     when the request's own connection is already closed."""
     return _connect
+
+
+def get_checkpointer() -> loop.CheckpointerFactory:
+    """Where a run's graph state is checkpointed (Postgres). Tests replace it with an in-memory saver."""
+    return loop.postgres_checkpointer
 
 
 def get_runners() -> dict[str, AgentRunner]:

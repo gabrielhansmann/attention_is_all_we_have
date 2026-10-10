@@ -105,12 +105,13 @@ next doc.
 
 Not an agent that produces findings. It does three things:
 
-1. **Plans.** Reads the PM's chat request and chooses which agents are needed, with a one-line
-   reason each. The plan is shown in the chat and the PM can edit it.
-2. **Sequences.** Holds the `PipelineRun`/`Step` state machine (see next doc) and starts the next
-   planned agent when the PM accepts the current one, passing along the accepted output as context.
-3. **Adapts.** May propose adding or dropping agents as results come in; the PM can veto, and a
-   step already accepted is never silently re-run.
+1. **Chooses.** Reads the PM's chat request and picks the next agent to call, with a one-line
+   reason that is shown in the chat.
+2. **Reads.** After each agent it sees the result (summary, finding count, success or failure) and
+   decides whether another agent is needed or the request is answered. Code refuses calls that break
+   the pipeline rules (unknown agent, already run, earlier stage missing).
+3. **Sequences.** Runs the loop and the `PipelineRun`/`Step` records (see next doc), passing the
+   output of successful steps to later agents as context. A step is never re-run.
 
 Not every request uses every agent. See
 [`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and-human-in-the-loop.md) and

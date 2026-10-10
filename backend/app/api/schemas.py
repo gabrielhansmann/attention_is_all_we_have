@@ -143,10 +143,6 @@ class UpdateConversation(BaseModel):
     status: Literal["active", "archived"] | None = None
 
 
-class EditPlan(BaseModel):
-    agents: list[str] = Field(min_length=1, max_length=12)
-
-
 # ---------------------------------------------------------------- evidence library
 
 class SourceCounts(BaseModel):
@@ -181,23 +177,6 @@ class CoverageOut(BaseModel):
     cells: list[CoverageCell]
     options_by_line: dict[str, int]
     total_feedback: int
-
-class StepNote(BaseModel):
-    note: str | None = Field(default=None, max_length=2000)
-
-
-class RetryStep(BaseModel):
-    note: str = Field(min_length=3, max_length=2000)
-
-
-class RejectStep(BaseModel):
-    note: str = Field(min_length=3, max_length=2000)
-    proceed: bool           # true: go on without this agent (coverage gap); false: abort the run
-
-
-class EditStep(BaseModel):
-    summary: str = Field(min_length=3, max_length=20000)
-    note: str | None = Field(default=None, max_length=2000)
 
 # ---------------------------------------------------------------- authentication
 

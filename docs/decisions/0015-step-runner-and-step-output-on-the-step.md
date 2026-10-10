@@ -1,6 +1,6 @@
 # 0015 — The step runner: agents run in the background, output is kept on the step
 
-> Date: 2026-10-10 · Status: accepted
+> Date: 2026-10-10 · Status: accepted; the PM actions and the start call were replaced by the orchestrator loop in [0018](0018-orchestrator-decides-in-an-agentic-loop.md)
 
 ## Context
 

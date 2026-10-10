@@ -1,6 +1,6 @@
 # 0012 — The planner model proposes agents; code validates, orders and completes the plan
 
-> Date: 2026-10-12 · Status: accepted
+> Date: 2026-10-12 · Status: superseded by [0018](0018-orchestrator-decides-in-an-agentic-loop.md) (the idea that code validates the model's choice stays; the up-front plan does not)
 
 ## Context
 

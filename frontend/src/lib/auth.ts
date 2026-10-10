@@ -3,10 +3,10 @@ import type { AuthUser } from '@/types/api'
 
 // The session token lives in sessionStorage: it survives a reload but not closing the tab. That limits exposure
 // compared with localStorage; it is still readable by any script on the page, which is why the app ships no
-// third-party scripts. Nothing here is used in the offline demo.
+// third-party scripts.
 const KEY = 'bmw-api-token'
 
-type Status = 'unknown' | 'signedIn' | 'required'
+type Status = 'signedIn' | 'required'
 interface State {
   status: Status
   user: AuthUser | null
@@ -29,7 +29,7 @@ const write = (token: string | null) => {
 }
 
 let memoryToken: string | null = read()
-let state: State = { status: memoryToken ? 'signedIn' : 'unknown', user: null }
+let state: State = { status: memoryToken ? 'signedIn' : 'required', user: null }
 const listeners = new Set<() => void>()
 const set = (next: State) => {
   state = next

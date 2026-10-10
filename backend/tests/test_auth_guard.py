@@ -31,7 +31,7 @@ def no_db(monkeypatch):
 
 
 def test_the_api_has_routes_to_check():
-    assert len(all_routes()) >= 19       # guards against this test passing because the route list came back empty
+    assert len(all_routes()) >= 16       # guards against this test passing because the route list came back empty
 
 
 @pytest.mark.parametrize("method,path", [r for r in all_routes() if r not in PUBLIC])

@@ -1,12 +1,11 @@
-"""Step runner: starts planned steps, runs the agent behind the Critic, and applies the PM's four actions
-(docs/architecture/02, decision 0015).
+"""Step runner: runs one agent behind the Critic and records the result (docs/architecture/02, decision 0018).
 
-The transition rules live in `steps.py`; this module is the I/O around them. Like `service.py`, the PM-action
-functions take an open connection and do NOT commit. They return `start_step_id` when a step was set to
-`running`; the caller commits and then calls `execute_step` for it outside the request (it can take minutes).
+The transition rules live in `steps.py`; the loop that decides which agent runs next is in `loop.py`. This module is
+the I/O around a single step. Nobody approves a step: the Critic is the automatic reviewer, and the orchestrator
+reads the outcome before choosing the next call.
 
 A step's output is kept as JSON on the step (`structured_output_refs`), after the Critic's adjustments. Later
-steps read the accepted output from there, so nothing an unaccepted step produced can reach them.
+steps read the accepted output from there, so nothing a failed step produced can reach them.
 """
 from __future__ import annotations
 
@@ -22,8 +21,7 @@ from app.agents import critic_agent as critic
 
 from . import service
 from .agents import RUNNERS, AgentRunner, StepContext
-from .catalog import get as agent_spec
-from .steps import InvalidTransition, StepAction, StepStatus, next_status, next_to_start
+from .steps import InvalidTransition, StepAction, StepStatus, next_status
 
 MAX_CRITIC_RETRIES = 1        # each automatic retry re-runs the agent (model and web calls), so keep it small
 DOCUMENTATION_AGENT = "Documentation Agent"
@@ -34,7 +32,7 @@ class StepNotFound(LookupError):
 
 
 class StepConflict(ValueError):
-    """The action is not allowed in the step's or the run's current state."""
+    """The step or its run is not in a state that allows this."""
 
 
 # ---------------------------------------------------------------- helpers
@@ -69,17 +67,11 @@ def _locked_step(conn, step_id: UUID) -> tuple[dict, dict]:
     return step, run
 
 
-def _transition(step: dict, action: StepAction, note: str | None = None) -> str:
+def _transition(step: dict, action: StepAction) -> str:
     try:
-        return next_status(StepStatus(step["status"]), action, note=note).value
+        return next_status(StepStatus(step["status"]), action).value
     except InvalidTransition as e:
         raise StepConflict(str(e)) from None
-
-
-def _result(conn, run: dict, messages: list[dict], start_step_id: UUID | None = None) -> dict:
-    run = conn.execute("select * from public.pipeline_run where id = %s", (run["id"],)).fetchone()
-    run["steps"] = service.list_steps(conn, run["id"])
-    return {"messages": messages, "run": run, "start_step_id": start_step_id}
 
 
 def _output_of(step: dict) -> dict[str, Any] | None:
@@ -99,41 +91,17 @@ def _with_finding_ids(output: dict[str, Any]) -> dict[str, Any]:
     return output
 
 
-# ---------------------------------------------------------------- starting and finishing a run
-
-def _start_next(conn, run: dict, messages: list[dict], reason: str) -> UUID | None:
-    """Set the next planned step to `running`, or finish the run when none is left."""
-    steps = service.list_steps(conn, run["id"])
-    index = next_to_start([StepStatus(s["status"]) for s in steps])
-    if index is None:
-        if not any(s["status"] in ("running", "awaiting_review") for s in steps):
-            _complete(conn, run, steps, messages)
-        return None
-    step = steps[index]
-    if not step["available"]:
-        messages.append(service.add_message(
-            conn, run["conversation_id"], "orchestrator", "system_note",
-            f"{step['agent_name']} is not built yet, so the run stops here. Reject the run or wait for the agent.",
-            run_id=run["id"]))
-        return None
-    conn.execute("update public.step set status = %s, launched_by = 'orchestrator', launched_at = now() where id = %s",
-                 (_transition(step, StepAction.START), step["id"]))
-    _audit(conn, "step", step["id"], "orchestrator", "step_started",
-           after={"agent": step["agent_name"], "position": step["position"]}, rationale=reason)
-    return step["id"]
-
-
 def _final_text(run: dict, steps: list[dict]) -> str:
-    """The final result is compiled from accepted steps only; a rejected step is named as a coverage gap."""
+    """The final result is compiled from accepted steps only; a failed step is named as a coverage gap."""
     accepted = [s for s in steps if s["status"] == "accepted"]
-    gaps = [f"- {s['agent_name']} was rejected" + (f": {s['pm_note']}" if s.get("pm_note") else "")
+    gaps = [f"- {s['agent_name']} could not finish" + (f": {s['pm_note']}" if s.get("pm_note") else "")
             for s in steps if s["status"] == "rejected"]
     dossier = next(((_output_of(s) or {}).get("dossier") for s in reversed(accepted)
                     if s["agent_name"] == DOCUMENTATION_AGENT), None)
     if isinstance(dossier, str) and dossier.strip():
         return dossier
     if not accepted:
-        return "No agent output was accepted, so there is no research result.\n\nCoverage gaps:\n" + "\n".join(gaps)
+        return "No agent produced a usable result, so there is no research result.\n\nCoverage gaps:\n" + "\n".join(gaps)
     parts = [f"Research result: {run['query_text']}"]
     parts += [f"## {s['agent_name']}\n{s['human_readable_summary'] or ''}".rstrip() for s in accepted]
     if gaps:
@@ -152,89 +120,6 @@ def _complete(conn, run: dict, steps: list[dict], messages: list[dict]) -> None:
            after={"accepted_steps": len(accepted), "coverage_gaps": rejected})
 
 
-def start_run(conn, run_id: UUID, actor: str = "pm") -> dict:
-    """The PM confirms the plan: the first agent starts. After this the plan can no longer be edited."""
-    run = _locked_run(conn, run_id)
-    if run["status"] != "in_progress":
-        raise StepConflict(f"this run is {run['status']}")
-    if any(s["status"] != "planned" for s in service.list_steps(conn, run_id)):
-        raise StepConflict("this run has already started")
-    messages: list[dict] = []
-    started = _start_next(conn, run, messages, "Plan confirmed by the PM")
-    return _result(conn, run, messages, started)
-
-
-# ---------------------------------------------------------------- the PM's four actions
-
-def accept(conn, step_id: UUID, note: str | None = None, actor: str = "pm") -> dict:
-    """Accept is the only trigger for the next agent."""
-    step, run = _locked_step(conn, step_id)
-    conn.execute("update public.step set status = %s, resolved_by = %s, resolved_at = now() where id = %s",
-                 (_transition(step, StepAction.ACCEPT), actor, step_id))
-    _audit(conn, "step", step_id, actor, "step_accepted", after={"agent": step["agent_name"], "attempt": step["attempt"]},
-           rationale=note)
-    messages: list[dict] = []
-    started = _start_next(conn, run, messages, f"{step['agent_name']} accepted by the PM")
-    return _result(conn, run, messages, started)
-
-
-def retry(conn, step_id: UUID, note: str, actor: str = "pm") -> dict:
-    """Same agent, same step, with the PM's steering note appended to its task."""
-    step, run = _locked_step(conn, step_id)
-    status = _transition(step, StepAction.RETRY, note)
-    note = note.strip()
-    conn.execute("update public.step set status = %s, attempt = attempt + 1, pm_note = %s, launched_by = %s, "
-                 "launched_at = now() where id = %s", (status, note, actor, step_id))
-    message = service.add_message(conn, run["conversation_id"], "pm", "pushback", note, run_id=run["id"],
-                                  step_id=step_id, payload={"action": "retry", "attempt": step["attempt"] + 1})
-    _audit(conn, "step", step_id, actor, "step_retried", before={"attempt": step["attempt"]},
-           after={"attempt": step["attempt"] + 1}, rationale=note)
-    return _result(conn, run, [message], step_id)
-
-
-def reject(conn, step_id: UUID, note: str, proceed: bool, actor: str = "pm") -> dict:
-    """Reject, then either go on without this agent (a coverage gap downstream) or abort the run."""
-    step, run = _locked_step(conn, step_id)
-    note = note.strip()
-    conn.execute("update public.step set status = %s, pm_note = %s, resolved_by = %s, resolved_at = now() "
-                 "where id = %s", (_transition(step, StepAction.REJECT), note, actor, step_id))
-    messages = [service.add_message(conn, run["conversation_id"], "pm", "pushback", note, run_id=run["id"],
-                                    step_id=step_id, payload={"action": "reject", "proceed": proceed})]
-    _audit(conn, "step", step_id, actor, "step_rejected", after={"agent": step["agent_name"], "proceed": proceed},
-           rationale=note)
-    if not proceed:
-        conn.execute("update public.pipeline_run set status = 'aborted' where id = %s", (run["id"],))
-        messages.append(service.add_message(
-            conn, run["conversation_id"], "orchestrator", "system_note",
-            f"Run aborted after {step['agent_name']} was rejected. No result is shown.", run_id=run["id"]))
-        _audit(conn, "pipeline_run", run["id"], actor, "run_aborted", rationale=note)
-        return _result(conn, run, messages)
-    messages.append(service.add_message(
-        conn, run["conversation_id"], "orchestrator", "system_note",
-        f"Proceeding without {step['agent_name']}. Everything downstream carries this as a coverage gap.",
-        run_id=run["id"]))
-    started = _start_next(conn, run, messages, f"{step['agent_name']} rejected by the PM, run continues")
-    return _result(conn, run, messages, started)
-
-
-def edit(conn, step_id: UUID, summary: str, note: str | None = None, actor: str = "pm") -> dict:
-    """The PM rewrites the step's summary before accepting. The diff is the audit event."""
-    step, run = _locked_step(conn, step_id)
-    _transition(step, StepAction.EDIT)
-    summary = summary.strip()
-    stored = step["structured_output_refs"] if isinstance(step["structured_output_refs"], dict) else {}
-    if isinstance(stored.get("output"), dict):
-        stored["output"]["summary"] = summary
-    conn.execute("update public.step set human_readable_summary = %s, structured_output_refs = %s where id = %s",
-                 (summary, Jsonb(stored), step_id))
-    message = service.add_message(conn, run["conversation_id"], "pm", "step_card", summary, run_id=run["id"],
-                                  step_id=step_id, payload={"agent": step["agent_name"], "attempt": step["attempt"],
-                                                            "edited_by": actor})
-    _audit(conn, "step", step_id, actor, "step_edited", before={"summary": step["human_readable_summary"]},
-           after={"summary": summary}, rationale=note)
-    return _result(conn, run, [message])
-
-
 # ---------------------------------------------------------------- running an agent
 
 def _context(conn, run: dict, step: dict) -> StepContext:
@@ -250,7 +135,7 @@ def _context(conn, run: dict, step: dict) -> StepContext:
              for s in earlier]
     decisions = [{**e, "entity_id": str(e["entity_id"]), "timestamp": e["timestamp"].isoformat()} for e in events]
     return StepContext(query=run["query_text"] or "", vehicle_line=run["vehicle_line"], market=run["market"],
-                       run_id=str(run["id"]), note=step["pm_note"], steps=steps, decisions=decisions)
+                       run_id=str(run["id"]), steps=steps, decisions=decisions)
 
 
 def _failure_reason(error: BaseException) -> str:
@@ -268,16 +153,17 @@ def _critic_report(verdict: critic.CriticVerdict) -> dict[str, Any]:
 
 
 def execute_step(conn, step_id: UUID, runners: dict[str, AgentRunner] | None = None,
-                 max_retries: int = MAX_CRITIC_RETRIES) -> None:
-    """Run the agent of a `running` step behind the Critic, store the output and put the step up for review.
+                 max_retries: int = MAX_CRITIC_RETRIES) -> bool:
+    """Run the agent of a `running` step behind the Critic and store the output. Returns True when the step was
+    accepted, False when the agent failed (the step is then rejected, with the reason on it and no output).
 
-    Commits its own work: it runs outside a request. An agent that fails still ends in `awaiting_review`, with a
-    card that says so and no output, so the PM can retry or reject instead of the run hanging.
+    Commits its own work: it runs outside a request. A failing agent never hangs the run: its card says what
+    happened and the orchestrator decides what to do without it.
     """
     runners = RUNNERS if runners is None else runners
     step = conn.execute("select * from public.step where id = %s", (step_id,)).fetchone()
     if not step or step["status"] != "running":
-        return
+        return False
     run = conn.execute("select * from public.pipeline_run where id = %s", (step["run_id"],)).fetchone()
     ctx = _context(conn, run, step)
     conn.commit()                       # no open transaction while the agent works
@@ -294,22 +180,24 @@ def execute_step(conn, step_id: UUID, runners: dict[str, AgentRunner] | None = N
         summary = str(output.get("summary") or f"{step['agent_name']} produced no summary.")
     except (Exception, SystemExit) as error:    # agent modules raise SystemExit for a missing dependency or key
         reason = _failure_reason(error)
-        summary = (f"{step['agent_name']} could not finish: {reason}.\n\nNothing was produced. "
-                   "Retry with a steering note, or reject the step.")
+        summary = f"{step['agent_name']} could not finish: {reason}.\n\nNothing was produced."
 
     step, run = _locked_step(conn, step_id)
-    conn.execute("update public.step set status = %s, human_readable_summary = %s, structured_output_refs = %s "
-                 "where id = %s", (_transition(step, StepAction.FINISH), summary,
-                                   Jsonb({"output": output, "critic": report}), step_id))
+    ok = output is not None
+    conn.execute("update public.step set status = %s, human_readable_summary = %s, structured_output_refs = %s, "
+                 "resolved_by = 'orchestrator', resolved_at = now(), pm_note = %s where id = %s",
+                 (_transition(step, StepAction.FINISH if ok else StepAction.FAIL), summary,
+                  Jsonb({"output": output, "critic": report}), None if ok else summary.split("\n")[0], step_id))
     service.add_message(conn, run["conversation_id"], "agent", "step_card", summary, run_id=run["id"], step_id=step_id,
-                        payload={"agent": step["agent_name"], "attempt": step["attempt"], "failed": output is None,
+                        payload={"agent": step["agent_name"], "attempt": step["attempt"], "failed": not ok,
                                  "critic": report, "output": output})
-    _audit(conn, "step", step_id, step["agent_name"], "step_finished" if output is not None else "step_failed",
+    _audit(conn, "step", step_id, step["agent_name"], "step_finished" if ok else "step_failed",
            after={"attempt": step["attempt"], "findings": len((output or {}).get("findings") or []),
                   "critic_attempts": report.get("attempts")},
-           rationale=None if output is not None else summary.split("\n")[0])
+           rationale=None if ok else summary.split("\n")[0])
     for event in events:                # the Critic's downgrades and drops, filed under the step
         _audit(conn, "step", step_id, event["actor"], event["action"], before=_json_safe(event.get("before")),
                after={**_json_safe(event.get("after") or {}), "item": str(event.get("entity_id"))},
                rationale=event.get("rationale"))
     conn.commit()
+    return ok

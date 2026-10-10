@@ -1,6 +1,6 @@
 # 0005 — Chat entry point; orchestrator plans the agents; accept starts the next one
 
-> Date: 2026-10-10 · Status: accepted · Supersedes part of [0002](0002-stepwise-agent-approval-chain.md)
+> Date: 2026-10-10 · Status: superseded by [0018](0018-orchestrator-decides-in-an-agentic-loop.md) · Supersedes part of [0002](0002-stepwise-agent-approval-chain.md)
 
 ## Context
 
