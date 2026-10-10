@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { HitCard } from '@/components/evidence/HitCard'
 import { FilterSelect } from '@/components/evidence/FilterSelect'
-import { Button } from '@/components/ui'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -88,14 +88,13 @@ export function EvidencePage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-[32px] leading-tight">Evidence</h1>
-        <p className="mt-2 max-w-3xl text-muted-foreground">
-          Search the stored customer feedback and catalog text. Every result shows the file, the location in it,
-          and the verbatim quote it came from.
+        <h1 className="text-2xl">Evidence</h1>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          Search customer feedback and catalog text. Every result cites its file, location and quote.
         </p>
       </div>
 
-      <form onSubmit={onSearch} className="flex flex-col gap-4 border border-border p-6">
+      <form onSubmit={onSearch} className="flex flex-col gap-4">
         <div className="grid gap-4 md:grid-cols-[1fr_220px]">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="live-q">Search</Label>
@@ -149,9 +148,9 @@ export function EvidencePage() {
         </div>
       </form>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+      <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
         <section aria-labelledby="results-h" aria-live="polite" className="flex flex-col gap-4">
-          <h2 id="results-h" className="text-xl">Results</h2>
+          <h2 id="results-h" className="text-lg">Results</h2>
           {results.kind === 'idle' && (
             <p className="text-muted-foreground">Enter a question above to see cited evidence.</p>
           )}
@@ -169,11 +168,8 @@ export function EvidencePage() {
           {results.kind === 'ok' && results.data.hits.map((h) => <HitCard key={h.citation.id} hit={h} />)}
         </section>
 
-        <aside aria-labelledby="counts-h" className="flex flex-col gap-4 self-start border border-border p-6">
-          <h2 id="counts-h" className="text-xl">Counts</h2>
-          <p className="text-sm text-muted-foreground">
-            Exact number of customer comments under the filters above.
-          </p>
+        <aside aria-labelledby="counts-h" className="flex flex-col gap-4 self-start border-t border-border pt-6 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
+          <h2 id="counts-h" className="text-lg">Counts</h2>
           <FilterSelect id="live-group" label="Group by" value={groupBy} options={GROUPS}
             onChange={(v) => setGroupBy((v as GroupBy) ?? 'market_code')} allLabel="Market" />
           {stats.kind === 'loading' && <Skeleton className="h-32 w-full" aria-label="Loading counts" />}

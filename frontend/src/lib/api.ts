@@ -1,6 +1,5 @@
 import { getToken, markRequired } from '@/lib/auth'
 import type {
-  AgentInfo,
   AuthUser,
   ConversationDetail,
   Conversation,
@@ -82,12 +81,10 @@ export const api = {
   logout: () => request<void>('POST', '/auth/logout'),
   sources: (signal?: AbortSignal) => get<SourceInfo[]>('/sources', signal),
   coverage: (signal?: AbortSignal) => get<Coverage>('/evidence/coverage', signal),
-  agents: (signal?: AbortSignal) => get<AgentInfo[]>('/agents', signal),
   conversations: (signal?: AbortSignal) => get<Conversation[]>('/conversations', signal),
   conversation: (id: string, signal?: AbortSignal) => get<ConversationDetail>(`/conversations/${id}`, signal),
   createConversation: (requestText: string) =>
     request<ConversationDetail>('POST', '/conversations', { request: requestText }),
   postRequest: (id: string, content: string) =>
     request<PostResult>('POST', `/conversations/${id}/messages`, { content }),
-  editPlan: (runId: string, agents: string[]) => request<PostResult>('PUT', `/runs/${runId}/plan`, { agents }),
 }

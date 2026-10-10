@@ -1,6 +1,6 @@
 # Data model
 
-> Status: `draft` · Last updated: 2026-10-10 (option availability and seeded ontology)
+> Status: `draft` · Last updated: 2026-10-14 (orchestrated steps, checkpoint tables)
 
 Everything is traceable because everything points backward. A PM looking at a requirement can walk
 back to the exact cell or paragraph that produced it; a PM looking at the audit log can tell who or
@@ -84,8 +84,10 @@ status (in_progress | completed | aborted), created_by, created_at`
 awaiting_review | accepted | rejected), plan_reason, planned_by (orchestrator | pm), human_readable_summary, structured_output_refs[],
 launched_by, launched_at, resolved_by, resolved_at, pm_note`
 
-Every launch, accept, edit, retry, and reject on a `Step` is also an `AuditEvent` — the run itself
-is fully reconstructable from the audit log alone.
+Every start, finish and failure of a `Step` is also an `AuditEvent` (actor `orchestrator`, with the reason for the call) — the run itself
+is fully reconstructable from the audit log alone. Since [decision 0018](../decisions/0018-orchestrator-decides-in-an-agentic-loop.md) steps are created `running`
+and end `accepted` or `rejected` by themselves; `planned`, `awaiting_review` and `planned_by = pm` are no longer used, and
+`pm_note` holds the failure reason of a rejected step.
 
 ## As implemented (Supabase, `supabase/migrations/20261010_init_schema.sql`)
 
@@ -146,6 +148,11 @@ awaiting_review | accepted | rejected` (the old `queued` and `awaiting_launch` a
 The database enforces the one-at-a-time rule: a unique partial index allows at most one step per run in
 `running` or `awaiting_review`. `backend/app/orchestration/steps.py` holds the transition rules and a test
 checks that its states match the migration.
+
+**Checkpoint tables** (`checkpoints`, `checkpoint_blobs`, `checkpoint_writes`, `checkpoint_migrations`; migration
+`20261014_langgraph_checkpoints.sql`) belong to LangGraph, not to this model. They hold each run's control-flow state
+(thread id = `pipeline_run.id`) so a run resumes after a restart ([decision 0019](../decisions/0019-orchestration-loop-runs-on-langgraph.md));
+nothing in the UI or the audit trail is read from them.
 
 ## AppUser & AuthSession (sign-in)
 

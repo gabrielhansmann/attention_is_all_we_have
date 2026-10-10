@@ -66,13 +66,6 @@ export interface EvidenceFilters {
 
 // ---------------------------------------------------------------- chat (mirrors backend/app/api/schemas.py)
 
-export interface AgentInfo {
-  name: string
-  stage: number
-  description: string
-  available: boolean
-}
-
 export interface Conversation {
   id: string
   title: string

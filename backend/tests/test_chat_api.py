@@ -1,36 +1,28 @@
-"""Chat API tests against the real database, rolled back after every test (see conftest.db)."""
-from dataclasses import replace
+"""Chat API tests against the real database, rolled back after every test (see conftest.db).
+The orchestrator and the agents are fakes (see orch_fakes.py)."""
+from contextlib import nullcontext
 
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.deps import get_conn, get_planner
+from langgraph.checkpoint.memory import InMemorySaver
+
+from app.api.deps import get_checkpointer, get_conn, get_connect, get_orchestrator, get_runners
 from app.main import app
-from app.orchestration import catalog
-from app.orchestration.planner import PlannedAgent, PlannerError, PlanProposal, normalize_plan
-
-
-class FakePlanner:
-    def __init__(self, proposal=None, error=None):
-        self.proposal, self.error, self.seen = proposal, error, []
-
-    def plan(self, request):
-        self.seen.append(request)
-        if self.error:
-            raise self.error
-        return self.proposal
-
-
-def proposal(*agents, line=None, market=None, title="A title"):
-    return PlanProposal(title=title, vehicle_line=line, market=market,
-                        steps=normalize_plan([PlannedAgent(a, f"because {a}") for a in agents]))
+from app.orchestration.agents import RUNNERS
+from app.orchestration.orchestrator import OrchestratorError, Scope
+from orch_fakes import FEEDBACK, FINISH, TREND, FakeAgent, ScriptedOrchestrator, call
 
 
 @pytest.fixture
 def client(db):
-    holder = {"planner": FakePlanner(proposal("Market & Trend Agent", line="G60", market="US"))}
+    holder = {"orchestrator": ScriptedOrchestrator(call(TREND), FINISH)}
+    runners = {name: FakeAgent(name) for name in RUNNERS}
     app.dependency_overrides[get_conn] = lambda: db
-    app.dependency_overrides[get_planner] = lambda: holder["planner"]
+    app.dependency_overrides[get_connect] = lambda: (lambda: nullcontext(db))
+    app.dependency_overrides[get_orchestrator] = lambda: holder["orchestrator"]
+    app.dependency_overrides[get_runners] = lambda: runners
+    app.dependency_overrides[get_checkpointer] = lambda: (lambda: nullcontext(InMemorySaver()))
     c = TestClient(app)
     c.holder, c.db = holder, db
     yield c
@@ -41,69 +33,72 @@ def kinds(messages):
     return [m["kind"] for m in messages]
 
 
+def thread(client, body):
+    """The POST answers at once with the stored request; the orchestrator's work (already finished here, because
+    the test client runs background tasks before returning) shows up when the thread is read."""
+    return client.get(f"/api/conversations/{body['conversation']['id']}").json()
+
+
 def test_agents_endpoint_lists_the_catalog_in_pipeline_order(client):
     body = client.get("/api/agents").json()
     assert [a["stage"] for a in body] == sorted(a["stage"] for a in body)
     assert all(a["available"] for a in body)
 
 
-def test_a_request_becomes_a_stored_plan_of_planned_steps(client, monkeypatch):
-    # every catalog agent is built now; mark one as not built to keep the "[not built yet]" path covered
-    monkeypatch.setitem(catalog.BY_NAME, "Competitor Agent", replace(catalog.get("Competitor Agent"), available=False))
-    client.holder["planner"] = FakePlanner(proposal("Competitor Agent", "Market & Trend Agent", line="G60", market="US",
-                                                    title="Competitive trends"))
+def test_a_request_opens_a_run_and_the_orchestrator_works_through_it(client):
+    client.holder["orchestrator"] = ScriptedOrchestrator(call(FEEDBACK), call(TREND), FINISH,
+                                                         scope=Scope("Competitive trends", "G60", "US"))
     r = client.post("/api/conversations", json={"request": "What do we need to stay competitive in the US?"})
-    assert r.status_code == 201
-    body = r.json()
+    assert r.status_code == 201 and kinds(r.json()["messages"]) == ["request"]
+    body = thread(client, r.json())
     assert body["conversation"]["title"] == "Competitive trends"
     assert (body["conversation"]["vehicle_line"], body["conversation"]["market_code"]) == ("G60", "US")
-    assert kinds(body["messages"]) == ["request", "plan", "system_note"]
-    plan = next(m for m in body["messages"] if m["kind"] == "plan")
-    assert [s["agent"] for s in plan["payload"]["steps"]] == ["Competitor Agent", "Market & Trend Agent"]
-    assert "not built yet" in plan["content"].lower() and "Competitor Agent" in body["messages"][2]["content"]
+    assert kinds(body["messages"]) == ["request", "system_note", "step_card", "system_note", "step_card", "final_result"]
     run = body["runs"][0]
-    assert (run["vehicle_line"], run["market"]) == ("G60", "US")
-    assert [(s["position"], s["agent_name"], s["status"], s["available"]) for s in run["steps"]] == \
-        [(1, "Competitor Agent", "planned", False), (2, "Market & Trend Agent", "planned", True)]
-    assert run["steps"][0]["plan_reason"] == "because Competitor Agent"
-    audit = client.db.execute("select action, actor, after from public.audit_event where entity_id = %s", (run["id"],)).fetchall()
-    assert [(a["action"], a["actor"]) for a in audit] == [("plan_created", "orchestrator")]
-    # who asked is recorded, not just that "a PM" did
-    assert audit[0]["after"]["requested_by"] == "tester@example.com"
+    assert (run["vehicle_line"], run["market"], run["status"]) == ("G60", "US", "completed")
+    assert [(s["position"], s["agent_name"], s["status"], s["planned_by"]) for s in run["steps"]] == \
+        [(1, FEEDBACK, "accepted", "orchestrator"), (2, TREND, "accepted", "orchestrator")]
     assert client.db.execute("select created_by from public.pipeline_run where id = %s", (run["id"],)).fetchone() == {"created_by": "tester@example.com"}
     assert client.db.execute("select created_by from public.conversation where id = %s", (body["conversation"]["id"],)).fetchone() == {"created_by": "tester@example.com"}
     assert body["messages"][0]["payload"] == {"author": "tester@example.com"}
 
 
 def test_scope_is_optional_and_means_all(client):
-    client.holder["planner"] = FakePlanner(proposal("Market & Trend Agent"))
-    body = client.post("/api/conversations", json={"request": "Which trends matter?"}).json()
+    client.holder["orchestrator"] = ScriptedOrchestrator(call(TREND), FINISH, scope=Scope("t", None, None))
+    body = thread(client, client.post("/api/conversations", json={"request": "Which trends matter?"}).json())
     assert (body["runs"][0]["vehicle_line"], body["runs"][0]["market"]) == ("ALL", "ALL")
     assert body["conversation"]["vehicle_line"] is None
 
 
-def test_a_request_with_no_usable_agents_gets_a_note_and_no_run(client):
-    client.holder["planner"] = FakePlanner(PlanProposal("x", None, None, []))
-    body = client.post("/api/conversations", json={"request": "hello there"}).json()
-    assert kinds(body["messages"]) == ["request", "system_note"] and body["runs"] == []
-    assert body["conversation"]["title"] == "New research request"
+def test_a_request_that_needs_no_agent_gets_a_note_and_an_aborted_run(client):
+    client.holder["orchestrator"] = ScriptedOrchestrator(FINISH)
+    body = thread(client, client.post("/api/conversations", json={"request": "hello there"}).json())
+    assert kinds(body["messages"]) == ["request", "system_note"] and body["runs"][0]["status"] == "aborted"
 
 
 def test_posting_to_an_existing_conversation_and_reading_the_thread(client):
     cid = client.post("/api/conversations", json={}).json()["conversation"]["id"]
     r = client.post(f"/api/conversations/{cid}/messages", json={"content": "Which trends matter for the G60?"})
-    assert r.status_code == 201 and kinds(r.json()["messages"]) == ["request", "plan"]
+    assert r.status_code == 201 and kinds(r.json()["messages"]) == ["request"]       # answered at once; the work follows
     thread = client.get(f"/api/conversations/{cid}").json()
-    assert kinds(thread["messages"]) == ["request", "plan"] and len(thread["runs"]) == 1
-    assert client.holder["planner"].seen == ["Which trends matter for the G60?"]
+    assert kinds(thread["messages"]) == ["request", "system_note", "step_card", "final_result"] and len(thread["runs"]) == 1
+    assert client.holder["orchestrator"].seen_requests == ["Which trends matter for the G60?"]
 
 
-def test_planner_failure_is_a_503_and_stores_nothing(client):
+def test_orchestrator_failure_before_the_run_is_a_503_and_stores_nothing(client):
     cid = client.post("/api/conversations", json={}).json()["conversation"]["id"]
-    client.holder["planner"] = FakePlanner(error=PlannerError("OPENAI_API_KEY is not set"))
+    client.holder["orchestrator"] = ScriptedOrchestrator(scope_error=OrchestratorError("OPENAI_API_KEY is not set"))
     r = client.post(f"/api/conversations/{cid}/messages", json={"content": "Which trends matter?"})
     assert r.status_code == 503 and "OPENAI_API_KEY" in r.json()["detail"]
     assert client.get(f"/api/conversations/{cid}").json()["messages"] == []
+
+
+def test_the_removed_review_endpoints_are_gone(client):
+    zero = "00000000-0000-0000-0000-000000000000"
+    assert client.put(f"/api/runs/{zero}/plan", json={"agents": [FEEDBACK]}).status_code == 404
+    assert client.post(f"/api/runs/{zero}/start").status_code == 404
+    for action in ("accept", "retry", "reject", "edit"):
+        assert client.post(f"/api/steps/{zero}/{action}", json={}).status_code == 404
 
 
 def test_unknown_and_archived_conversations(client):
@@ -133,47 +128,12 @@ def test_conversations_list_most_recently_active_first(client):
     assert [c["id"] for c in client.get("/api/conversations").json()][:2] == [b, a]
 
 
-def test_the_pm_can_edit_the_plan_before_anything_starts(client):
-    client.holder["planner"] = FakePlanner(proposal("Competitor Agent", "Market & Trend Agent"))
-    body = client.post("/api/conversations", json={"request": "competitive trends"}).json()
-    run_id = body["runs"][0]["id"]
-    r = client.put(f"/api/runs/{run_id}/plan", json={"agents": ["Customer Feedback Agent", "Market & Trend Agent"]})
-    assert r.status_code == 200
-    out = r.json()
-    assert [(s["position"], s["agent_name"], s["planned_by"]) for s in out["run"]["steps"]] == \
-        [(1, "Customer Feedback Agent", "pm"), (2, "Market & Trend Agent", "orchestrator")]
-    change = out["messages"][0]
-    assert change["kind"] == "plan_change" and change["role"] == "pm"
-    assert change["payload"]["removed"] == ["Competitor Agent"] and change["payload"]["added"] == ["Customer Feedback Agent"]
-    thread = client.get(f"/api/conversations/{body['conversation']['id']}").json()
-    assert [s["agent_name"] for s in thread["runs"][0]["steps"]] == ["Customer Feedback Agent", "Market & Trend Agent"]
-    audit = client.db.execute("select action, actor from public.audit_event where entity_id = %s", (run_id,)).fetchall()
-    assert sorted((a["action"], a["actor"]) for a in audit) == [("plan_created", "orchestrator"), ("plan_edited", "tester@example.com")]
-    assert change["payload"]["author"] == "tester@example.com"
-
-
-def test_plan_edits_are_checked_and_locked_once_an_agent_starts(client):
-    body = client.post("/api/conversations", json={"request": "trends please"}).json()
-    run_id = body["runs"][0]["id"]
-    bad = client.put(f"/api/runs/{run_id}/plan", json={"agents": ["Requirements Drafting Agent", "Customer Feedback Agent"]})
-    assert bad.status_code == 422 and "needed before" in bad.json()["detail"]
-    assert client.put(f"/api/runs/{run_id}/plan", json={"agents": ["Oracle Agent"]}).status_code == 422
-    assert client.put(f"/api/runs/{run_id}/plan", json={"agents": []}).status_code == 422
-    assert client.put("/api/runs/00000000-0000-0000-0000-000000000000/plan", json={"agents": ["Competitor Agent"]}).status_code == 404
-    client.db.execute("update public.step set status = 'running' where run_id = %s and position = 1", (run_id,))
-    locked = client.put(f"/api/runs/{run_id}/plan", json={"agents": ["Competitor Agent"]})
-    assert locked.status_code == 409 and "already started" in locked.json()["detail"]
-
-
-def test_thread_order_is_stable_even_though_a_request_writes_several_messages_at_once(client, monkeypatch):
+def test_thread_order_is_stable_even_though_a_run_writes_several_messages_at_once(client):
     """Messages of one request share a transaction timestamp; the sequence number keeps their order."""
-    monkeypatch.setitem(catalog.BY_NAME, "Competitor Agent", replace(catalog.get("Competitor Agent"), available=False))
-    client.holder["planner"] = FakePlanner(proposal("Competitor Agent", "Market & Trend Agent"))
-    for _ in range(8):
-        body = client.post("/api/conversations", json={"request": "competitive trends please"}).json()
-        assert kinds(body["messages"]) == ["request", "plan", "system_note"]
-        assert kinds(client.get(f"/api/conversations/{body['conversation']['id']}").json()["messages"]) == \
-            ["request", "plan", "system_note"]
+    for _ in range(5):
+        client.holder["orchestrator"] = ScriptedOrchestrator(call(FEEDBACK), call(TREND), FINISH)
+        body = thread(client, client.post("/api/conversations", json={"request": "competitive trends please"}).json())
+        assert kinds(body["messages"]) == ["request", "system_note", "step_card", "system_note", "step_card", "final_result"]
         assert [m["seq"] for m in body["messages"]] == sorted(m["seq"] for m in body["messages"])
 
 

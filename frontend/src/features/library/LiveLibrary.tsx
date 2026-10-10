@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api, ApiError } from '@/lib/api'
-import { LINE_LABELS, MARKET_LABELS } from '@/lib/live'
 import type { Coverage, CoverageCell, SourceInfo } from '@/types/api'
 
 type Load<T> = { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ok'; data: T }
@@ -59,12 +58,14 @@ export function LiveLibrary() {
 
   return (
     <div className="flex flex-col gap-8" data-testid="live-library">
-      <section aria-labelledby="coverage-h" className="flex flex-col gap-3">
-        <h2 id="coverage-h" className="text-xl">Where the evidence is thin</h2>
-        <p className="max-w-3xl text-sm text-muted-foreground">
-          What is stored per vehicle line and market. A gap is shown as a gap: there is no customer feedback for
-          China in any line, and only some combinations have sales or study data.
+      <div>
+        <h1 className="text-2xl">Sources</h1>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          What is stored per vehicle line and market. Gaps are shown as gaps.
         </p>
+      </div>
+      <section aria-labelledby="coverage-h" className="flex flex-col gap-3">
+        <h2 id="coverage-h" className="text-lg">Coverage</h2>
         {coverage.kind === 'loading' && <Skeleton className="h-48 w-full" aria-label="Loading coverage" />}
         {coverage.kind === 'error' && (
           <p role="alert" className="border border-destructive p-4 text-destructive">{`Coverage unavailable: ${coverage.message}`}</p>
@@ -80,14 +81,14 @@ export function LiveLibrary() {
                 <thead>
                   <tr className="border-b border-border text-left">
                     <th scope="col" className="p-3 font-bold">Vehicle line</th>
-                    {markets.map((m) => <th key={m} scope="col" className="p-3 font-bold">{MARKET_LABELS[m] ?? m}</th>)}
+                    {markets.map((m) => <th key={m} scope="col" className="p-3 font-bold">{m}</th>)}
                   </tr>
                 </thead>
                 <tbody>
                   {lines.map((l) => (
                     <tr key={l} className="border-b border-border align-top">
                       <th scope="row" className="p-3 text-left font-bold">
-                        {LINE_LABELS[l] ?? l}
+                        {l}
                         <span className="block text-xs font-normal text-muted-foreground">
                           {`${fmt(coverage.data.options_by_line[l] ?? 0)} catalog options`}
                         </span>
@@ -103,7 +104,7 @@ export function LiveLibrary() {
       </section>
 
       <section aria-labelledby="sources-h" className="flex flex-col gap-3">
-        <h2 id="sources-h" className="text-xl">Loaded source files</h2>
+        <h2 id="sources-h" className="text-lg">Files</h2>
         {sources.kind === 'loading' && <Skeleton className="h-40 w-full" aria-label="Loading sources" />}
         {sources.kind === 'error' && (
           <p role="alert" className="border border-destructive p-4 text-destructive">{`Sources unavailable: ${sources.message}`}</p>
@@ -128,7 +129,7 @@ export function LiveLibrary() {
                   <tr key={s.id} className="border-b border-border align-top">
                     <th scope="row" className="p-3 text-left font-bold">{s.file}</th>
                     <td className="p-3">{s.family}</td>
-                    <td className="p-3">{s.vehicle_line ? (LINE_LABELS[s.vehicle_line] ?? s.vehicle_line) : 'Several'}</td>
+                    <td className="p-3">{s.vehicle_line ?? 'Several'}</td>
                     <td className="p-3">{contents(s.counts)}</td>
                   </tr>
                 ))}

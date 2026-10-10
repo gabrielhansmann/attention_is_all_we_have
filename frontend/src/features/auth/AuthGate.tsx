@@ -26,12 +26,9 @@ function SignIn() {
   }
 
   return (
-    <section aria-labelledby="signin-h" className="mx-auto flex w-full max-w-md flex-col gap-4 border border-border p-6">
-      <h2 id="signin-h" className="text-xl">Sign in to use live mode</h2>
-      <p className="text-sm text-muted-foreground">
-        Live mode reads the stored evidence and plans research, so it needs an account. There is no sign-up here:
-        ask an administrator to create one for you.
-      </p>
+    <section aria-labelledby="signin-h" className="mx-auto flex w-full max-w-sm flex-col gap-4 px-6 py-24">
+      <h1 id="signin-h" className="text-2xl">Sign in</h1>
+      <p className="text-sm text-muted-foreground">There is no sign-up. Ask an administrator for an account.</p>
       <form onSubmit={submit} className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="signin-email">Email</Label>
@@ -52,7 +49,16 @@ function SignIn() {
   )
 }
 
-/** Shows the sign-in form when the backend has said "not authenticated"; otherwise the live views and who is signed in. */
+export async function signOut() {
+  try {
+    await api.logout()
+  } catch {
+    /* the token is dropped locally either way */
+  }
+  markRequired()
+}
+
+/** Shows the sign-in form when there is no valid session; otherwise the app. */
 export function AuthGate({ children }: { children: ReactNode }) {
   const { status, user } = useAuth()
 
@@ -64,25 +70,5 @@ export function AuthGate({ children }: { children: ReactNode }) {
     return () => { cancelled = true }
   }, [status, user])
 
-  async function signOut() {
-    try {
-      await api.logout()
-    } catch {
-      /* the token is dropped locally either way */
-    }
-    markRequired()
-  }
-
-  if (status === 'required') return <SignIn />
-  return (
-    <>
-      {status === 'signedIn' && (
-        <div className="flex items-center justify-end gap-3 text-sm">
-          <span>{user ? `Signed in as ${user.display_name}` : 'Signed in'}</span>
-          <Button variant="outline" size="sm" onClick={signOut}>Sign out</Button>
-        </div>
-      )}
-      {children}
-    </>
-  )
+  return status === 'required' ? <main id="main-content"><SignIn /></main> : <>{children}</>
 }

@@ -1,108 +1,40 @@
 # Product Intelligence frontend
 
-A working, responsive PM workspace based on [`docs/idea.md`](../docs/idea.md),
-[`design.md`](../design.md), and the architecture docs. Uses the documented BMW blue,
-white, and navy palette, rectangular controls, Inter, and Phosphor icons.
-
-Live demo: [bmw-product-intelligence.vercel.app](https://bmw-product-intelligence.vercel.app).
+A minimal React UI over the backend API. It holds no demo data: everything on screen comes from `/api`.
+Design rules are in [`design.md`](../design.md) and [`docs/ui-design-guidelines.md`](../docs/ui-design-guidelines.md);
+the decision is [0017](../docs/decisions/0017-minimal-live-only-frontend.md).
 
 ## Run locally
 
-Use Node 24 LTS (or another version supported by Vite 7).
+Node 24 LTS (or another version supported by Vite 7). From the repo root, `make dev` runs backend and frontend; or:
 
 ```bash
 cd frontend
 npm ci
-npm run dev
+npm run dev      # /api is proxied to http://localhost:8000, or VITE_API_PROXY
+npm run build    # type-check and production build
+npm test         # Playwright, desktop and mobile, with axe checks; every API call is mocked
 ```
 
-Open the local URL printed by Vite. Production build:
+## Views
 
-```bash
-npm run build
-npm run preview
-```
-
-## What works
-
-- Overview with vehicle-line/market selection, baseline comparisons, editable successor
-  targets and priorities, illustrative trend charts, and decision history.
-- Requirement portfolio with search, filters, explainable weighted scores, editing,
-  reason-required approval/challenge/rejection, and filtered CSV exports with citations.
-- Guided research with sequential Accept/Edit/Retry/Reject gates. Rejections require a
-  continue-with-gap or abort decision. Drafts appear only after the final review.
-- Evidence library with source locators, linked requirements, coverage gaps, and local
-  document registration. Text/CSV/JSON files include a preview; binary files are not parsed.
-- Programme report with targets, requirements, citations, history, CSV export, and
-  browser print/save as PDF.
-- Browser persistence, JSON workspace export, and an explicit reset confirmation.
-
-All seed values, excerpts, grades, and trends are **illustrative demo fixtures**, not verified
-BMW specifications or findings. Research does not call an AI provider, query Supabase, or
-search the web. Retry records steering against the same fixtures. Plans use three fixed
-steps, rather than the proposed live orchestrator. No automated report scheduling runs.
-
-In local development, **Evidence library → Browse backend evidence** opens the retained live
-Evidence browser. Run `make backend` at the repo root to serve its `/api` requests; Vite
-proxies them to port 8000, or `VITE_API_PROXY` when set. This mode has separate search filters
-and does not import live hits into the local portfolio. It is disabled in the static Vercel
-demo; another deployment can enable it with `VITE_LIVE_EVIDENCE=true` once `/api` is served.
-
-### Sign-in (live mode only)
-
-Live mode needs an account on the backend. When the API answers 401 the live views show a sign-in form; the token is
-kept in `sessionStorage` (gone when the tab closes), sent as a Bearer header, and dropped on any 401. There is no
-sign-up: an administrator creates users with `python -m app.auth.manage`. The offline demo never calls the auth endpoints.
-
-### Live mode (backend)
-
-In local development, **Research** has a **Live planner (backend)** switch and **Evidence library** has **Browse
-backend evidence**. Both call `/api` only (the frontend never reads the database). Live research posts your request,
-shows the orchestrator's real plan (which agents, why, and which are not built yet), and lets you edit the plan until an
-agent starts. Agents do not run yet, so there are no accept/retry controls in live mode. The live library shows every
-loaded source file and a coverage matrix per vehicle line and market with gaps marked. Live mode is off in the static
-Vercel build unless `VITE_LIVE_EVIDENCE=true` and `/api` is served. `npm run dev` listens on localhost only; use
-`npm run dev:lan` to expose it, which also exposes the proxied, unauthenticated API to your network.
-
-Edits and previews are stored in this browser's local storage. There is no account system,
-server persistence, shared workspace, immutable audit log, or restore-from-JSON UI yet.
-Export a backup to retain work outside this browser. See
-[decision 0011](../docs/decisions/0011-local-demo-frontend-and-vercel.md) for the boundary
-between the delivered frontend and the planned backend.
-
-## Verification
-
-```bash
-npx playwright install chromium
-npm test
-```
-
-Playwright exercises desktop and mobile workflows, persistence, exports, review gates,
-keyboard dialog focus, PDF generation, overflow, and automated axe WCAG checks on all five
-views. Tests require a browser environment that permits Chromium to launch.
+- **Sign in**: shown whenever there is no valid session. There is no sign-up; an administrator creates users with
+  `python -m app.auth.manage`. The token is kept in `sessionStorage`, sent as a Bearer header and dropped on any 401.
+- **Research**: send a request and watch the orchestrator work. It chooses agents itself, reads each result and
+  decides whether to call another ([decision 0018](../docs/decisions/0018-orchestrator-decides-in-an-agentic-loop.md)).
+  The thread shows each decision with its reason, each agent's cited result and the final result. Nothing to approve.
+  It refreshes while a run is in progress; one request runs at a time.
+- **Evidence**: search customer feedback and catalog text with filters; every hit shows its citation. Exact counts by group.
+- **Sources**: coverage per vehicle line and market with gaps marked, and the loaded source files.
 
 ## Structure
 
-- `src/App.tsx`: navigation, scope, dialogs, and persisted workspace state.
-- `src/data.ts`: typed demo fixtures, scoring, citations, CSV, and export utilities.
-- `src/context.tsx`: shared workspace actions.
-- `src/components/`: the five views, forms, and Radix-based dialog/button primitives.
-- `src/styles.css`: brand tokens, responsive layouts, print, and reduced-motion styles.
-- `src/features/evidence/`, `src/lib/api.ts`: retained backend Evidence browser and API client.
-- `src/index.css`, `src/shadcn-variants.css`: retained Tailwind/Base UI styling.
+- `src/App.tsx`: sign-in gate, top bar, hash navigation.
+- `src/features/{auth,research,evidence,library}/`: the views.
+- `src/lib/api.ts`, `src/types/api.ts`: the API client and its types (mirrors `backend/app/api/schemas.py`).
+- `src/components/ui/`, `src/index.css`: shadcn components and the BMW tokens.
 
-## Vercel
+## Deploying
 
-Deploy **this directory** as a Vite project, with `npm run build` and output directory
-`dist`. `vercel.json` contains these settings. Hash navigation allows all workspace views
-to load and refresh from the static entry point. The Latin Inter font is hosted with the
-app; the frontend needs no environment variables or backend credentials.
-
-```bash
-cd frontend
-vercel --prod
-```
-
-`.vercelignore` excludes dependencies, test artifacts, and environment files from uploads.
-Keep service-role/database/AI keys on a future backend; do not expose them through `VITE_*`.
-Deployments currently use the CLI; Git-triggered deployments are not configured.
+Serve the `dist` build from an origin that also serves `/api` (see `vercel.json` for the Vercel settings). Keep
+database and AI keys on the backend; never expose them through `VITE_*`.
