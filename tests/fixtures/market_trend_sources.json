@@ -1,0 +1,16 @@
+[
+  {
+    "url": "https://www.caranddriver.com/example-premium-sedan-trends",
+    "title": "Premium sedan technology trends",
+    "snippet": "Premium sedan buyers increasingly expect route planning that integrates charging stops, cabin comfort personalization, and voice-first infotainment.",
+    "trust_tier": "trade_press",
+    "language": "en"
+  },
+  {
+    "url": "https://example-forum.invalid/thread/comfort",
+    "title": "Owner thread about comfort",
+    "snippet": "Owners discuss seat comfort, long-distance fatigue, and frustration with complex climate controls.",
+    "trust_tier": "forum_social",
+    "language": "en"
+  }
+]

@@ -21,3 +21,31 @@ python ingest/load_options.py               # equipment options with per-variant
 python ingest/seed_ontology.py              # domains, vehicle lines, markets, category labels
 python ingest/ask_pdf.py "Welche Felgen gibt es für den 5er?" --line G60
 ```
+
+## Market & Trend Agent
+
+The first agent implementation is the Market & Trend Agent. It turns cited web research into
+`market_trend` findings, keeps URL + retrieval date locators, stores web source trust tiers, and
+leaves the step in `awaiting_review` for PM acceptance.
+
+```
+python agents/market_trend_agent.py "What comfort trends matter for premium sedans?" --vehicle-line G60 --market US --dry-run
+python agents/market_trend_agent.py "What comfort trends matter for premium sedans?" --vehicle-line G60 --market US --run-id <uuid>
+```
+
+For deterministic demos or tests, pass `--seed-sources path/to/sources.json` with a JSON list of
+`url`, `title`, and `snippet` entries. To avoid OpenAI as well, pass a model-output fixture via
+`--draft-json`:
+
+```
+python agents/market_trend_agent.py "comfort trends" --vehicle-line G60 --market US \
+  --seed-sources tests/fixtures/market_trend_sources.json \
+  --draft-json tests/fixtures/market_trend_draft.json \
+  --dry-run
+```
+
+Run the local tests without external services:
+
+```
+python3 -m unittest discover -s tests
+```

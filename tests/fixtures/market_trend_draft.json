@@ -1,0 +1,19 @@
+{
+  "findings": [
+    {
+      "source_index": 1,
+      "text": "Premium sedan buyers increasingly expect charging-aware route planning and personalized cabin comfort.",
+      "signal_type": "market_trend",
+      "sentiment": 0.3,
+      "assumptions": ["Forward-looking market trend inferred from trade press."]
+    },
+    {
+      "source_index": 2,
+      "text": "Owners report long-distance fatigue and frustration with complex climate controls.",
+      "signal_type": "market_trend",
+      "sentiment": -0.5,
+      "assumptions": ["Forum source is low trust and needs corroboration."]
+    }
+  ],
+  "skipped": []
+}

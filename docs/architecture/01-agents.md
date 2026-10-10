@@ -1,6 +1,6 @@
 # Agents
 
-> Status: `draft` · Last updated: 2026-10-10 (orchestrator plans agents)
+> Status: `draft` · Last updated: 2026-10-10 (Market & Trend Agent prototype implemented)
 
 Every agent reads some slice of evidence and produces either new evidence (`Finding`s) or a
 synthesis of existing evidence (`Cluster`, `Requirement`, `Score`, dossier). None of them change a
@@ -33,6 +33,30 @@ visible in each requirement's assumptions. See
 
 How the Competitor Agent decides *which* rivals to look at and makes their evidence comparable is
 its own doc: [`10-competitor-benchmarking.md`](10-competitor-benchmarking.md).
+
+## Implementation status
+
+The first implemented agent is the **Market & Trend Agent** in
+[`agents/market_trend_agent.py`](../../agents/market_trend_agent.py). It covers the current demo path for
+web research:
+
+- reads PM scope (`vehicle_line`, `market`) plus a research query
+- can collect web-search source snippets through OpenAI, or use local `--seed-sources` fixtures for
+  deterministic tests
+- extracts cited `market_trend` findings, keeping URL + retrieval date as the locator
+- stores web source metadata (`input_family = website`, channel/domain, origin `agent_search`,
+  language where known, trust tier, ingest report)
+- assigns evidence from source trust tier (`oem` → `Verified`, `trade_press` → `Interpreted`,
+  `forum_social` → `Unverified`)
+- stores a cited passage snapshot and explicit assumptions on each finding
+- routes pricing, regulatory/type-approval and engineering-internal claims to the visible
+  out-of-scope bin via `finding.out_of_scope_reason`
+- leaves the step in `awaiting_review`; it does not accept, reject, score, prioritize or draft
+  requirements on its own
+
+The implementation is intentionally testable without external services: `--seed-sources`,
+`--draft-json` and `--dry-run` exercise the Source → Finding path without OpenAI, web access or
+Supabase. The remaining agents in the roster are still design-level until their own modules exist.
 
 ## The Critic Agent
 
