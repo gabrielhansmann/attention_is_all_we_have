@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4K7VZ7YBSBNQCKMNBJ8H8AQ",
+  "strategy": "manual-commit",
+  "branch": "docs/bmw-design-guidelines",
+  "checkpoints_count": 3,
+  "files_touched": [
+    ".gitignore",
+    "AGENTS.md",
+    "design.md",
+    "docs/ui-design-guidelines.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 2399,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 370210,
+    "output_tokens": 803,
+    "api_call_count": 5
+  }
+}
