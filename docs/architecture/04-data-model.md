@@ -146,3 +146,15 @@ awaiting_review | accepted | rejected` (the old `queued` and `awaiting_launch` a
 The database enforces the one-at-a-time rule: a unique partial index allows at most one step per run in
 `running` or `awaiting_review`. `backend/app/orchestration/steps.py` holds the transition rules and a test
 checks that its states match the migration.
+
+## AppUser & AuthSession (sign-in)
+
+Added by [decision 0016](../decisions/0016-backend-owned-authentication.md); in the database since `20261013_auth.sql`.
+
+**AppUser:** `id, email (lower case, unique), display_name, password_hash (scrypt), role (pm | admin), active,
+failed_attempts, locked_until, last_login_at, created_at`.
+
+**AuthSession:** `id, user_id, token_hash (SHA-256 of the random token, unique), created_at, expires_at, last_used_at,
+revoked_at`. The token itself is never stored. The signed-in user's email is written to `conversation.created_by`,
+`pipeline_run.created_by`, `message.payload.author` (PM messages) and `audit_event.actor` (plan edits and every step action); the planner's
+`plan_created` event records `requested_by`.

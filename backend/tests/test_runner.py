@@ -250,3 +250,29 @@ def test_context_task_carries_steering_and_the_weight_pattern_reads_a_nudge():
     assert StepContext(query="q", vehicle_line="G60", market="US", run_id="r").task == "q"
     assert WEIGHT_RE.findall("please use business_signal=0.35 and effort_proxy = .1") == \
         [("business_signal", "0.35"), ("effort_proxy", ".1")]
+
+
+def test_every_pm_action_on_a_step_records_who_the_signed_in_user_was(client):
+    """The audit trail must say which person accepted, retried, edited or rejected, not just 'a PM'."""
+    me = "tester@example.com"
+    body = new_run(client)
+    start(client, body)
+    first = step_id(client, body)
+    client.post(f"/api/steps/{first}/accept", json={"note": "good"})
+    second = step_id(client, body, 2)
+    client.post(f"/api/steps/{second}/retry", json={"note": "only EU respondents please"})
+    client.post(f"/api/steps/{second}/edit", json={"summary": "A tightened summary of the finding."})
+    client.post(f"/api/steps/{second}/reject", json={"note": "not usable", "proceed": False})
+
+    def actors(entity_id):
+        return {r["action"]: r["actor"] for r in client.db.execute(
+            "select action, actor from public.audit_event where entity_id = %s", (entity_id,)).fetchall()}
+
+    on_first, on_second = actors(first), actors(second)
+    assert on_first["step_accepted"] == me
+    assert (on_second["step_retried"], on_second["step_edited"], on_second["step_rejected"]) == (me, me, me)
+    assert on_first["step_started"] != me and on_second["step_started"] != me     # the system's own events stay the system's
+    assert actors(body["runs"][0]["id"])["run_aborted"] == me
+    row = client.db.execute("select resolved_by from public.step where id = %s", (first,)).fetchone()
+    assert row["resolved_by"] == me
+    assert client.db.execute("select launched_by from public.step where id = %s", (second,)).fetchone()["launched_by"] == me

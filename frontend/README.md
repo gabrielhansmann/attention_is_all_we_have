@@ -48,6 +48,12 @@ proxies them to port 8000, or `VITE_API_PROXY` when set. This mode has separate 
 and does not import live hits into the local portfolio. It is disabled in the static Vercel
 demo; another deployment can enable it with `VITE_LIVE_EVIDENCE=true` once `/api` is served.
 
+### Sign-in (live mode only)
+
+Live mode needs an account on the backend. When the API answers 401 the live views show a sign-in form; the token is
+kept in `sessionStorage` (gone when the tab closes), sent as a Bearer header, and dropped on any 401. There is no
+sign-up: an administrator creates users with `python -m app.auth.manage`. The offline demo never calls the auth endpoints.
+
 ### Live mode (backend)
 
 In local development, **Research** has a **Live planner (backend)** switch and **Evidence library** has **Browse

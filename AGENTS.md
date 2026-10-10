@@ -28,6 +28,10 @@ Project: BMW hackathon requirement-evidence engine. Architecture docs live in `d
   migrations, load data or fix a connection error, read `skills/database-setup/SKILL.md` first.
 - Check the connection with `python skills/database-setup/scripts/check_db.py --openai`.
 - Never print, log, commit or paste secrets (`SUPABASE_DB_URL`, `OPENAI_API_KEY`, passwords, keys).
+- **Every API route needs a signed-in user by default.** New routers go into the `protected` router in
+  `backend/app/api/__init__.py`. Only `/api/health` and `/api/auth/login` are public; a test checks every route, so do
+  not add to the public list without a decision record. Never print or commit tokens or passwords; users are created
+  by a human with `python -m app.auth.manage`.
 - Agents read evidence through `backend/app/knowledge/tools.py`, not hand-written SQL.
 
 ## Pushing

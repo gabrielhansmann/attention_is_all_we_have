@@ -34,9 +34,9 @@ class PlanLocked(ValueError):
 
 # ---------------------------------------------------------------- conversations and messages
 
-def create_conversation(conn, title: str | None = None) -> dict:
-    return conn.execute("insert into public.conversation (title) values (%s) returning *",
-                        ((title or DEFAULT_TITLE).strip()[:120],)).fetchone()
+def create_conversation(conn, title: str | None = None, actor: str = "pm") -> dict:
+    return conn.execute("insert into public.conversation (title, created_by) values (%s, %s) returning *",
+                        ((title or DEFAULT_TITLE).strip()[:120], actor)).fetchone()
 
 
 def list_conversations(conn, status: str = "active", limit: int = 50) -> list[dict]:
@@ -127,7 +127,7 @@ def _insert_steps(conn, run_id: UUID, agents: list[tuple[str, str, str]]) -> lis
     return steps
 
 
-def post_request(conn, conversation_id: UUID, text: str, planner: Planner) -> dict:
+def post_request(conn, conversation_id: UUID, text: str, planner: Planner, actor: str = "pm") -> dict:
     """Store the PM's request, let the planner choose agents, and store the plan as `planned` steps.
     Returns {"messages": [...], "run": run-with-steps | None}."""
     conv = get_conversation(conn, conversation_id)
@@ -135,7 +135,7 @@ def post_request(conn, conversation_id: UUID, text: str, planner: Planner) -> di
         raise ConversationArchived("this conversation is archived")
     proposal: PlanProposal = planner.plan(text)          # may raise PlannerError before any write
 
-    messages = [add_message(conn, conversation_id, "pm", "request", text)]
+    messages = [add_message(conn, conversation_id, "pm", "request", text, payload={"author": actor})]
     if not proposal.steps:
         messages.append(add_message(
             conn, conversation_id, "orchestrator", "system_note",
@@ -145,8 +145,8 @@ def post_request(conn, conversation_id: UUID, text: str, planner: Planner) -> di
 
     run = conn.execute(
         "insert into public.pipeline_run (trigger, vehicle_line, market, query_text, created_by, conversation_id) "
-        "values ('pm_query', %s, %s, %s, 'pm', %s) returning *",
-        (proposal.vehicle_line or "ALL", proposal.market or "ALL", text, conversation_id)).fetchone()
+        "values ('pm_query', %s, %s, %s, %s, %s) returning *",
+        (proposal.vehicle_line or "ALL", proposal.market or "ALL", text, actor, conversation_id)).fetchone()
     steps = _insert_steps(conn, run["id"], [(s.agent, s.reason, "orchestrator") for s in proposal.steps])
     run["steps"] = [{**s, "available": agent_spec(s["agent_name"]).available} for s in steps]
 
@@ -163,12 +163,12 @@ def post_request(conn, conversation_id: UUID, text: str, planner: Planner) -> di
         "update public.conversation set title = case when title = %s then %s else title end, "
         "vehicle_line = coalesce(vehicle_line, %s), market_code = coalesce(market_code, %s) where id = %s",
         (DEFAULT_TITLE, proposal.title[:120], proposal.vehicle_line, proposal.market, conversation_id))
-    _audit(conn, run["id"], "orchestrator", "plan_created", _plan_payload(run, steps),
+    _audit(conn, run["id"], "orchestrator", "plan_created", {**_plan_payload(run, steps), "requested_by": actor},
            "Agents chosen from the request by the planner")
     return {"messages": messages, "run": run}
 
 
-def edit_plan(conn, run_id: UUID, agent_names: list[str]) -> dict:
+def edit_plan(conn, run_id: UUID, agent_names: list[str], actor: str = "pm") -> dict:
     """Replace the plan of a run whose steps are all still `planned`. Raises PlanError for an invalid plan."""
     run = conn.execute("select * from public.pipeline_run where id = %s for update", (run_id,)).fetchone()
     if not run:
@@ -189,7 +189,8 @@ def edit_plan(conn, run_id: UUID, agent_names: list[str]) -> dict:
     parts = ([f"removed {', '.join(removed)}"] if removed else []) + ([f"added {', '.join(added)}"] if added else [])
     text = ("Plan updated" + (": " + "; ".join(parts) if parts else " (order only)") + ".\n" + _plan_text(run, steps))
     message = add_message(conn, run["conversation_id"], "pm", "plan_change", text, run_id=run_id,
-                          payload={**_plan_payload(run, steps), "removed": removed, "added": added})
-    _audit(conn, run_id, "pm", "plan_edited", {"removed": removed, "added": added,
+                          payload={**_plan_payload(run, steps), "removed": removed, "added": added,
+                                   "author": actor})
+    _audit(conn, run_id, actor, "plan_edited", {"removed": removed, "added": added,
                                               "steps": [s["agent_name"] for s in steps]})
     return {"messages": [message], "run": run}

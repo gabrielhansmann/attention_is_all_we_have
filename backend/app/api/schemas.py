@@ -198,3 +198,22 @@ class RejectStep(BaseModel):
 class EditStep(BaseModel):
     summary: str = Field(min_length=3, max_length=20000)
     note: str | None = Field(default=None, max_length=2000)
+
+# ---------------------------------------------------------------- authentication
+
+class LoginIn(BaseModel):
+    email: str = Field(min_length=3, max_length=254)
+    password: str = Field(min_length=1, max_length=256)
+
+
+class UserOut(BaseModel):
+    id: UUID
+    email: str
+    display_name: str
+    role: Literal["pm", "admin"]
+
+
+class LoginOut(BaseModel):
+    token: str
+    expires_at: datetime
+    user: UserOut

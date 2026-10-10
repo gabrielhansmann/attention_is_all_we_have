@@ -166,3 +166,18 @@ export interface Coverage {
   options_by_line: Record<string, number>
   total_feedback: number
 }
+
+// ---------------------------------------------------------------- authentication
+
+export interface AuthUser {
+  id: string
+  email: string
+  display_name: string
+  role: 'pm' | 'admin'
+}
+
+export interface LoginResult {
+  token: string
+  expires_at: string
+  user: AuthUser
+}

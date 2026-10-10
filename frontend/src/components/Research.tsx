@@ -6,6 +6,7 @@ import type { Requirement, ResearchRun } from '../data'
 import { liveEnabled } from '../lib/live'
 import { Badge, Button, Dialog, Empty } from './ui'
 
+import { AuthGate } from '../features/auth/AuthGate'
 const LiveResearch = lazy(() => import('../features/research/LiveResearch').then(module => ({ default: module.LiveResearch })))
 
 export function Research() {
@@ -65,7 +66,7 @@ export function Research() {
   if (live) return <>
     <div className="page-heading"><div><p className="eyebrow">RESEARCH WORKSPACE</p><h1>Ask. Review. Decide.</h1><p>One question, a visible plan, and your approval at every step.</p></div><Badge tone="blue">Live planner</Badge></div>
     {liveEnabled && <div className="evidence-mode-controls"><Button variant={live ? 'secondary' : 'primary'} aria-pressed={!live} onClick={() => setLive(false)}>Demo walkthrough</Button><Button variant={live ? 'primary' : 'secondary'} aria-pressed={live} onClick={() => setLive(true)}>Live planner (backend)</Button></div>}
-    <section className="live-research-section"><Suspense fallback={<p role="status">Loading the live planner...</p>}><LiveResearch /></Suspense></section>
+    <section className="live-research-section"><AuthGate><Suspense fallback={<p role="status">Loading the live planner...</p>}><LiveResearch /></Suspense></AuthGate></section>
   </>
   return <>
     <div className="page-heading"><div><p className="eyebrow">RESEARCH WORKSPACE</p><h1>Ask. Review. Decide.</h1><p>One question, a visible plan, and your approval at every step.</p></div><Badge tone="blue">Guided demo</Badge></div>
