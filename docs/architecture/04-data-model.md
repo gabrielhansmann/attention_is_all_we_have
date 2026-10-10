@@ -132,10 +132,11 @@ created_at, updated_at`. `updated_at` moves forward by trigger whenever a messag
 conversation list sorts by recent activity. A conversation that has runs cannot be deleted (runs hold the
 audit trail): archive it instead. One without runs can be deleted and its messages go with it.
 
-**Message:** `id, conversation_id, role (pm | orchestrator | agent | system), kind (request | plan |
+**Message:** `id, seq, conversation_id, role (pm | orchestrator | agent | system), kind (request | plan |
 plan_change | step_card | pushback | final_result | system_note), run_id, step_id, content, payload (jsonb),
 created_at`. `content` is the text shown in the thread; `payload` holds the structured part of a card (plan
-items, citations, summary sections). A `step_card` or `pushback` must have a `step_id`.
+items, citations, summary sections). A `step_card` or `pushback` must have a `step_id`. `seq` is an identity number that orders the thread:
+`created_at` cannot, because messages written in one transaction share the same timestamp.
 
 **PipelineRun** gains `conversation_id`. **Step** now has the states `planned | running |
 awaiting_review | accepted | rejected` (the old `queued` and `awaiting_launch` are gone) and the columns

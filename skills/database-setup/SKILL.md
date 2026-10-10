@@ -24,7 +24,8 @@ Never print, log, commit or paste a password, connection string or API key. Refe
 ```
 OPENAI_API_KEY=sk-...                  # your own key
 SUPABASE_DB_URL=postgresql://USER:PASSWORD@HOST:5432/postgres
-OPENAI_CHAT_MODEL=gpt-4o-mini          # optional: model used by `app.ingest.ask_pdf` and `app.ingest.seed_ontology`
+OPENAI_CHAT_MODEL=gpt-4o-mini          # optional: model used by the planner, `app.ingest.ask_pdf` and `app.ingest.seed_ontology`
+PLANNER=llm                            # optional: `rules` plans with keywords, for local work without an OpenAI key
 ```
 
 Each variable on its own line (a file without a trailing newline glues the next line on). URL-encode

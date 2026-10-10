@@ -31,6 +31,24 @@ what starts the next one.**
 Not every request needs every agent. A question that only needs feedback evidence runs two or three
 agents; a full requirement derivation runs the whole chain.
 
+## How the plan is made (implemented)
+
+`POST /api/conversations/{id}/messages` stores the PM's request, asks the planner for a plan, and stores it as a
+`plan` message plus one `planned` step per agent. Nothing runs yet.
+
+- **The model proposes, code decides.** An OpenAI model picks agents from the catalog (`orchestration/catalog.py`)
+  with a one-sentence reason each and extracts the scope if the request states one. Code then drops unknown agents,
+  removes duplicates, orders by pipeline stage, and adds the prerequisites a later stage needs (Prioritization needs
+  Drafting, Clustering and a research agent). Added prerequisites are marked as such.
+- **Scope is optional.** No line or market in the request means all of them (stored as `ALL`).
+- **Agents that are not built are still planned**, flagged `[not built yet]`, with a note in the thread, so the PM
+  sees what the question really needs. They cannot run until they exist and can be removed from the plan.
+- **No hidden fallback.** If the model is unavailable the API answers 503 with the reason and stores nothing.
+  `PLANNER=rules` selects a keyword planner for local work without a key.
+- **The PM can edit the plan** (`PUT /api/runs/{id}/plan`) until an agent has started. An edit is checked, never
+  silently completed: removing a prerequisite is refused with the reason. Each edit adds a `plan_change` message.
+- Plans and edits are written to the audit log (`plan_created`, `plan_edited`).
+
 ## The unit of work: a Step
 
 A `PipelineRun` (one chat request's execution, scoped to a vehicle line + market) is made of
