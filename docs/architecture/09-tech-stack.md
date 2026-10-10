@@ -7,7 +7,7 @@ Kept boring on purpose — a hackathon is not the place to debug infrastructure.
 | Layer | Choice | Why |
 |---|---|---|
 | Orchestration | LangGraph | Its explicit interrupt-for-human-input pattern maps directly onto the per-step PM gates in [`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and-human-in-the-loop.md) — one `interrupt()` per `Step`, not one at the end, plus a planner node where the orchestrator chooses the agents. Its Postgres checkpointer stores run state in the same Supabase database (use the direct or session-pooler connection string, not the transaction pooler) |
-| LLM | Claude | Extraction, cluster labeling, requirement drafting, scoring rationale, Critic verification |
+| LLM | Every agent is LLM-backed. Currently the OpenAI API (key in `.env`); the provider is a config choice and Claude remains an option | Extraction, cluster labeling, requirement drafting, scoring rationale, Critic verification, answering over retrieved evidence. Answers may only cite retrieved rows |
 | Web research | Search API tool-call (Tavily/Brave) | Source-trust tagging applied at ingest time, not after the fact |
 | PDF parsing | `pdftotext -layout` (poppler) for text; pdfplumber / vision-LLM still planned for the equipment tables | Text extraction works (the catalogs have real text). Reliable ■/□ column mapping needs table-aware extraction or a vision pass — not built yet |
 | Excel | openpyxl (+ psycopg for loading) | Loaders in `ingest/`; the customer-study cross-tabs need a custom parser |

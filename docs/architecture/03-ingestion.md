@@ -1,6 +1,6 @@
 # Ingestion: turning a PDF or spreadsheet into a cited Finding
 
-> Status: `draft` · Last updated: 2026-10-10 (implemented: PDFs and Excel loaded, see decision 0006)
+> Status: `draft` · Last updated: 2026-10-10 (Tier 1 option extraction built, see decision 0007)
 
 The provided PDFs (`F70_OptionList.PDF`, `G60_OptionList.PDF`, `G70_OptionList.PDF`) are
 structured option/equipment listings, not prose. Treating them as plain text to embed would throw
@@ -58,18 +58,35 @@ idempotent (re-running replaces a file's rows) and need `OPENAI_API_KEY` and `SU
 - The three `*_OptionList.PDF` files are **German sales catalogs** (e.g. "BMW 5er Limousine Katalog
   Juli 2026", 23–28 pages), not clean option lists. They contain real selectable text, so no OCR.
 - Text is extracted page by page with `pdftotext -layout`, split at ALL-CAPS headings, and capped
-  at ~1,800 characters per chunk. 277 chunks in total (F70 75, G60 110, G70 92).
+  at ~1,800 characters per chunk; fragments under 250 characters are merged into a neighbour on the
+  same page. 149 chunks in total (F70 39, G60 58, G70 52).
 - Each `chunk` keeps `page`, `chunk_index`, `heading`, and the verbatim text; the embedding input
   is prefixed with the catalog title, page, and heading for better retrieval.
 - Embedded with OpenAI `text-embedding-3-small` (1536 dims).
 - `public.match_chunks()` does cosine search; `ingest/ask_pdf.py` answers questions. **Citations are
   built from the retrieved rows** (file, page, verbatim quote), never from model output.
 
-Known limits: the equipment tables use ■ (standard) / □ (optional) marks in wide columns; flattened
-text cannot tie a mark to a model variant, so the answer prompt forbids such claims. Some chunks
-are small fragments cut mid-table (merge short chunks: open item). The Tier 1 "deterministic table
-rows → `option`" extraction is **not built yet**; prices appear in the catalogs but are out of
-scope for requirements.
+Known limit: flattened chunk text cannot tie a ■/□ mark to a model variant, so the answer prompt
+forbids such claims; use the Tier 1 tables below for availability. Prices appear in the catalogs
+but are out of scope for requirements.
+
+### PDFs → `option` + `option_availability` (Tier 1: `ingest/pdf_options.py`, `ingest/load_options.py`)
+
+The equipment pages are parsed by **position** with pdfplumber, not as text: the SA code, gross
+price and bracketed net price sit at fixed x positions (found per page from the rotated
+"SA-Nr." / "EUR inkl." headers), and each ■ (standard) / □ (optional) mark sits under a variant
+column. The variant names are printed rotated 90° in the page header; they are decoded and matched
+to marks by x position.
+
+- 198 options (F70 53, G60 62, G70 83), 1,352 availability rows (one per option × price line ×
+  variant). An option can have several price lines (different price per variant group), each with
+  its own condition text such as "In Verbindung mit M Sportpaket".
+- Code-only options directly under a priced one (e.g. paint colours) share its price and marks and are
+  flagged `inherited`.
+- **Completeness check:** every ■/□ on the equipment pages is captured exactly once (F70 260,
+  G60 541, G70 305), and the three catalogs' variant names decode (G60 10, F70 6, G70 4).
+- Not covered: the "selected standard equipment" pages (no SA codes), the package description pages
+  (M Sportpaket etc.), and the technical-value pages. They remain searchable as chunks.
 
 ### Excel → relational tables (`ingest/load_excel.py`)
 

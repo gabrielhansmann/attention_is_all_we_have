@@ -17,5 +17,7 @@ Architecture docs: [`docs/README.md`](docs/README.md). Agent/push rules: [`AGENT
 ```
 python ingest/load_pdfs.py                  # chunk + embed the catalog PDFs
 python ingest/load_excel.py                 # feedback, sales, customer studies
+python ingest/load_options.py               # equipment options with per-variant availability
+python ingest/seed_ontology.py              # domains, vehicle lines, markets, category labels
 python ingest/ask_pdf.py "Welche Felgen gibt es für den 5er?" --line G60
 ```

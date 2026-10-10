@@ -22,13 +22,17 @@ A finding that reads as regulatory or pricing in nature is auto-tagged and route
 separate "flagged, out of scope" bin rather than drafted into a requirement — see
 [`08-scaling-and-config.md`](08-scaling-and-config.md#regulatory-guardrail).
 
-## Demonstration scope
+## Scope: set by the question
 
-- **Vehicle lines in the provided data:** F70, G60, G70 (presumed 1 / 5 / 7 Series successors —
-  confirm before presenting as fact)
-- **Markets:** Europe, China, United States, or a subset
-- **Demo pick:** G60 (5 Series) × Europe, full vertical slice; other lines/markets loaded and
-  runnable on request to prove it isn't a one-off
+The system is not tied to one vehicle line or market. Every line in the provided data (F70, G60/G68,
+G70; presumed 1 / 5 / 7 Series successors, confirm before presenting as fact) and every market
+(Europe, China, United States, Rest of World) is loaded, and a PM can ask in any direction: a
+competitor comparison, a feature gap, a market trend, a requirement derivation for one line, a
+question across lines. The orchestrator reads the request, picks the agents that are needed, and
+each agent, backed by an LLM, searches the evidence relevant to that question.
+
+Evidence is uneven (some line/market combinations have far more customer feedback than others), so
+sample size and confidence are shown with every result rather than hidden by narrowing the scope.
 
 ## The five stages
 

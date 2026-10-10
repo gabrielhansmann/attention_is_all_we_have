@@ -10,6 +10,7 @@ from pathlib import Path
 
 MAX_CHARS = 1800
 MIN_CHARS = 40
+SMALL_CHUNK = 250   # chunks shorter than this are merged into a neighbour on the same page
 HEADING_RE = re.compile(r"^[A-ZÄÖÜ0-9][A-ZÄÖÜ0-9 &/,\-–\.\*]{5,70}$")
 
 
@@ -82,7 +83,39 @@ def chunk_pdf(path: Path) -> list[Chunk]:
             buf.append(line)
             size += len(line) + 1
         flush()
-    return chunks
+    return _merge_small(chunks)
+
+
+def _merge_small(chunks: list[Chunk]) -> list[Chunk]:
+    """Fold fragments (often a table cut mid-way) into the previous chunk on the same page,
+    or into the next one when they open the page. The text stays verbatim, so citations hold."""
+    merged: list[Chunk] = []
+    carry: Chunk | None = None
+    for c in chunks:
+        if carry is not None:
+            if carry.page == c.page:
+                c = Chunk(c.file, c.title, c.page, carry.index, carry.heading or c.heading,
+                          carry.text + "\n" + c.text)
+            else:
+                merged.append(carry)
+            carry = None
+        if len(c.text) < SMALL_CHUNK:
+            if merged and merged[-1].page == c.page:
+                prev = merged[-1]
+                merged[-1] = Chunk(prev.file, prev.title, prev.page, prev.index, prev.heading,
+                                   prev.text + "\n" + c.text)
+            else:
+                carry = c
+            continue
+        merged.append(c)
+    if carry is not None:
+        merged.append(carry)
+    # re-number positions within each page
+    seen: dict[int, int] = {}
+    for c in merged:
+        c.index = seen.get(c.page, 0)
+        seen[c.page] = c.index + 1
+    return merged
 
 
 if __name__ == "__main__":
