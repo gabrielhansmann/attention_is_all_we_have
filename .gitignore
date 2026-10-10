@@ -1,8 +1,17 @@
 .*
+!.gitignore
+!.env.example
+!.oxlintrc.json
 .env
 
 # Provided BMW data (do not commit)
 data/
 
+# Python
 __pycache__/
 *.pyc
+*.egg-info/
+
+# Frontend
+node_modules/
+dist/

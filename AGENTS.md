@@ -3,6 +3,17 @@
 Project: BMW hackathon requirement-evidence engine. Architecture docs live in `docs/`
 (start at `docs/README.md`); those `.md` files are the source of truth.
 
+## Repository layout
+
+- `backend/` FastAPI app and Python package `app` (`api/`, `knowledge/`, `agents/`, `ingest/`,
+  `orchestration/`), tests in `backend/tests/`. Run with `make backend`, test with `make test`.
+- `frontend/` Vite + React + TypeScript + Tailwind + shadcn/ui. Run with `make frontend`, build with `make build`.
+- `supabase/migrations/` SQL migrations, `docs/` architecture and decisions, `skills/` agent skills,
+  `data/` provided BMW files (gitignored). One `.env` at the repo root. See `docs/architecture/12-repo-structure.md`.
+- The frontend talks to the backend only through `/api`; it never touches the database directly.
+- Put new Python code under `backend/app/`, import it as `app.<package>`, and run scripts as
+  `python -m app.<package>.<module>`.
+
 ## UI design
 
 - Before generating or changing UI, read `design.md` and `docs/ui-design-guidelines.md`.
@@ -10,6 +21,14 @@ Project: BMW hackathon requirement-evidence engine. Architecture docs live in `d
 - Apply the anti-slop workflow in `docs/ui-design-guidelines.md`. BMW's explicit brand rules
   take precedence over generic aesthetic defaults, including white surfaces, Inter fallback,
   rectangular components, and dark hero bands.
+
+## Database
+
+- Postgres on Supabase (pgvector). To connect, set up a machine or teammate, check the state, apply
+  migrations, load data or fix a connection error, read `skills/database-setup/SKILL.md` first.
+- Check the connection with `python skills/database-setup/scripts/check_db.py --openai`.
+- Never print, log, commit or paste secrets (`SUPABASE_DB_URL`, `OPENAI_API_KEY`, passwords, keys).
+- Agents read evidence through `backend/app/knowledge/tools.py`, not hand-written SQL.
 
 ## Pushing
 
@@ -34,16 +53,17 @@ Project: BMW hackathon requirement-evidence engine. Architecture docs live in `d
 
 ## Syncing to Supabase after a push
 
-After a successful push, sync the project record to Supabase (use the Supabase MCP tools):
+After a successful push, sync the project record to Supabase. Any agent can do this from a shell:
 
-1. Upsert every new or changed `docs/decisions/*.md` entry into the `design_decisions` table
-   (`id`, `title`, `status`, `body`, `source_path`, `commit_sha`, `updated_at`).
-2. Upsert changed `docs/architecture/*.md` files into the `architecture_docs` table
-   (`path`, `title`, `status`, `body`, `commit_sha`, `updated_at`).
-3. Schema changes go through `apply_migration` (never ad-hoc DDL via `execute_sql`), and the
-   migration file is committed in the same squashed commit.
-4. Inspect existing tables (`list_tables`) before changing schema. Run `get_advisors` after DDL.
-5. Report what was synced in the final message. If a sync step fails or is skipped, say so
+1. Run `python skills/database-setup/scripts/sync_docs.py` from a checkout of the pushed commit. It
+   upserts `docs/decisions/*.md` into `design_decisions` and `docs/architecture/*.md` into
+   `architecture_docs` with the commit sha. (Supabase MCP tools may be used instead if available.)
+2. Schema changes go through `python skills/database-setup/scripts/apply_migration.py <file>`
+   (try `--dry-run` first), never ad-hoc DDL, and the migration file is committed in the same
+   squashed commit.
+3. Check the current state with `python skills/database-setup/scripts/check_db.py` before changing
+   schema, and review the Supabase advisors after DDL.
+4. Report what was synced in the final message. If a sync step fails or is skipped, say so
    explicitly. Do not claim the sync is done.
 
 The git repo is the source of truth; Supabase is a mirror. Never edit docs only in Supabase.

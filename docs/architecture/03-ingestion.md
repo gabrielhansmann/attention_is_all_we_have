@@ -56,10 +56,10 @@ feedback file."
 
 ## As implemented (decision 0006)
 
-Scripts live in `ingest/`; raw files stay in the gitignored `data/` folder. Both loaders are
+Scripts live in `backend/app/ingest/` (run as `python -m app.ingest.<module>`); raw files stay in the gitignored `data/` folder. Both loaders are
 idempotent (re-running replaces a file's rows) and need `OPENAI_API_KEY` and `SUPABASE_DB_URL` in `.env`.
 
-### PDFs → `source` + `chunk` (`ingest/load_pdfs.py`, `ingest/pdf_chunks.py`)
+### PDFs → `source` + `chunk` (`app/ingest/load_pdfs.py`, `app/ingest/pdf_chunks.py`)
 
 - The three `*_OptionList.PDF` files are **German sales catalogs** (e.g. "BMW 5er Limousine Katalog
   Juli 2026", 23–28 pages), not clean option lists. They contain real selectable text, so no OCR.
@@ -69,14 +69,14 @@ idempotent (re-running replaces a file's rows) and need `OPENAI_API_KEY` and `SU
 - Each `chunk` keeps `page`, `chunk_index`, `heading`, and the verbatim text; the embedding input
   is prefixed with the catalog title, page, and heading for better retrieval.
 - Embedded with OpenAI `text-embedding-3-small` (1536 dims).
-- `public.match_chunks()` does cosine search; `ingest/ask_pdf.py` answers questions. **Citations are
+- `public.match_chunks()` does cosine search; `app/ingest/ask_pdf.py` answers questions. **Citations are
   built from the retrieved rows** (file, page, verbatim quote), never from model output.
 
 Known limit: flattened chunk text cannot tie a ■/□ mark to a model variant, so the answer prompt
 forbids such claims; use the Tier 1 tables below for availability. Prices appear in the catalogs
 but are out of scope for requirements.
 
-### PDFs → `option` + `option_availability` (Tier 1: `ingest/pdf_options.py`, `ingest/load_options.py`)
+### PDFs → `option` + `option_availability` (Tier 1: `app/ingest/pdf_options.py`, `app/ingest/load_options.py`)
 
 The equipment pages are parsed by **position** with pdfplumber, not as text: the SA code, gross
 price and bracketed net price sit at fixed x positions (found per page from the rotated
@@ -94,7 +94,7 @@ to marks by x position.
 - Not covered: the "selected standard equipment" pages (no SA codes), the package description pages
   (M Sportpaket etc.), and the technical-value pages. They remain searchable as chunks.
 
-### Excel → relational tables (`ingest/load_excel.py`)
+### Excel → relational tables (`app/ingest/load_excel.py`)
 
 | File | Table | Rows | Notes |
 |---|---|---|---|

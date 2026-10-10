@@ -57,7 +57,7 @@ cannot point at a row that does not exist. `finding` also carries `domain_id`, `
 The `evidence_item` view unions all five raw kinds into one shape (`kind`, `id`, line, market, `file`,
 `locator`, `text`); `cite(kind, id)` reads from it. That is the single definition of "what can be cited".
 
-## 3. Retrieval tools (`knowledge/tools.py`)
+## 3. Retrieval tools (`backend/app/knowledge/tools.py`, exposed over HTTP by `backend/app/api/evidence.py`)
 
 | Tool | Use | Backed by |
 |---|---|---|

@@ -37,7 +37,7 @@ its own doc: [`10-competitor-benchmarking.md`](10-competitor-benchmarking.md).
 ## Implementation status
 
 The first implemented agent is the **Market & Trend Agent** in
-[`agents/market_trend_agent.py`](../../agents/market_trend_agent.py). It covers the current demo path for
+[`backend/app/agents/market_trend_agent.py`](../../backend/app/agents/market_trend_agent.py). It covers the current demo path for
 web research:
 
 - reads PM scope (`vehicle_line`, `market`) plus a research query
