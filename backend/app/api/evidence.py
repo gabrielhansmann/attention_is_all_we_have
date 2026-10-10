@@ -7,9 +7,9 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.knowledge import tools
+from app.knowledge import library, tools
 
-from .schemas import (CitationOut, EvidenceKind, GroupBy, HitOut, Line, Market, Polarity, Powertrain,
+from .schemas import (CitationOut, EvidenceContextOut, EvidenceKind, GroupBy, HitOut, Line, Market, Polarity, Powertrain,
                       SearchResponse, StatRow, StatsResponse)
 
 router = APIRouter(prefix="/evidence", tags=["evidence"])
@@ -72,6 +72,17 @@ def stats(
 def filters() -> dict:
     try:
         return tools.filters()
+    except Exception as e:
+        raise _unavailable(e)
+
+
+@router.get("/{kind}/{evidence_id}/context", response_model=EvidenceContextOut)
+def context(kind: EvidenceKind, evidence_id: UUID) -> dict:
+    """The cited passage in its surroundings (the whole catalog page, the neighbouring comments) for the viewer."""
+    try:
+        return library.evidence_context(kind, str(evidence_id))
+    except LookupError:
+        raise HTTPException(status_code=404, detail="no such evidence row")
     except Exception as e:
         raise _unavailable(e)
 

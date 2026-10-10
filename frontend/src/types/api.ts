@@ -182,3 +182,25 @@ export interface LoginResult {
   expires_at: string
   user: AuthUser
 }
+
+// ---------------------------------------------------------------- source viewer
+
+export interface EvidencePassage {
+  id: string
+  label: string | null
+  text: string
+  cited: boolean
+}
+
+export interface EvidenceContext {
+  kind: string
+  id: string
+  file: string
+  locator: string
+  title: string | null
+  page: number | null
+  passages: EvidencePassage[]
+  vehicle_line: string | null
+  market_code: string | null
+  document: { source_id: string; type: string; openable: boolean } | null
+}

@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Database, Grid3x3, FileText } from 'lucide-react'
+import { PageShell } from '@/components/layout/PageShell'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api, ApiError } from '@/lib/api'
@@ -55,37 +57,31 @@ export function LiveLibrary() {
   const loaded = sources.kind === 'ok' ? sources.data.map((s) => s.file) : []
 
   return (
-    <div className="flex flex-col gap-8" data-testid="live-library">
-      <div>
-        <h1 className="text-2xl">Sources</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          What is stored per vehicle line and market. Gaps are shown as gaps.
-        </p>
-      </div>
+    <PageShell testId="live-library" title="Sources" Icon={Database} description="What is stored per vehicle line and market. Gaps are shown as gaps.">
       <section aria-labelledby="coverage-h" className="flex flex-col gap-3">
-        <h2 id="coverage-h" className="text-lg">Coverage</h2>
-        {coverage.kind === 'loading' && <Skeleton className="h-48 w-full" aria-label="Loading coverage" />}
+        <h2 id="coverage-h" className="flex items-center gap-2 text-lg"><Grid3x3 className="size-5 text-primary" /> Coverage</h2>
+        {coverage.kind === 'loading' && <Skeleton className="h-48 w-full rounded-2xl" aria-label="Loading coverage" />}
         {coverage.kind === 'error' && (
-          <p role="alert" className="border border-destructive p-4 text-destructive">{`Coverage unavailable: ${coverage.message}`}</p>
+          <p role="alert" className="rounded-2xl border border-destructive p-4 text-destructive">{`Coverage unavailable: ${coverage.message}`}</p>
         )}
         {coverage.kind === 'ok' && (() => {
           const lines = [...new Set(coverage.data.cells.map((c) => c.line))]
           const markets = [...new Set(coverage.data.cells.map((c) => c.market))]
           const cell = (l: string, m: string) => coverage.data.cells.find((c) => c.line === l && c.market === m)
           return (
-            <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Coverage table, scrolls sideways on small screens">
+            <div className="overflow-x-auto rounded-2xl border border-border bg-background shadow-xs" tabIndex={0} role="region" aria-label="Coverage table, scrolls sideways on small screens">
               <table className="w-full min-w-[720px] border-collapse text-sm">
                 <caption className="sr-only">Stored evidence by vehicle line and market</caption>
                 <thead>
-                  <tr className="border-b border-border text-left">
-                    <th scope="col" className="p-3 font-bold">Vehicle line</th>
-                    {markets.map((m) => <th key={m} scope="col" className="p-3 font-bold">{m}</th>)}
+                  <tr className="border-b border-border bg-canvas-tint text-left">
+                    <th scope="col" className="p-3 font-semibold">Vehicle line</th>
+                    {markets.map((m) => <th key={m} scope="col" className="p-3 font-semibold">{m}</th>)}
                   </tr>
                 </thead>
                 <tbody>
                   {lines.map((l) => (
                     <tr key={l} className="border-b border-border align-top">
-                      <th scope="row" className="p-3 text-left font-bold">
+                      <th scope="row" className="p-3 text-left font-semibold">
                         {l}
                         <span className="block text-xs font-normal text-muted-foreground">
                           {`${fmt(coverage.data.options_by_line[l] ?? 0)} catalog options`}
@@ -102,31 +98,31 @@ export function LiveLibrary() {
       </section>
 
       <section aria-labelledby="sources-h" className="flex flex-col gap-3">
-        <h2 id="sources-h" className="text-lg">Files</h2>
+        <h2 id="sources-h" className="flex items-center gap-2 text-lg"><FileText className="size-5 text-primary" /> Files</h2>
         <UploadForm lines={lines} loaded={loaded} onStored={load} />
-        {sources.kind === 'loading' && <Skeleton className="h-40 w-full" aria-label="Loading sources" />}
+        {sources.kind === 'loading' && <Skeleton className="h-40 w-full rounded-2xl" aria-label="Loading sources" />}
         {sources.kind === 'error' && (
-          <p role="alert" className="border border-destructive p-4 text-destructive">{`Sources unavailable: ${sources.message}`}</p>
+          <p role="alert" className="rounded-2xl border border-destructive p-4 text-destructive">{`Sources unavailable: ${sources.message}`}</p>
         )}
         {sources.kind === 'ok' && sources.data.length === 0 && (
           <p className="text-muted-foreground">No source files are loaded yet.</p>
         )}
         {sources.kind === 'ok' && sources.data.length > 0 && (
-          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Sources table, scrolls sideways on small screens">
+          <div className="overflow-x-auto rounded-2xl border border-border bg-background shadow-xs" tabIndex={0} role="region" aria-label="Sources table, scrolls sideways on small screens">
             <table className="w-full min-w-[640px] border-collapse text-sm">
               <caption className="sr-only">Source files loaded into the evidence store</caption>
               <thead>
-                <tr className="border-b border-border text-left">
-                  <th scope="col" className="p-3 font-bold">File</th>
-                  <th scope="col" className="p-3 font-bold">Kind</th>
-                  <th scope="col" className="p-3 font-bold">Line</th>
-                  <th scope="col" className="p-3 font-bold">Contents</th>
+                <tr className="border-b border-border bg-canvas-tint text-left">
+                  <th scope="col" className="p-3 font-semibold">File</th>
+                  <th scope="col" className="p-3 font-semibold">Kind</th>
+                  <th scope="col" className="p-3 font-semibold">Line</th>
+                  <th scope="col" className="p-3 font-semibold">Contents</th>
                 </tr>
               </thead>
               <tbody>
                 {sources.data.map((s) => (
                   <tr key={s.id} className="border-b border-border align-top">
-                    <th scope="row" className="p-3 text-left font-bold">{s.file}</th>
+                    <th scope="row" className="p-3 text-left font-semibold">{s.file}</th>
                     <td className="p-3">{s.family}</td>
                     <td className="p-3">{s.vehicle_line ?? 'Several'}</td>
                     <td className="p-3">{contents(s.counts)}</td>
@@ -137,6 +133,6 @@ export function LiveLibrary() {
           </div>
         )}
       </section>
-    </div>
+    </PageShell>
   )
 }

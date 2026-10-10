@@ -1,6 +1,6 @@
 # Repository structure: frontend and backend
 
-> Status: `building` · Last updated: 2026-10-14 (file upload endpoint; see [decision 0020](../decisions/0020-file-upload-reuses-the-loaders.md))
+> Status: `building` · Last updated: 2026-10-14 (file upload endpoint; see [decision 0021](../decisions/0021-file-upload-reuses-the-loaders.md))
 
 ```mermaid
 flowchart LR
@@ -76,7 +76,7 @@ Makefile  .env.example    common tasks and the environment template (one .env at
 | `GET /api/evidence/filters` | the values the UI offers as filters |
 | `GET /api/evidence/{kind}/{id}` | the citation for one stored row |
 | `GET /api/sources` | every loaded source file with what was extracted from it (comments, passages, options, study cells, sales rows) |
-| `POST /api/sources?filename=&line=&replace=` | upload one PDF or Excel file as the raw request body; it is stored by the loaders in `app/ingest` and the answer reports what was stored and skipped ([decision 0020](../decisions/0020-file-upload-reuses-the-loaders.md)) |
+| `POST /api/sources?filename=&line=&replace=` | upload one PDF or Excel file as the raw request body; it is stored by the loaders in `app/ingest` and the answer reports what was stored and skipped ([decision 0021](../decisions/0021-file-upload-reuses-the-loaders.md)) |
 | `GET /api/evidence/coverage` | comments, study cells and 2025 sales per vehicle line and market, so gaps are visible |
 | `GET /api/agents` | the agent catalog in pipeline order and which agents exist yet |
 | `GET, POST /api/conversations` | list, or create (optionally with a first request) |

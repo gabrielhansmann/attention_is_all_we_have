@@ -8,7 +8,7 @@ const CHIPS = ['vehicle_line', 'market_code', 'powertrain', 'polarity', 'domain'
 export function HitCard({ hit }: { hit: Hit }) {
   const sim = typeof hit.meta.similarity === 'number' ? hit.meta.similarity : null
   return (
-    <Card>
+    <Card className="rounded-2xl bg-background shadow-xs">
       <CardContent className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           {CHIPS.map((k) => (hit.meta[k] ? <Badge key={k} variant="outline">{String(hit.meta[k])}</Badge> : null))}

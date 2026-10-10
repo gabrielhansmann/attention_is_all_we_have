@@ -22,6 +22,32 @@ class CitationOut(BaseModel):
     quote: str
 
 
+class PassageOut(BaseModel):
+    id: str
+    label: str | None
+    text: str
+    cited: bool
+
+
+class DocumentOut(BaseModel):
+    source_id: str
+    type: str
+    openable: bool
+
+
+class EvidenceContextOut(BaseModel):
+    kind: str
+    id: str
+    file: str
+    locator: str
+    title: str | None
+    page: int | None
+    passages: list[PassageOut]
+    vehicle_line: str | None
+    market_code: str | None
+    document: DocumentOut | None
+
+
 class HitOut(BaseModel):
     citation: CitationOut
     text: str

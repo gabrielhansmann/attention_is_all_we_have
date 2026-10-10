@@ -52,7 +52,7 @@ export function UploadForm({ lines, loaded, onStored }: Props) {
   }
 
   return (
-    <form onSubmit={submit} aria-labelledby="upload-h" className="flex flex-col gap-4 border border-border p-4 sm:p-6">
+    <form onSubmit={submit} aria-labelledby="upload-h" className="flex flex-col gap-4 rounded-2xl border border-border bg-background p-4 shadow-xs sm:p-6">
       <div>
         <h3 id="upload-h" className="text-base font-bold">Add a file</h3>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
@@ -86,7 +86,7 @@ export function UploadForm({ lines, loaded, onStored }: Props) {
         </p>
       )}
       {state.kind === 'done' && (
-        <div role="status" className="border border-border p-4 text-sm">
+        <div role="status" className="rounded-2xl border border-border p-4 text-sm">
           <p>{`${state.result.replaced ? 'Replaced' : 'Stored'} ${state.result.file}: ${contents(state.result.counts)}.`}</p>
           {state.result.notes.length > 0 && (
             <ul className="mt-2 list-disc pl-5 text-muted-foreground">
@@ -96,7 +96,7 @@ export function UploadForm({ lines, loaded, onStored }: Props) {
         </div>
       )}
       {state.kind === 'error' && (
-        <p role="alert" className="border border-destructive p-4 text-sm text-destructive">{`Upload failed: ${state.message}`}</p>
+        <p role="alert" className="rounded-2xl border border-destructive p-4 text-sm text-destructive">{`Upload failed: ${state.message}`}</p>
       )}
     </form>
   )

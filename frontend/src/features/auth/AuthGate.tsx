@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { Lock, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -26,25 +27,36 @@ function SignIn() {
   }
 
   return (
-    <section aria-labelledby="signin-h" className="mx-auto flex w-full max-w-sm flex-col gap-4 px-6 py-24">
-      <h1 id="signin-h" className="text-2xl">Sign in</h1>
-      <p className="text-sm text-muted-foreground">There is no sign-up. Ask an administrator for an account.</p>
-      <form onSubmit={submit} className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="signin-email">Email</Label>
-          <Input id="signin-email" type="email" autoComplete="username" required value={email}
-            onChange={(e) => setEmail(e.target.value)} />
+    <section aria-labelledby="signin-h" className="grid min-h-dvh place-items-center bg-canvas-tint px-4 py-12">
+      <div className="flex w-full max-w-sm flex-col gap-6 rounded-3xl border border-border bg-background p-8 shadow-md">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <span className="grid size-12 place-items-center rounded-2xl bg-primary text-lg font-semibold text-primary-foreground" aria-hidden>B</span>
+          <div>
+            <h1 id="signin-h" className="text-2xl">Sign in</h1>
+            <p className="mt-1 text-sm text-muted-foreground">There is no sign-up. Ask an administrator for an account.</p>
+          </div>
         </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="signin-password">Password</Label>
-          <Input id="signin-password" type="password" autoComplete="current-password" required value={password}
-            onChange={(e) => setPassword(e.target.value)} />
-        </div>
-        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-        <div>
+        <form onSubmit={submit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="signin-email">Email</Label>
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <Input id="signin-email" type="email" autoComplete="username" required value={email} className="pl-10"
+                onChange={(e) => setEmail(e.target.value)} />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="signin-password">Password</Label>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+              <Input id="signin-password" type="password" autoComplete="current-password" required value={password} className="pl-10"
+                onChange={(e) => setPassword(e.target.value)} />
+            </div>
+          </div>
+          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           <Button type="submit" size="lg" disabled={busy || !email || !password}>{busy ? 'Signing in' : 'Sign in'}</Button>
-        </div>
-      </form>
+        </form>
+      </div>
     </section>
   )
 }

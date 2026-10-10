@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
 import { api } from '@/lib/api'
+import { cn } from '@/lib/utils'
 import type { Health } from '@/types/api'
 
 type State = { kind: 'loading' } | { kind: 'offline' } | { kind: 'ok'; health: Health }
@@ -25,10 +25,21 @@ export function HealthBadge() {
     }
   }, [])
 
-  if (state.kind === 'loading') return <Badge variant="outline">Checking backend</Badge>
-  if (state.kind === 'offline') return <Badge variant="destructive">Backend offline</Badge>
-  const { health } = state
-  if (health.status === 'ok') return <Badge variant="secondary">Backend ready</Badge>
-  const missing = [health.db !== 'ok' && 'database', !health.openai_key && 'OpenAI key'].filter(Boolean).join(' and ')
-  return <Badge variant="destructive">{`Backend degraded: ${missing}`}</Badge>
+  let text = 'Checking backend'
+  let tone = 'bg-muted-foreground/40'
+  let bad = false
+  if (state.kind === 'offline') { text = 'Backend offline'; tone = 'bg-destructive'; bad = true }
+  else if (state.kind === 'ok') {
+    const { health } = state
+    if (health.status === 'ok') { text = 'Backend ready'; tone = 'bg-success' }
+    else {
+      const missing = [health.db !== 'ok' && 'database', !health.openai_key && 'OpenAI key'].filter(Boolean).join(' and ')
+      text = `Backend degraded: ${missing}`; tone = 'bg-destructive'; bad = true
+    }
+  }
+  return (
+    <p role="status" className={cn('flex items-center gap-2 text-xs', bad ? 'font-medium text-destructive' : 'text-muted-foreground')}>
+      <span className={cn('size-2 rounded-full', tone)} aria-hidden /> {text}
+    </p>
+  )
 }

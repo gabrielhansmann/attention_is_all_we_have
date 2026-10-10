@@ -1,6 +1,6 @@
 # Ingestion: turning a PDF or spreadsheet into a cited Finding
 
-> Status: `draft` · Last updated: 2026-10-10 (file upload, see [decision 0020](../decisions/0020-file-upload-reuses-the-loaders.md))
+> Status: `draft` · Last updated: 2026-10-10 (file upload, see [decision 0021](../decisions/0021-file-upload-reuses-the-loaders.md))
 
 The provided PDFs (`F70_OptionList.PDF`, `G60_OptionList.PDF`, `G70_OptionList.PDF`) are
 structured option/equipment listings, not prose. Treating them as plain text to embed would throw
@@ -107,7 +107,7 @@ filters. Counts, sample sizes and uptake come from SQL on these tables; only com
 are searched by meaning. `finding` rows are **not yet derived** from `feedback_raw` (that is the
 Customer Feedback Agent's job).
 
-### Uploads (`app/ingest/upload.py`, `POST /api/sources`, decision 0020)
+### Uploads (`app/ingest/upload.py`, `POST /api/sources`, decision 0021)
 
 A signed-in PM adds a file in the Sources view. The file goes to `POST /api/sources` as the raw request body and is
 stored by the loaders above, so an uploaded file and a provided file end up in the same tables with the same
