@@ -1,6 +1,6 @@
-# 0023 — A PM adds a website as a source; the Sources view gets a graph and tabs
+# 0024 — A PM adds a website as a source; the Sources view gets a graph and tabs
 
-> Date: 2026-10-10 · Status: accepted · Builds on [0006](0006-raw-tables-and-cited-pdf-chunks.md), [0009](0009-web-search-through-the-llm.md), [0020](0020-source-viewer-for-citations.md), [0021](0021-rounded-chat-first-frontend.md), [0022](0022-file-upload-reuses-the-loaders.md)
+> Date: 2026-10-10 · Status: accepted · Builds on [0006](0006-raw-tables-and-cited-pdf-chunks.md), [0009](0009-web-search-through-the-llm.md), [0020](0020-source-viewer-for-citations.md), [0021](0021-rounded-chat-first-frontend.md), [0023](0023-file-upload-reuses-the-loaders.md)
 
 ## Context
 

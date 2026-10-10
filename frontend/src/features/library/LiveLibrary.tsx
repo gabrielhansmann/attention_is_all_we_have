@@ -12,6 +12,10 @@ import { SourceGraph } from './SourceGraph'
 import { WebsitesTab } from './WebsitesTab'
 
 type Tab = 'graph' | 'files' | 'websites' | 'coverage'
+// The shared tabs are the compact shadcn default; the Sources view keeps its rounded pill bar (decision 0021).
+const tabsList = 'max-w-full justify-start gap-1 overflow-x-auto rounded-2xl border border-border bg-background p-1 shadow-xs group-data-horizontal/tabs:h-auto'
+const tabsTrigger = 'h-9 flex-none gap-2 rounded-xl px-2.5 text-muted-foreground sm:px-3.5 data-active:bg-accent data-active:text-accent-foreground group-data-[variant=default]/tabs-list:data-active:shadow-none [&_svg]:hidden sm:[&_svg]:block'
+const tabsPanel = 'flex flex-col gap-6 text-base'
 const aborted = (e: unknown) => e instanceof DOMException && e.name === 'AbortError'
 
 function Stat({ label, value, note }: { label: string; value: string; note?: string }) {
@@ -74,15 +78,15 @@ export function LiveLibrary() {
         <Stat label="Gaps" value={cells ? fmt(gaps) : '-'} note={cells ? `of ${cells.length} line and market pairs have no customer feedback` : undefined} />
       </dl>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
-        <TabsList aria-label="Sources views">
-          <TabsTrigger value="graph"><Waypoints aria-hidden /> Graph</TabsTrigger>
-          <TabsTrigger value="files"><FileText aria-hidden /> Files</TabsTrigger>
-          <TabsTrigger value="websites"><Globe aria-hidden /> Websites</TabsTrigger>
-          <TabsTrigger value="coverage"><Grid3x3 aria-hidden /> Coverage</TabsTrigger>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="gap-6">
+        <TabsList aria-label="Sources views" className={tabsList}>
+          <TabsTrigger value="graph" className={tabsTrigger}><Waypoints aria-hidden /> Graph</TabsTrigger>
+          <TabsTrigger value="files" className={tabsTrigger}><FileText aria-hidden /> Files</TabsTrigger>
+          <TabsTrigger value="websites" className={tabsTrigger}><Globe aria-hidden /> Websites</TabsTrigger>
+          <TabsTrigger value="coverage" className={tabsTrigger}><Grid3x3 aria-hidden /> Coverage</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="graph">
+        <TabsContent value="graph" className={tabsPanel}>
           {(sources.kind === 'loading' || graph.kind === 'loading' || coverage.kind === 'loading') && loading}
           {sources.kind === 'error' && <Unavailable what="Sources" message={sources.message} />}
           {graph.kind === 'error' && sources.kind !== 'error' && <Unavailable what="Graph" message={graph.message} />}
@@ -93,19 +97,19 @@ export function LiveLibrary() {
           )}
         </TabsContent>
 
-        <TabsContent value="files">
+        <TabsContent value="files" className={tabsPanel}>
           {sources.kind === 'loading' && loading}
           {sources.kind === 'error' && <Unavailable what="Sources" message={sources.message} />}
           {sources.kind === 'ok' && <FilesTab files={files} lines={lines} onStored={load} />}
         </TabsContent>
 
-        <TabsContent value="websites">
+        <TabsContent value="websites" className={tabsPanel}>
           {sources.kind === 'loading' && loading}
           {sources.kind === 'error' && <Unavailable what="Sources" message={sources.message} />}
           {sources.kind === 'ok' && <WebsitesTab websites={websites} found={found} lines={lines} markets={markets} onChanged={load} />}
         </TabsContent>
 
-        <TabsContent value="coverage">
+        <TabsContent value="coverage" className={tabsPanel}>
           {coverage.kind === 'loading' && loading}
           {coverage.kind === 'error' && <Unavailable what="Coverage" message={coverage.message} />}
           {coverage.kind === 'ok' && <CoverageTab coverage={coverage.data} />}
