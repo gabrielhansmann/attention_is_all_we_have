@@ -9,9 +9,9 @@ const step = (n: number, agent: string, status: string) => ({ id: `s${n}`, posit
 const run = (status: string, steps: ReturnType<typeof step>[]) => ({ id: 'r1', conversation_id: 'c1', vehicle_line: 'G60', market: 'US', query_text: 'q', status, created_at: NOW, steps })
 
 const request = msg(1, 'pm', 'request', 'What do US G60 owners dislike most about the infotainment?')
-const call1 = msg(2, 'orchestrator', 'system_note', 'Calling Customer Feedback Agent: asks what owners say.', { decision: { agent: 'Customer Feedback Agent' } }, 's1')
+const call1 = msg(2, 'orchestrator', 'system_note', 'Calling Customer Feedback Agent: asks what owners say.', { decision: { agent: 'Customer Feedback Agent', reason: 'asks what owners say.', position: 1 } }, 's1')
 const card1 = msg(3, 'agent', 'step_card', 'Owners find the voice assistant unreliable (G60_feedback.xlsx, row 12).', { agent: 'Customer Feedback Agent', failed: false, output: { findings: [{ id: 'f1', text: 'Voice assistant unreliable.' }, { id: 'f2', text: 'Menu depth.' }] } }, 's1')
-const call2 = msg(4, 'orchestrator', 'system_note', 'Calling Competitor Agent: the findings point at a rival feature.', { decision: { agent: 'Competitor Agent' } }, 's2')
+const call2 = msg(4, 'orchestrator', 'system_note', 'Calling Competitor Agent: the findings point at a rival feature.', { decision: { agent: 'Competitor Agent', reason: 'the findings point at a rival feature.', position: 2 } }, 's2')
 const final = msg(5, 'orchestrator', 'final_result', 'Research result: voice assistant complaints.')
 
 // What the backend returns while the orchestrator works through the request, one stage per read.
@@ -48,13 +48,13 @@ test.describe('research', () => {
     expect(calls.posted).toBe('What do US G60 owners dislike most about the infotainment?')
 
     // the first agent is called, then its cited result arrives and a second agent is chosen because of it
-    await expect(live.getByText('Calling Customer Feedback Agent: asks what owners say.')).toBeVisible()
+    await expect(live.getByText('Step 1: Customer Feedback Agent')).toBeVisible()
     await expect(live.getByRole('status')).toContainText('is working')
     await expect(live.getByRole('button', { name: 'Working' })).toBeDisabled()          // one request at a time
     const card = live.getByRole('article', { name: 'Customer Feedback Agent result' })
     await expect(card).toContainText('voice assistant unreliable')
     await expect(card.getByText('2 findings')).toBeVisible()
-    await expect(live.getByText('Calling Competitor Agent: the findings point at a rival feature.')).toBeVisible()
+    await expect(live.getByText('Step 2: Competitor Agent')).toBeVisible()
     await expect(live.getByText('Research result: voice assistant complaints.')).toBeVisible()
     await expect(live.getByRole('status')).toHaveCount(0)
     await expect(live.getByLabel('Follow-up request')).toBeVisible()

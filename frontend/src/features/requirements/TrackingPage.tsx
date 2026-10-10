@@ -73,7 +73,7 @@ export function TrackingPage() {
   return (
     <SourceViewerProvider>
       <PageShell testId="tracking" Icon={Radar} title="Tracking"
-        description="Approved requirements stay under watch for about two years. Check for new customer evidence and decide what to do about each change.">
+        description="Approved requirements stay under watch for about two years.">
         <ProcessStrip current="tracking" counts={{ flags: flagged }} />
         {state.kind === 'loading' && <Skeleton className="h-48 w-full rounded-2xl" aria-label="Loading tracking" />}
         {state.kind === 'error' && <p role="alert" className="rounded-2xl border border-destructive p-4 text-destructive">{`Tracking unavailable: ${state.message}`}</p>}

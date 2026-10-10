@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass
 from typing import Any, Literal, Protocol
 
@@ -46,12 +47,14 @@ class Outcome:
     accepted: bool                # False: the agent failed or the Critic left nothing usable
     summary: str
     findings: int = 0
+    evidence: tuple[tuple[str, str], ...] = ()     # (finding id, finding text) the answer may cite
 
 
 class Orchestrator(Protocol):
     def scope(self, request: str) -> Scope: ...
     def decide(self, request: str, scope: Scope, history: list[Outcome], notes: list[str],
                calls_left: int) -> Decision: ...
+    def answer(self, request: str, scope: Scope, history: list[Outcome], notes: list[str]) -> str | None: ...
 
 
 # ---------------------------------------------------------------- rules every call must pass
@@ -116,6 +119,9 @@ class RuleOrchestrator:
                 return Decision("call", agent, "Matches the request wording.")
         return Decision("finish")
 
+    def answer(self, request, scope, history, notes) -> str | None:
+        return None                     # no model: the thread falls back to the agents' own summaries
+
 
 # ---------------------------------------------------------------- LLM orchestrator
 
@@ -144,6 +150,25 @@ DECIDE_SYSTEM = (
     'Reply with JSON only: {"action": "call", "agent": "<name>", "reason": "<one sentence specific to this '
     'request>"} or {"action": "finish"}.'
 )
+
+ANSWER_SYSTEM = (
+    "You are the orchestrator of a BMW product-requirements research system, and you are now answering the product "
+    "manager who asked. Agents have finished; their results are below. Write the answer yourself, in your own words, "
+    "addressed to the PM. Do not repeat or paste the agents' summaries.\n"
+    "- Open with the direct answer to the question in one or two sentences.\n"
+    "- Then the three to five points that matter most, most important first, each one short, with how strongly the "
+    "evidence backs it (for example how many comments) when the results say so.\n"
+    "- Say plainly what is uncertain, thin or missing, and which agent failed if one did.\n"
+    "- If it would help, end with one concrete next step the PM can ask for, such as deriving requirements.\n"
+    "- Use only what the results say. Never invent numbers. No file names, sheet names or row numbers.\n"
+    "- Cite a finding by putting its id in square brackets right after the claim, for example [abc123]. Use only ids "
+    "listed in the results.\n"
+    "- Plain markdown: short paragraphs and a bullet list, bold only for the key phrase of a point. Under 180 words.\n"
+    'Reply with JSON only: {"answer": "<markdown>"}.'
+)
+
+EVIDENCE_PER_STEP = 12
+EVIDENCE_CHARS = 400
 
 
 class LLMOrchestrator:
@@ -176,6 +201,35 @@ class LLMOrchestrator:
 
     def decide(self, request, scope, history, notes, calls_left) -> Decision:
         return parse_decision(self._ask(DECIDE_SYSTEM, decide_prompt(request, scope, history, notes, calls_left)))
+
+
+    def answer(self, request, scope, history, notes) -> str | None:
+        if not any(o.accepted for o in history):
+            return None
+        return parse_answer(self._ask(ANSWER_SYSTEM, answer_prompt(request, scope, history, notes)), history)
+
+
+def answer_prompt(request: str, scope: Scope, history: list[Outcome], notes: list[str]) -> str:
+    blocks = []
+    for o in history:
+        if not o.accepted:
+            blocks.append(f"{o.agent}: FAILED. {o.summary.splitlines()[0] if o.summary else ''}".strip())
+            continue
+        lines = "\n".join(f"[{fid}] {text[:EVIDENCE_CHARS]}" for fid, text in o.evidence[:EVIDENCE_PER_STEP])
+        blocks.append(f"{o.agent}: {o.findings} findings\n{o.summary[:SUMMARY_CHARS]}" + (f"\nFindings you may cite:\n{lines}" if lines else ""))
+    extra = "".join(f"\nNote: {n}" for n in notes)
+    return (f"Request: {request}\nScope: vehicle line {scope.vehicle_line or 'all'}, market {scope.market or 'all'}\n\n"
+            + "\n\n".join(blocks) + extra)
+
+
+def parse_answer(data: Any, history: list[Outcome]) -> str | None:
+    """The model's answer, with any citation it invented removed. None if there is nothing usable."""
+    text = data.get("answer") if isinstance(data, dict) else None
+    if not isinstance(text, str) or len(text.strip()) < 20:
+        return None
+    known = {fid for o in history for fid, _ in o.evidence}
+    text = re.sub(r"\s?\[([^\]\s]+)\]", lambda m: m.group(0) if m.group(1) in known else "", text.strip())
+    return text[:4000]
 
 
 def decide_prompt(request: str, scope: Scope, history: list[Outcome], notes: list[str], calls_left: int) -> str:

@@ -32,24 +32,32 @@ function Message({ message, findings }: { message: ChatMessage; findings: Map<st
     )
   }
   if (message.kind === 'system_note' && message.payload.decision !== undefined) {
+    const decision = message.payload.decision as { agent?: string; reason?: string; position?: number }
     return (
       <div className="rise sm:ml-11 flex items-start gap-2 text-sm text-muted-foreground">
         <Route className="mt-0.5 size-4 shrink-0" aria-hidden />
-        <p className="whitespace-pre-line">{message.content}</p>
+        <p>
+          <span className="font-medium text-foreground">{`${decision.position ? `Step ${decision.position}: ` : ''}${decision.agent ?? 'Agent'}`}</span>
+          {decision.reason ? <span>{`. Why: ${decision.reason}`}</span> : <span>.</span>}
+        </p>
       </div>
     )
   }
   if (message.kind === 'final_result') {
+    const reqs = Number(message.payload.requirements) || 0
+    const hasDossier = message.payload.dossier === true || message.content.startsWith('# Research dossier')
+    const written = message.payload.written_by === 'orchestrator'
     return (
       <div className="rise flex gap-3">
         <Avatar />
-        <div className="min-w-0 flex-1 rounded-2xl border border-primary/30 bg-accent/60 p-4">
-          <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-accent-foreground"><CheckCircle2 className="size-4" /> Result</p>
-          <Prose text={message.content} findings={findings} />
-          {Number(message.payload.requirements) > 0 && (
-            <a href="#requirements" className="mt-3 inline-flex h-10 items-center rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm focus-visible:outline-2 focus-visible:outline-ring">
-              {`Review ${message.payload.requirements} requirement${Number(message.payload.requirements) === 1 ? '' : 's'}`}
-            </a>
+        <div className="min-w-0 flex-1 rounded-2xl border border-primary/30 bg-accent/60 p-4 sm:p-5">
+          <p className="mb-3 flex items-center gap-1.5 text-xs font-medium text-accent-foreground"><CheckCircle2 className="size-4" aria-hidden /> Research finished</p>
+          <Prose text={message.content} findings={findings} collapse={written ? [] : hasDossier ? ['Accepted steps', 'Audit trail', 'Sources'] : ['*']} />
+          {(reqs > 0 || hasDossier) && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {reqs > 0 && <a href="#requirements" className="inline-flex h-10 items-center rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm focus-visible:outline-2 focus-visible:outline-ring">{`Review ${reqs} requirement${reqs === 1 ? '' : 's'}`}</a>}
+              {hasDossier && <a href="#dossiers" className="inline-flex h-10 items-center rounded-xl border border-border bg-background px-4 text-sm font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">Open dossier</a>}
+            </div>
           )}
         </div>
       </div>
@@ -58,7 +66,7 @@ function Message({ message, findings }: { message: ChatMessage; findings: Map<st
   return (
     <div className="rise flex gap-3">
       <Avatar />
-      <p className="min-w-0 flex-1 whitespace-pre-line pt-1 text-[0.95rem] leading-relaxed">{message.content}</p>
+      <Prose text={message.content} findings={findings} className="min-w-0 flex-1 pt-1" />
     </div>
   )
 }
