@@ -77,7 +77,7 @@ message. Interactive docs are served at `/docs`.
 
 ## Not built yet
 
-- Chat endpoints and the orchestrator that plans and runs agents (needs the `conversation` and
-  `message` tables and the new step states from decision 0005).
+- Chat endpoints and the orchestrator that plans and runs agents. The `conversation` and `message` tables and
+  the new step states are in the database; the endpoints and the planner are next.
 - Authentication: the API is open, which is fine for a local demo and must change before it is exposed.
 - A Docker setup and CI.

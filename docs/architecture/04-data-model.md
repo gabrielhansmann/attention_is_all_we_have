@@ -122,14 +122,26 @@ Differences and additions relative to the sketch above:
   push (see `AGENTS.md`). Git stays the source of truth.
 - **Access:** RLS enabled on all tables, no policies yet (backend-only access).
 
-## Conversation & Message (chat entry point, not yet in the database)
+## Conversation & Message (chat entry point)
 
-Added by [decision 0005](../decisions/0005-chat-entry-and-orchestrator-planned-steps.md).
+Added by [decision 0005](../decisions/0005-chat-entry-and-orchestrator-planned-steps.md); in the database
+since `supabase/migrations/20261011_chat_tables.sql`.
 
-**Conversation:** `id, title, created_by, vehicle_line, market, created_at`
+**Conversation:** `id, title, created_by, vehicle_line, market_code, status (active | archived),
+created_at, updated_at`. `updated_at` moves forward by trigger whenever a message is added, so the
+conversation list sorts by recent activity. A conversation that has runs cannot be deleted (runs hold the
+audit trail): archive it instead. One without runs can be deleted and its messages go with it.
 
 **Message:** `id, conversation_id, role (pm | orchestrator | agent | system), kind (request | plan |
-step_card | pushback | final_result), step_id (nullable), run_id (nullable), content, created_at`
+plan_change | step_card | pushback | final_result | system_note), run_id, step_id, content, payload (jsonb),
+created_at`. `content` is the text shown in the thread; `payload` holds the structured part of a card (plan
+items, citations, summary sections). A `step_card` or `pushback` must have a `step_id`.
 
-`PipelineRun` gains `conversation_id`. The Supabase tables currently still have the old `step.status`
-values (`queued`, `awaiting_launch`) and no chat tables; a migration is pending.
+**PipelineRun** gains `conversation_id`. **Step** now has the states `planned | running |
+awaiting_review | accepted | rejected` (the old `queued` and `awaiting_launch` are gone) and the columns
+`position` (order in the plan, unique per run), `plan_reason`, `planned_by (orchestrator | pm)` and
+`attempt` (incremented by every Retry); `pm_note` holds the latest steering note.
+
+The database enforces the one-at-a-time rule: a unique partial index allows at most one step per run in
+`running` or `awaiting_review`. `backend/app/orchestration/steps.py` holds the transition rules and a test
+checks that its states match the migration.

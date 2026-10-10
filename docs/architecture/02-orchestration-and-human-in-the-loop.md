@@ -56,6 +56,8 @@ Deliberate points:
   the PM until every claim in its output has a live citation — see
   [`01-agents.md`](01-agents.md#the-critic-agent). The PM pushes back on judgment calls, not on
   obviously unsourced claims; those never arrive.
+- **One agent at a time is enforced by the database,** not only by the app: a unique index allows at most one step
+  per run in `running` or `awaiting_review`.
 - **The plan can change mid-run** (orchestrator proposes, PM can veto), but a step already
   `accepted` is never silently re-run.
 
