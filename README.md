@@ -4,7 +4,8 @@ BMW "AI for Product Decision Making" hackathon — a multi-agent system that tur
 feedback, product data, sales data, and web research into cited, PM-approved vehicle requirements.
 
 Software idea: [`docs/idea.md`](docs/idea.md). Architecture docs: [`docs/README.md`](docs/README.md).
-Agent/push rules: [`AGENTS.md`](AGENTS.md). Repo layout: [`docs/architecture/12-repo-structure.md`](docs/architecture/12-repo-structure.md).
+Agent/push rules: [`AGENTS.md`](AGENTS.md). Repo layout:
+[`docs/architecture/12-repo-structure.md`](docs/architecture/12-repo-structure.md).
 
 ## Layout
 
@@ -19,10 +20,11 @@ data/        provided BMW files (gitignored)
 
 ## Frontend
 
-The responsive PM workspace lives in [`frontend/`](frontend/README.md). It implements the
-documented overview, editable successor targets, requirement reviews, guided research gates,
-evidence library, and programme reports using the BMW design tokens. The current frontend uses
-clearly labeled illustrative data and browser storage; it does not call the agent backend yet.
+The responsive PM workspace lives in [`frontend/`](frontend/README.md). All five views use
+real database evidence and stored agent results through authenticated `/api` calls. Overview shows
+recorded sales, catalog equipment, study values and audit events. Requirements shows actual backlog
+rows and scores; missing data stays missing. Research runs the real planner and agents, including
+web research. Reports export stored results and citations.
 
 ```bash
 cd frontend
@@ -31,16 +33,17 @@ npm run dev
 ```
 
 See the [frontend guide](frontend/README.md) for build, browser tests, and Vercel deployment.
-Live demo: [bmw-product-intelligence.vercel.app](https://bmw-product-intelligence.vercel.app).
 
 ## Setup
 
-1. Put the provided BMW files in `data/` (gitignored) if you want to re-run the loaders. The data is already loaded in Supabase.
+1. Put the provided BMW files in `data/` (gitignored) if you want to re-run the loaders. The data is already
+   loaded in Supabase.
 2. `cp .env.example .env` and fill in `OPENAI_API_KEY` and `SUPABASE_DB_URL`
    (see [`skills/database-setup/SKILL.md`](skills/database-setup/SKILL.md)).
 3. `make install` (Python 3.11+, Node 24 LTS, npm). PDF loaders also need `pdftotext`/`pdfinfo` (poppler).
 4. `make check-db` to verify the database connection and the OpenAI key.
-5. Create your first user (the API needs sign-in): `cd backend && ../.venv/bin/python -m app.auth.manage create-user --email you@example.com --name "Your Name"`. The password is typed at a hidden prompt.
+5. Create your first user (the API needs sign-in): `cd backend && ../.venv/bin/python -m app.auth.manage
+   create-user --email you@example.com --name "Your Name"`. The password is typed at a hidden prompt.
 
 ## Run
 
@@ -48,14 +51,15 @@ Live demo: [bmw-product-intelligence.vercel.app](https://bmw-product-intelligenc
 make dev          # backend on :8000 and frontend on :5173 (BACKEND_PORT=8001 make dev if 8000 is taken)
 make backend      # API only: http://localhost:8000/api/health, interactive docs at /docs
 make frontend     # UI only: http://localhost:5173 (proxies /api to the backend)
-make test         # backend tests, no database or OpenAI key needed
+make test         # backend fixtures; database integration tests run when SUPABASE_DB_URL is set
 make build        # type-check and build the frontend
 ```
 
-The UI has five views: **Overview**, **Requirements**, **Research**, **Evidence library**, and
-**Reports**. In local development, Evidence library also offers **Browse backend evidence** to
-search stored feedback/catalog text and exact counts through `/api`. Every live result shows
-its file, location, and verbatim quote. The Research flow remains a guided fixture demo.
+The UI has five authenticated views: **Overview**, **Requirements**, **Research**, **Evidence library**,
+and **Reports**. Vehicle lines and market labels come from the database ontology. No demo values are
+created or loaded from browser storage. Accepted research contributions appear in Overview and Reports;
+the runner still retains drafted requirements/scores on steps rather than automatically importing them
+into backlog tables. A production deployment must serve `/api` on the frontend origin.
 
 ## Load and query data
 
@@ -74,7 +78,8 @@ Use the repo's virtualenv (`.venv/bin/python`) or activate it first.
 
 ## Market & Trend Agent
 
-The first agent implementation is the Market & Trend Agent. It turns cited web research into
+All roster agent modules and the review-gated runner exist. The Market & Trend Agent was the first
+implementation. It turns cited web research into
 `market_trend` findings, keeps URL + retrieval date locators, stores web source trust tiers, and
 leaves the step in `awaiting_review` for PM acceptance.
 

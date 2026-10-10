@@ -13,7 +13,7 @@ deduplicated themes. Derived from [`01-agents.md`](../architecture/01-agents.md)
 |---|---|---|---|
 | FR-AN-01 | Derive a baseline from the previous generation — what customers valued and criticised, how sales developed — as findings marked as strategic continuity. | S | [01](../architecture/01-agents.md#roster) |
 | FR-AN-02 | Extract complaints, unmet needs and praise from customer feedback, each with its market and, where the source provides one, its sample size. | M | [01](../architecture/01-agents.md#roster) |
-| FR-AN-03 | Compute option uptake per market from sales volumes and the option list, as a revealed-preference signal alongside what customers say. | M | [01](../architecture/01-agents.md#roster) |
+| FR-AN-03 | Report sales trends and catalog-standard availability alongside customer evidence, labeling availability as a thin proxy. Compute measured option uptake only when option-level sales data is supplied. | M | [01](../architecture/01-agents.md#roster) |
 | FR-AN-04 | Identify market and technology trends from web research, and label every such finding as an assumption about the future rather than an observed fact. | S | [01](../architecture/01-agents.md#roster), [ADR 0003](../decisions/0003-critic-agent-and-agent-split.md) |
 | FR-AN-05 | Classify every finding by signal type and sentiment. | M | [04](../architecture/04-data-model.md#finding) |
 
@@ -27,8 +27,9 @@ deduplicated themes. Derived from [`01-agents.md`](../architecture/01-agents.md)
 | FR-AN-09 | Compare specifications only where both sides use the same measurement standard. | S | [10](../architecture/10-competitor-benchmarking.md#6--relative-comparison-against-the-anchor) |
 | FR-AN-10 | Turn clear deltas into findings: a competitor advantage where the rival leads, a strength to defend where BMW leads. | M | [10](../architecture/10-competitor-benchmarking.md#6--relative-comparison-against-the-anchor) |
 
-For the demo, `FR-AN-10` is satisfied with a hand-confirmed rival set; `FR-AN-06` to `FR-AN-09`
-describe the full path and remain a proposal until the architecture adopts it.
+The Competitor module supports a supplied rival set and comparison rules within one step.
+`FR-AN-06` to `FR-AN-09` describe the full benchmark design; separate scoping and selection
+approval gates remain planned.
 
 ## Structure & context
 

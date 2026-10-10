@@ -1,6 +1,6 @@
 # 0013 — The frontend reaches data only through the backend API; live mode sits beside the demo
 
-> Date: 2026-10-12 · Status: accepted
+> Date: 2026-10-12 · Status: partly superseded by [0023](0023-database-backed-workspace.md) (the backend-only data access rule remains)
 
 ## Context
 

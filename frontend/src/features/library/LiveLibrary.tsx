@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api, ApiError } from '@/lib/api'
-import { LINE_LABELS, MARKET_LABELS } from '@/lib/live'
+import { useWorkspace } from '@/context'
 import type { Coverage, CoverageCell, SourceInfo } from '@/types/api'
 
 type Load<T> = { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ok'; data: T }
-const THIN = 100 // fewer customer comments than this is shown as thin evidence
 
 const fmt = (n: number) => n.toLocaleString('en-US')
 const aborted = (e: unknown) => e instanceof DOMException && e.name === 'AbortError'
@@ -19,18 +18,17 @@ function contents(c: SourceInfo['counts']): string {
     c.options && `${fmt(c.options)} equipment options`,
     c.study_cells && `${fmt(c.study_cells)} study cells`,
     c.sales_rows && `${fmt(c.sales_rows)} sales rows`,
+    c.findings && `${fmt(c.findings)} findings`,
   ].filter(Boolean)
   return parts.join(', ') || 'Nothing extracted'
 }
 
-function CoverageCellView({ cell }: { cell?: CoverageCell }) {
+function CoverageCellView({ cell, salesYear }: { cell?: CoverageCell; salesYear: number | null }) {
   if (!cell) return <span className="text-muted-foreground">No data</span>
   return (
     <div className="flex flex-col gap-1">
       {cell.feedback === 0 ? (
         <Badge variant="destructive">No customer feedback</Badge>
-      ) : cell.feedback < THIN ? (
-        <Badge variant="outline">{`Thin: ${fmt(cell.feedback)} comments`}</Badge>
       ) : (
         <span>{`${fmt(cell.feedback)} comments`}</span>
       )}
@@ -38,13 +36,14 @@ function CoverageCellView({ cell }: { cell?: CoverageCell }) {
         {cell.study_cells > 0 ? `${fmt(cell.study_cells)} study cells` : 'No study data'}
       </span>
       <span className="text-muted-foreground">
-        {cell.sales_2025 === null ? 'No 2025 sales row' : `2025 sales ${fmt(cell.sales_2025)}`}
+        {salesYear === null ? 'No recorded sales year' : cell.sales_volume === null ? `No ${salesYear} sales row` : `${salesYear} sales ${fmt(cell.sales_volume)}`}
       </span>
     </div>
   )
 }
 
 export function LiveLibrary() {
+  const { lineLabel, marketLabel } = useWorkspace()
   const [sources, setSources] = useState<Load<SourceInfo[]>>({ kind: 'loading' })
   const [coverage, setCoverage] = useState<Load<Coverage>>({ kind: 'loading' })
 
@@ -60,10 +59,10 @@ export function LiveLibrary() {
   return (
     <div className="flex flex-col gap-8" data-testid="live-library">
       <section aria-labelledby="coverage-h" className="flex flex-col gap-3">
-        <h2 id="coverage-h" className="text-xl">Where the evidence is thin</h2>
+        <h2 id="coverage-h" className="text-xl">Evidence coverage</h2>
         <p className="max-w-3xl text-sm text-muted-foreground">
-          What is stored per vehicle line and market. A gap is shown as a gap: there is no customer feedback for
-          China in any line, and only some combinations have sales or study data.
+          What is stored per vehicle line and market. Empty cells show missing evidence.
+          Sales use the latest recorded year; forecasts are excluded from these counts.
         </p>
         {coverage.kind === 'loading' && <Skeleton className="h-48 w-full" aria-label="Loading coverage" />}
         {coverage.kind === 'error' && (
@@ -80,19 +79,19 @@ export function LiveLibrary() {
                 <thead>
                   <tr className="border-b border-border text-left">
                     <th scope="col" className="p-3 font-bold">Vehicle line</th>
-                    {markets.map((m) => <th key={m} scope="col" className="p-3 font-bold">{MARKET_LABELS[m] ?? m}</th>)}
+                    {markets.map((m) => <th key={m} scope="col" className="p-3 font-bold">{marketLabel(m)}</th>)}
                   </tr>
                 </thead>
                 <tbody>
                   {lines.map((l) => (
                     <tr key={l} className="border-b border-border align-top">
                       <th scope="row" className="p-3 text-left font-bold">
-                        {LINE_LABELS[l] ?? l}
+                        {lineLabel(l)}
                         <span className="block text-xs font-normal text-muted-foreground">
                           {`${fmt(coverage.data.options_by_line[l] ?? 0)} catalog options`}
                         </span>
                       </th>
-                      {markets.map((m) => <td key={m} className="p-3"><CoverageCellView cell={cell(l, m)} /></td>)}
+                      {markets.map((m) => <td key={m} className="p-3"><CoverageCellView cell={cell(l, m)} salesYear={coverage.data.sales_year} /></td>)}
                     </tr>
                   ))}
                 </tbody>
@@ -126,9 +125,9 @@ export function LiveLibrary() {
               <tbody>
                 {sources.data.map((s) => (
                   <tr key={s.id} className="border-b border-border align-top">
-                    <th scope="row" className="p-3 text-left font-bold">{s.file}</th>
+                    <th scope="row" className="p-3 text-left font-bold">{/^https?:\/\//i.test(s.file) ? <a href={s.file} target="_blank" rel="noreferrer">{s.title || s.file}</a> : s.file}</th>
                     <td className="p-3">{s.family}</td>
-                    <td className="p-3">{s.vehicle_line ? (LINE_LABELS[s.vehicle_line] ?? s.vehicle_line) : 'Several'}</td>
+                    <td className="p-3">{s.vehicle_line ? lineLabel(s.vehicle_line) : 'Scope not specified'}</td>
                     <td className="p-3">{contents(s.counts)}</td>
                   </tr>
                 ))}

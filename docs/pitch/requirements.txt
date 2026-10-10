@@ -1,0 +1,7 @@
+# Separate tooling environment; these are not backend runtime dependencies.
+office-powerpoint-mcp-server==2.0.7
+mcp[cli]==1.26.0
+python-pptx==1.0.2
+reportlab==5.0.1
+fonttools==4.66.1
+brotli==1.2.0

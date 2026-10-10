@@ -1,6 +1,6 @@
 # Overview
 
-> Status: `draft` · Last updated: 2026-10-10 (chat entry point)
+> Status: `draft` · Last updated: 2026-10-10 (database workspace; [decision 0023](../decisions/0023-database-backed-workspace.md))
 
 ## Mission
 
@@ -29,7 +29,8 @@ G70; presumed 1 / 5 / 7 Series successors, confirm before presenting as fact) an
 (Europe, China, United States, Rest of World) is loaded, and a PM can ask in any direction: a
 competitor comparison, a feature gap, a market trend, a requirement derivation for one line, a
 question across lines. The orchestrator reads the request, picks the agents that are needed, and
-each agent, backed by an LLM, searches the evidence relevant to that question.
+the agents search the relevant evidence. Some use models for wording and synthesis; scoring, audit compilation
+and Critic provenance checks are deterministic.
 
 Evidence is uneven (some line/market combinations have far more customer feedback than others), so
 sample size and confidence are shown with every result rather than hidden by narrowing the scope.
@@ -53,8 +54,18 @@ What makes this more than a batch pipeline is **how** a PM drives it — see
 [`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and-human-in-the-loop.md): the PM
 starts a **chat** with a research request, an **orchestrator** plans which agents are needed, and
 they run one at a time. Each agent's cited answer can be pushed back on or accepted before the
-next agent starts, and the final result appears only after all needed agents are accepted. Not
+next agent starts. The PM confirms the plan first; acceptance or explicit rejection with a coverage gap
+advances it. The final result appears only once all steps are resolved. Not
 every request runs every stage. See [decision 0005](../decisions/0005-chat-entry-and-orchestrator-planned-steps.md).
+
+## Implemented boundary
+
+All frontend views require sign-in and read database evidence or stored agent output through `/api`.
+Overview and Reports show recorded sales, catalog/study evidence, accepted contributions and audit events.
+Requirements reads persisted backlog rows and scores; missing records stay missing. Runs retain structured
+output on steps. Automatic backlog publication, durable recovery, recurring refresh and dossier re-embedding
+remain planned.
+See [decision 0022](../decisions/0022-project-review-and-live-step-controls.md).
 
 ## Document map
 

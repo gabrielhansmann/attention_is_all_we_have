@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { api, ApiError } from '@/lib/api'
-import { markRequired, setSession, setUser, useAuth } from '@/lib/auth'
+import { setSession, setUser, useAuth } from '@/lib/auth'
 
 function SignIn() {
   const [email, setEmail] = useState('')
@@ -27,9 +27,9 @@ function SignIn() {
 
   return (
     <section aria-labelledby="signin-h" className="mx-auto flex w-full max-w-md flex-col gap-4 border border-border p-6">
-      <h2 id="signin-h" className="text-xl">Sign in to use live mode</h2>
+      <h2 id="signin-h" className="text-xl">Sign in to your workspace</h2>
       <p className="text-sm text-muted-foreground">
-        Live mode reads the stored evidence and plans research, so it needs an account. There is no sign-up here:
+        Your workspace reads stored evidence and runs research. There is no sign-up here:
         ask an administrator to create one for you.
       </p>
       <form onSubmit={submit} className="flex flex-col gap-4">
@@ -64,25 +64,6 @@ export function AuthGate({ children }: { children: ReactNode }) {
     return () => { cancelled = true }
   }, [status, user])
 
-  async function signOut() {
-    try {
-      await api.logout()
-    } catch {
-      /* the token is dropped locally either way */
-    }
-    markRequired()
-  }
-
-  if (status === 'required') return <SignIn />
-  return (
-    <>
-      {status === 'signedIn' && (
-        <div className="flex items-center justify-end gap-3 text-sm">
-          <span>{user ? `Signed in as ${user.display_name}` : 'Signed in'}</span>
-          <Button variant="outline" size="sm" onClick={signOut}>Sign out</Button>
-        </div>
-      )}
-      {children}
-    </>
-  )
+  if (status === 'required') return <main className="main-content flex min-h-dvh flex-col gap-8"><h1>BMW Product Intelligence</h1><SignIn /></main>
+  return <>{children}</>
 }

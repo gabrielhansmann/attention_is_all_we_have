@@ -174,9 +174,12 @@ def parse_proposal(data: dict, request: str) -> PlanProposal:
     """Validate model output. Unknown agent names are dropped; unknown scope values become None."""
     if not isinstance(data, dict):
         raise PlannerError("planner returned something other than an object")
+    agents = data.get("agents", [])
+    if not isinstance(agents, list):
+        raise PlannerError("planner agents must be a list")
     picked = []
-    for item in data.get("agents") or []:
-        if isinstance(item, dict) and item.get("name") in BY_NAME:
+    for item in agents:
+        if isinstance(item, dict) and isinstance(item.get("name"), str) and item["name"] in BY_NAME:
             picked.append(PlannedAgent(item["name"], str(item.get("reason") or "").strip()[:300]))
     line = data.get("vehicle_line") if data.get("vehicle_line") in LINES else None
     market = data.get("market") if data.get("market") in MARKETS else None

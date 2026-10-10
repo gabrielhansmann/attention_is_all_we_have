@@ -45,41 +45,22 @@ EMBED_MODEL = "text-embedding-3-small"
 RESEARCH_MODEL = os.getenv("RESEARCH_AGENT_MODEL", "gpt-4.1-mini")
 MAX_EMBED_CHARS = 6000
 
-TRUST_BY_DOMAIN_HINT = {
-    "bmw": "oem",
-    "mercedes-benz": "oem",
-    "audi": "oem",
-    "tesla": "oem",
-    "volkswagen": "oem",
-    "volvo": "oem",
-    "hyundai": "oem",
-    "kia": "oem",
-    "toyota": "oem",
-    "lexus": "oem",
-    "honda": "oem",
-    "nissan": "oem",
-    "byd": "oem",
-    "nio": "oem",
-    "rivian": "oem",
+# Explicit roots, not brand-name substrings: bmwblog.com and bmw.com.example.org are not OEM sites.
+# Unlisted regional sites remain low-trust until the configured source tier is explicitly supplied.
+OEM_DOMAINS = {
+    "bmw.com", "bmw.de", "bmwusa.com", "mercedes-benz.com", "mercedes-benz.de", "mbusa.com",
+    "audi.com", "audi.de", "audiusa.com", "tesla.com", "volkswagen.com", "volkswagen.de", "vw.com",
+    "volvocars.com", "hyundai.com", "hyundaiusa.com", "kia.com", "toyota.com", "lexus.com",
+    "honda.com", "nissan-global.com", "nissanusa.com", "byd.com", "nio.com", "rivian.com",
 }
-
-TRADE_PRESS_HINTS = {
-    "automotive",
-    "autocar",
-    "caranddriver",
-    "motortrend",
-    "topgear",
-    "insideevs",
-    "electrive",
-    "wardsauto",
-    "autonews",
-    "carscoops",
-    "edmunds",
+TRADE_PRESS_DOMAINS = {
+    "autocar.co.uk", "caranddriver.com", "motortrend.com", "topgear.com", "insideevs.com",
+    "electrive.com", "electrive.net", "wardsauto.com", "autonews.com", "carscoops.com", "edmunds.com",
 }
 
 OUT_OF_SCOPE_RE = re.compile(
     r"\b(price|pricing|msrp|discount|emissions?|type approval|homologation|regulation|regulatory|"
-    r"mandatory|compliance|safety standard|fine|tax credit)\b",
+    r"mandatory (?:regulations?|compliance|standards?)|compliance|safety standard|(?:regulatory|legal) fines?|tax credit)\b",
     re.IGNORECASE,
 )
 
@@ -98,7 +79,10 @@ class SourceDoc:
 
     @property
     def domain(self) -> str:
-        return urlparse(self.url).netloc.lower().removeprefix("www.")
+        try:
+            return (urlparse(self.url).hostname or "").lower().rstrip(".").removeprefix("www.")
+        except ValueError:
+            return ""
 
 
 @dataclass
@@ -145,9 +129,9 @@ def infer_trust_tier(doc: SourceDoc) -> str:
     if doc.trust_tier in {"oem", "trade_press", "forum_social"}:
         return doc.trust_tier
     domain = doc.domain
-    if any(hint in domain for hint in TRUST_BY_DOMAIN_HINT):
+    if any(domain == root or domain.endswith("." + root) for root in OEM_DOMAINS):
         return "oem"
-    if any(hint in domain for hint in TRADE_PRESS_HINTS):
+    if any(domain == root or domain.endswith("." + root) for root in TRADE_PRESS_DOMAINS):
         return "trade_press"
     return "forum_social"
 

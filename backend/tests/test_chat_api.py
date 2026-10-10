@@ -120,7 +120,7 @@ def test_unknown_and_archived_conversations(client):
 
 def test_request_validation(client):
     cid = client.post("/api/conversations", json={}).json()["conversation"]["id"]
-    for body in ({"content": "hi"}, {"content": "x" * 4001}, {}):
+    for body in ({"content": "hi"}, {"content": "   "}, {"content": "x" * 4001}, {}):
         assert client.post(f"/api/conversations/{cid}/messages", json=body).status_code == 422
     assert client.post("/api/conversations", json={"request": "no"}).status_code == 422
     assert client.get("/api/conversations?status=deleted").status_code == 422
@@ -130,7 +130,7 @@ def test_conversations_list_most_recently_active_first(client):
     a = client.post("/api/conversations", json={"title": "older"}).json()["conversation"]["id"]
     b = client.post("/api/conversations", json={"title": "newer"}).json()["conversation"]["id"]
     client.db.execute("update public.conversation set updated_at = now() - interval '1 day' where id = %s", (a,))
-    assert [c["id"] for c in client.get("/api/conversations").json()][:2] == [b, a]
+    assert [c["id"] for c in client.get("/api/conversations").json() if c["id"] in {a, b}] == [b, a]
 
 
 def test_the_pm_can_edit_the_plan_before_anything_starts(client):

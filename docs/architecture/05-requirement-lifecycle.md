@@ -1,6 +1,15 @@
 # Requirement lifecycle & the two-year tracking loop
 
-> Status: `draft` · Last updated: 2026-10-10 (chat wording)
+> Status: `draft` · Last updated: 2026-10-10 (database workspace; [decision 0023](../decisions/0023-database-backed-workspace.md))
+
+**Implementation boundary:** the authenticated workspace reads actual backlog rows and supports
+reason-required status reviews with optimistic concurrency and append-only audit events. Draft/proposed
+rows can enter PM review or be rejected; PM review can become tracked or rejected; tracked rows can be
+challenged or superseded; challenged rows can return to PM review or be rejected. Rejected/superseded
+rows are terminal. The broader lifecycle below remains the target. Live runs retain drafts on steps and
+do not automatically publish them into the backlog, schedule refreshes or reopen requirements. The
+Delta/Tracking module exists but no recurring scheduler calls it.
+
 
 This is the *long-horizon* state of a requirement once it has made it out of a
 [run](02-orchestration-and-human-in-the-loop.md) — weeks to months, across the life of the

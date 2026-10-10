@@ -1,199 +1,116 @@
-import { test, expect, type Page } from '@playwright/test'
-import { readFile } from 'node:fs/promises'
+import { test, expect } from '@playwright/test'
 import { createRequire } from 'node:module'
 import type axe from 'axe-core'
-
+import { emptySnapshot, json, mockWorkspace, navigate, storedRequirement } from './support'
 const require = createRequire(import.meta.url)
-async function navigate(page: Page, name: string) {
-  const link = page.getByRole('link', { name, exact: true })
-  if (!(await link.count()) || !(await link.first().isVisible())) await page.getByRole('button', { name: 'Open navigation' }).click()
-  await page.getByRole('link', { name, exact: true }).click()
-}
-test.beforeEach(async ({ page }) => { await page.goto('/') })
 
-test('overview, scope controls, and navigation work without page overflow', async ({ page }, testInfo) => {
-  await expect(page.getByRole('heading', { name: 'Build what comes next.' })).toBeVisible()
-  if (await page.getByRole('button', { name: 'Open navigation' }).isVisible()) {
-    await page.getByRole('button', { name: 'Open navigation' }).click()
-    await expect(page.getByRole('dialog').getByText('Demo workspace', { exact: true })).toBeVisible()
-    await page.getByRole('button', { name: 'Close dialog' }).click()
-  } else {
-    await expect(page.locator('.sidebar').getByText('Demo workspace', { exact: true })).toBeVisible()
-  }
-  await page.getByLabel('Vehicle line', { exact: true }).selectOption('F70')
-  await expect(page.getByRole('button', { name: 'Fuel consumption', exact: true })).toBeVisible()
-  await page.getByLabel('Market', { exact: true }).selectOption('CN')
-  await navigate(page, 'Requirements')
-  await expect(page.getByRole('heading', { name: 'Evidence into action.' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Predictable rapid charging', exact: true })).toHaveCount(0)
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  await page.getByLabel('Vehicle line', { exact: true }).selectOption('G60')
-  await page.getByLabel('Market', { exact: true }).selectOption('EU')
-  await navigate(page, 'Overview')
-  await page.screenshot({ path: `/tmp/attention-overview-${testInfo.project.name}.png`, fullPage: true })
-})
-
-test('a successor target requires a reason, persists, and appears in the decision history', async ({ page }) => {
-  await page.getByRole('button', { name: 'Edit Electric range (WLTP) target' }).click()
-  await page.getByLabel('Successor target (km)', { exact: true }).fill('590')
-  await page.getByRole('button', { name: 'Save target', exact: true }).click()
-  await expect(page.getByLabel('Reason for the target')).toBeFocused()
-  await page.getByLabel('Reason for the target').fill('Target aligns with the customer range concern.')
-  await page.getByRole('button', { name: 'Save target', exact: true }).click()
-  await expect(page.getByRole('dialog')).toHaveCount(0)
-  await expect(page.getByRole('button', { name: 'Edit Electric range (WLTP) target' })).toContainText('590')
-  await expect(page.getByText('Electric range (WLTP) target updated', { exact: true })).toBeVisible()
-  await page.reload()
-  await expect(page.getByRole('button', { name: 'Edit Electric range (WLTP) target' })).toContainText('590')
-})
-
-test('requirements filter, review, and persist a PM approval with its reason', async ({ page }) => {
-  await navigate(page, 'Requirements')
-  await page.getByLabel('Search requirements', { exact: true }).fill('rapid charging')
-  await expect(page.locator('.requirement-table tbody tr')).toHaveCount(1)
-  await page.getByRole('button', { name: 'Predictable rapid charging', exact: true }).click()
-  await page.getByRole('button', { name: 'Approve & track', exact: true }).click()
-  await expect(page.getByLabel('Reason for your decision')).toBeFocused()
-  await page.getByLabel('Reason for your decision').fill('Approve the direction, pending protocol validation.')
-  await page.getByRole('button', { name: 'Approve & track', exact: true }).click()
-  await expect(page.locator('.requirement-table tbody tr')).toContainText('Tracked')
-  await page.reload()
-  await page.getByLabel('Search requirements', { exact: true }).fill('rapid charging')
-  await expect(page.locator('.requirement-table tbody tr')).toContainText('Tracked')
-  await page.getByLabel('Status', { exact: true }).selectOption('draft')
-  await expect(page.getByRole('heading', { name: 'No requirements match these filters' })).toBeVisible()
-})
-
-test('research only advances on acceptance and produces a draft after the final review', async ({ page }) => {
-  await navigate(page, 'Research')
-  await page.getByLabel('What would you like to explore?').fill('Make climate adjustment easier for customers')
-  await page.getByRole('button', { name: 'Start research', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Accept & continue', exact: true })).toHaveCount(1)
-  await expect(page.getByText('Research reviewed. Direction recorded.', { exact: true })).toHaveCount(0)
-  await page.getByRole('button', { name: 'Accept & continue', exact: true }).click()
-  await expect(page.getByRole('alert')).toContainText('Add a review reason')
-  for (let i = 0; i < 3; i++) {
-    await page.getByLabel('Your review reason or steering note').fill(`Accepted demo contribution ${i + 1} with its limitations.`)
-    await page.getByRole('button', { name: 'Accept & continue', exact: true }).click()
-    if (i < 2) await expect(page.getByText('Research reviewed. Direction recorded.', { exact: true })).toHaveCount(0)
-  }
-  await expect(page.getByRole('heading', { name: 'Research reviewed. Direction recorded.' })).toBeVisible()
-  await page.getByRole('button', { name: 'Review draft', exact: true }).click()
-  await expect(page.getByLabel('Title', { exact: true })).toHaveValue('Make climate adjustment easier for customers')
-  await expect(page.getByLabel('Metric or successor target')).toHaveValue('Successor target to be set by the PM')
-})
-
-test('a rejected step remains gated and can continue with a visible coverage gap', async ({ page }) => {
-  await navigate(page, 'Research')
-  await page.getByLabel('What would you like to explore?').fill('Explore rear-seat comfort')
-  await page.getByRole('button', { name: 'Start research', exact: true }).click()
-  await page.getByLabel('Your review reason or steering note').fill('The customer fixture does not support this scope.')
-  await page.getByRole('button', { name: 'Reject', exact: true }).click()
-  await expect(page.getByRole('dialog')).toContainText('Continuing records a coverage gap')
-  await page.getByRole('button', { name: 'Continue with gap', exact: true }).click()
-  for (let i = 0; i < 2; i++) {
-    await page.getByLabel('Your review reason or steering note').fill('Accept this limited demo contribution.')
-    await page.getByRole('button', { name: 'Accept & continue', exact: true }).click()
-  }
-  await page.getByRole('button', { name: 'Review draft', exact: true }).click()
-  await expect(page.getByRole('dialog')).toContainText('Coverage gap')
-})
-
-test('documents are registered locally without claiming ingestion or verification', async ({ page }) => {
-  await navigate(page, 'Evidence library')
-  await page.getByRole('button', { name: 'Add document', exact: true }).click()
-  await page.getByLabel('Document (up to 10 MB)').setInputFiles({ name: 'dealer-notes.txt', mimeType: 'text/plain', buffer: Buffer.from('Customer wants easier climate controls.') })
-  await page.getByRole('button', { name: 'Add document', exact: true }).last().click()
-  await expect(page.getByRole('dialog')).toHaveCount(0)
-  await page.getByRole('button', { name: /dealer-notes.txt/ }).click()
-  await expect(page.getByRole('dialog')).toContainText('Not parsed')
-  await expect(page.getByRole('dialog')).toContainText('Customer wants easier climate controls.')
-  await page.getByRole('button', { name: 'Close dialog' }).click()
-  await page.reload()
-  await expect(page.getByRole('button', { name: /dealer-notes.txt/ })).toBeVisible()
-})
-
-test('filtered CSV exports include only matching requirements and citations', async ({ page }) => {
-  await navigate(page, 'Requirements')
-  await page.getByLabel('Search requirements', { exact: true }).fill('rapid charging')
-  const downloading = page.waitForEvent('download')
-  await page.getByRole('button', { name: 'Export portfolio', exact: true }).click()
-  const file = await downloading
-  expect(file.suggestedFilename()).toBe('requirements-G60-EU.csv')
-  const csv = await readFile((await file.path())!, 'utf8')
-  expect(csv).toContain('Predictable rapid charging')
-  expect(csv).toContain('G60_OptionList.PDF: Page 18')
-  expect(csv).not.toContain('Faster seat ventilation response')
-})
-
-test('citation dialogs work with the keyboard and return focus to the trigger', async ({ page }) => {
-  const trigger = page.getByRole('button', { name: 'Electric range (WLTP)', exact: true })
-  await trigger.focus(); await page.keyboard.press('Enter')
-  await expect(page.getByRole('dialog')).toContainText('Illustrative source excerpt')
-  await page.keyboard.press('Escape')
-  await expect(page.getByRole('dialog')).toHaveCount(0)
-  await expect(trigger).toBeFocused()
-})
-
-test('the report includes targets, source locators, and decision context', async ({ page }, testInfo) => {
-  await navigate(page, 'Reports')
-  await expect(page.getByRole('heading', { name: '5 Series successor programme' })).toBeVisible()
-  await expect(page.locator('.programme-report')).toContainText('Feedback, row 214')
-  await expect(page.locator('.programme-report')).toContainText('Decision history')
-  if (testInfo.project.name === 'desktop') {
-    const pdf = await page.pdf({ path: '/tmp/attention-programme-report.pdf', format: 'A4' })
-    expect(pdf.subarray(0, 4).toString()).toBe('%PDF')
-  }
+test('overview uses backend values and ignores old local demo data', async ({ page }, testInfo) => {
+  const data = emptySnapshot()
+  data.counts = { feedback: 913, study_cells: 27, catalog_options: 1, pending_steps: 2 }
+  data.sales = [{ id:'sale-1', vehicle_line:'G60', market_code:'EU', year:2027, volume:12345, is_forecast:false, file:'recorded-sales.xlsx', locator:'sheet Europe, row 6' }, { id:'sale-2', vehicle_line:'G60', market_code:'EU', year:2031, volume:15000, is_forecast:true, file:'recorded-sales.xlsx', locator:'sheet Europe, row 7' }]
+  data.options = [{ id:'option-1', vehicle_line:'G60', code:'SA-REAL', name:'Stored equipment item', description:null, standard_variants:2, optional_variants:1, file:'loaded-catalog.pdf', locator:'page 8' }]
+  await mockWorkspace(page, { snapshot: () => data })
+  await page.addInitScript(() => localStorage.setItem('bmw-product-intelligence-v1', JSON.stringify({ version:1, requirements:[{ title:'OLD FAKE REQUIREMENT' }] })))
+  await page.goto('/')
+  await expect(page.getByText('913', { exact:true })).toBeVisible()
+  await expect(page.getByText('12,345', { exact:true })).toBeVisible()
+  await expect(page.getByText('Forecast', { exact:true })).toBeVisible()
+  await expect(page.getByText('SA-REAL: Stored equipment item')).toBeVisible()
+  await expect(page.getByText('OLD FAKE REQUIREMENT')).toHaveCount(0)
+  await expect(page.getByText('Illustrative metrics')).toHaveCount(0)
+  await page.getByLabel('Vehicle line', { exact:true }).selectOption('G60')
+  await expect(page.getByLabel('Vehicle line', { exact:true })).toHaveValue('G60')
+  await page.getByLabel('Market', { exact:true }).selectOption('EU')
+  await expect(page.getByLabel('Market', { exact:true })).toHaveValue('EU')
+  await expect(page.getByRole('heading', { name:'Build what comes next.' })).toBeVisible()
+  await page.screenshot({ path:`/tmp/attention-real-workspace-${testInfo.project.name}.png`, fullPage:true })
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })
 
-test('main views pass automated WCAG checks', async ({ page }) => {
-  for (const name of ['Overview', 'Requirements', 'Research', 'Evidence library', 'Reports']) {
-    await navigate(page, name)
-    await page.addScriptTag({ path: require.resolve('axe-core/axe.min.js') })
-    const violations = await page.evaluate(async () => {
-      const engine = (window as unknown as { axe: typeof axe }).axe
-      return (await engine.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'] } })).violations
-    })
-    expect(violations, `${name} accessibility violations`).toEqual([])
-  }
+test('empty requirements and missing scores stay empty instead of being estimated', async ({ page }) => {
+  const data = emptySnapshot()
+  await mockWorkspace(page, { snapshot:() => data })
+  await page.goto('/#requirements')
+  await expect(page.getByRole('heading', { name:'No persisted requirements in this scope' })).toBeVisible()
+  await expect(page.getByRole('button', { name:'Export portfolio' })).toBeDisabled()
+  data.requirements = [storedRequirement()]
+  await page.getByRole('button', { name:'Refresh data' }).click()
+  await expect(page.getByRole('button', { name:'Stored climate requirement', exact:true })).toBeVisible()
+  await expect(page.getByText('Not scored', { exact:true })).toHaveCount(2)
+  data.requirements[0].score = 0; data.requirements[0].confidence = 0
+  await page.getByRole('button', { name:'Refresh data' }).click()
+  await expect(page.getByText('0%', { exact:true })).toBeVisible()
 })
 
-test('the retained backend evidence browser renders API citations and exact counts', async ({ page }) => {
-  await page.route('**/api/evidence/filters', route => route.fulfill({ json: { lines: ['G60'], markets: [{ key: 'EU', label: 'Europe' }], domains: [], polarities: ['negative'], powertrains: ['BEV'] } }))
-  await page.route('**/api/evidence/stats?**', route => route.fulfill({ json: { group_by: 'market_code', total: 3, rows: [{ key: 'EU', n: 3 }] } }))
-  let requestedQuery = ''
-  await page.route('**/api/evidence/search?**', route => {
-    requestedQuery = new URL(route.request().url()).searchParams.get('q') || ''
-    return route.fulfill({ json: { query: requestedQuery, source: 'feedback', hits: [{ citation: { kind: 'feedback', id: 'fixture-1', file: 'api-test-fixture.xlsx', locator: 'Feedback, row 7', quote: 'The seat ventilation takes too long to respond.' }, text: 'Improve seat ventilation response.', meta: { vehicle_line: 'G60', market_code: 'EU' }, score: 0.8 }] } })
+test('requirement reviews send reasons to the backend and refresh the persisted history', async ({ page }) => {
+  const data = emptySnapshot(); data.requirements = [storedRequirement()]
+  const calls: unknown[] = []
+  await mockWorkspace(page, { snapshot:() => data })
+  await page.route('**/api/requirements/*/status', route => {
+    const body = route.request().postDataJSON(); calls.push(body)
+    data.requirements[0].status = body.status; data.requirements[0].allowed_statuses = ['challenged','superseded']
+    data.audits = [{ id:'a1', entity_type:'requirement', entity_id:data.requirements[0].id, action:'requirement_status_changed', actor:'pm@example.test', rationale:body.reason, timestamp:data.generated_at, before:{ status:'pm_review' }, after:{ status:body.status } }]
+    return json(route, { id:data.requirements[0].id, status:body.status })
   })
-  await navigate(page, 'Evidence library')
-  await page.getByRole('button', { name: 'Browse backend evidence', exact: true }).click()
-  const live = page.locator('.live-evidence')
-  await expect(live.getByRole('heading', { name: 'Evidence', exact: true })).toBeVisible()
-  await expect(live.getByRole('row', { name: 'Total 3', exact: true })).toBeVisible()
-  await live.getByLabel('Search', { exact: true }).fill('seat ventilation')
-  await live.getByRole('button', { name: 'Search', exact: true }).click()
-  await expect(live.getByText('api-test-fixture.xlsx', { exact: true })).toBeVisible()
-  await expect(live).toContainText('Feedback, row 7')
-  await expect(live.getByRole('blockquote')).toHaveText('The seat ventilation takes too long to respond.')
-  expect(requestedQuery).toBe('seat ventilation')
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
-  await page.addScriptTag({ path: require.resolve('axe-core/axe.min.js') })
-  const violations = await page.evaluate(async () => (await (window as unknown as { axe: typeof axe }).axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'] } })).violations)
-  expect(violations).toEqual([])
-  await page.getByRole('button', { name: 'Demo sources', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Every claim has a source.' })).toBeVisible()
+  await page.goto('/#requirements')
+  await page.getByRole('button', { name:'Stored climate requirement', exact:true }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.getByText('sheet Feedback, row 81')).toBeVisible()
+  await expect(dialog.getByRole('button', { name:'Move to Tracked' })).toBeDisabled()
+  await dialog.getByLabel('Review reason').fill('The original evidence supports this direction')
+  await dialog.getByRole('button', { name:'Move to Tracked' }).click()
+  await expect(dialog).toHaveCount(0)
+  await expect(page.getByRole('table').getByText('Tracked', { exact:true })).toBeVisible()
+  expect(calls).toEqual([{ status:'tracked', expected_status:'pm_review', reason:'The original evidence supports this direction' }])
+  await navigate(page, 'Reports')
+  await expect(page.getByText('The original evidence supports this direction', { exact:true })).toBeVisible()
 })
 
-test('backend evidence failures are shown and the local demo remains available', async ({ page }) => {
-  await page.route('**/api/**', route => route.fulfill({ status: 503, json: { detail: 'Evidence service unavailable.' } }))
-  await navigate(page, 'Evidence library')
-  await page.getByRole('button', { name: 'Browse backend evidence', exact: true }).click()
-  await expect(page.locator('.live-evidence').getByText('Filters unavailable: Evidence service unavailable.', { exact: true })).toBeVisible()
-  await page.locator('.live-evidence').getByLabel('Search', { exact: true }).fill('comfort')
-  await page.locator('.live-evidence').getByRole('button', { name: 'Search', exact: true }).click()
-  await expect(page.locator('.live-evidence section[aria-labelledby="results-h"]')).toContainText('Evidence service unavailable.')
-  await page.getByRole('button', { name: 'Demo sources', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Every claim has a source.' })).toBeVisible()
+test('a refused review is visible and leaves the persisted status unchanged', async ({ page }) => {
+  const data = emptySnapshot(); data.requirements = [storedRequirement()]
+  await mockWorkspace(page, { snapshot:() => data })
+  await page.route('**/api/requirements/*/status', r => json(r, { detail:'the requirement changed; refresh it before reviewing' }, 409))
+  await page.goto('/#requirements')
+  await page.getByRole('button', { name:'Stored climate requirement', exact:true }).click()
+  await page.getByLabel('Review reason').fill('Reason for this review')
+  await page.getByRole('button', { name:'Move to Tracked' }).click()
+  await expect(page.getByRole('alert')).toHaveText('the requirement changed; refresh it before reviewing')
+  await expect(page.getByRole('dialog').getByText('R-STORED / PM review')).toBeVisible()
+})
+
+test('portfolio exports use only real filtered rows and stored citations', async ({ page }) => {
+  const data = emptySnapshot(); data.requirements = [storedRequirement(), { ...storedRequirement(), id:'second', title:'Another stored requirement' }]
+  await mockWorkspace(page, { snapshot:() => data })
+  await page.goto('/#requirements')
+  await page.getByLabel('Search requirements').fill('climate')
+  const downloaded = page.waitForEvent('download')
+  await page.getByRole('button', { name:'Export portfolio' }).click()
+  const download = await downloaded
+  const stream = await download.createReadStream()
+  let text = ''; for await (const chunk of stream!) text += chunk.toString()
+  expect(text).toContain('Stored climate requirement'); expect(text).toContain('real-feedback.xlsx: sheet Feedback, row 81')
+  expect(text).not.toContain('Another stored requirement'); expect(text).not.toContain('Must-have')
+})
+
+test('backend failures are visible without generating a sample workspace', async ({ page }) => {
+  await mockWorkspace(page, { unavailable:true })
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name:'Workspace unavailable' })).toBeVisible()
+  await expect(page.getByRole('alert')).toContainText('database unavailable')
+  await expect(page.getByText('Predictable rapid charging')).toHaveCount(0)
+  await expect(page.getByRole('button', { name:'Try again' })).toBeVisible()
+})
+
+test('the connected views pass WCAG checks and fit both viewports', async ({ page }) => {
+  const data = emptySnapshot(); data.requirements = [storedRequirement()]
+  await mockWorkspace(page, { snapshot:() => data })
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name:'Build what comes next.' })).toBeVisible()
+  for (const name of ['Overview','Requirements','Reports']) {
+    await navigate(page, name)
+    await page.addScriptTag({ path:require.resolve('axe-core/axe.min.js') })
+    const violations = await page.evaluate(async () => (await (window as unknown as { axe:typeof axe }).axe.run(document, { runOnly:{ type:'tag', values:['wcag2a','wcag2aa','wcag21aa'] } })).violations.map(v => ({ id:v.id, nodes:v.nodes.map(n => n.html) })))
+    expect(violations).toEqual([])
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  }
 })

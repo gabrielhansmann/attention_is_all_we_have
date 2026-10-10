@@ -32,7 +32,7 @@ Origin column wherever they appear:
 |---|---|
 | **ID** | Stable. Never renumber; retire an ID by striking it through and noting what replaced it. |
 | **Requirement** | One testable behaviour, phrased as "The system shall …" (shortened to the verb). |
-| **Prio** | `M` must — the demo slice (G60 × Europe) does not work without it. `S` should — expected in a credible product, built if time allows. `C` could — worth stating, not planned for the demo. |
+| **Prio** | `M` must — required for the target end-to-end workflow; priority does not imply it is already implemented. `S` should — expected in a credible product, built if time allows. `C` could — worth stating, not planned for the demo. |
 | **Origin** | The architecture doc it is derived from, or `new` if the architecture does not cover it yet. |
 
 Acceptance notes are given below a table only where the requirement alone leaves room for argument.
@@ -42,8 +42,9 @@ Acceptance notes are given below a table only where the requirement alone leaves
 A PM picks a vehicle line and a market, and feeds in whatever evidence exists — BMW's own feedback
 and sales files, pasted customer comments, website links, social media exports. The system turns
 all of it into individually cited findings, groups them into themes, drafts requirements with a
-metric and acceptance criteria, and ranks them with a score the PM can take apart. The PM starts
-and approves each agent step by hand, and afterwards sees every requirement — its status, its
+metric and acceptance criteria, and ranks them with a score the PM can take apart. The PM confirms the plan,
+then reviews each agent step; acceptance starts the next agent automatically, and afterwards sees every
+requirement — its status, its
 priority, how good its evidence is, and what changed since last time — in one overview.
 
 ## What the PM gets, by goal
@@ -60,21 +61,21 @@ priority, how good its evidence is, and what changed since last time — in one 
 | "Keep requirements current over two years" | `FR-LC-01` … `FR-LC-07` |
 | "Reuse this for another vehicle or market" | `FR-CF-01` … `FR-CF-06` |
 
-## Architecture gaps these requirements open
+## Implementation status (reviewed 2026-10-10)
 
-Adopting the `new` requirements means changing the architecture docs. Nothing below is done yet;
-each needs an edit to the named doc and, where it reverses a choice, an entry in
-[`../decisions/`](../decisions/).
+These requirements describe the target product, not a completion checklist. Current boundaries:
 
-| Gap | Affects | Triggered by |
+| Area | Implemented | Remaining |
 |---|---|---|
-| `Source.type` only knows `internal_pdf \| internal_xlsx \| web`; no notion of channel, platform, language or upload | [`04-data-model.md`](../architecture/04-data-model.md#source) | `FR-IN-02`, `FR-IN-12` |
-| Web content is cited by URL + retrieval date only; no stored snapshot, so a deleted post leaves a dead citation | [`03-ingestion.md`](../architecture/03-ingestion.md) | `FR-IN-15` |
-| No personal-data handling for social media and free-text feedback | [`03-ingestion.md`](../architecture/03-ingestion.md) | `FR-IN-17` |
-| Web sources are found only by agent search; a PM cannot hand over a specific URL or site | [`01-agents.md`](../architecture/01-agents.md) | `FR-IN-06`, `FR-IN-07` |
-| `sample_size` has no counterpart for social reach (likes, replies), which is not a sample | [`04-data-model.md`](../architecture/04-data-model.md#finding) | `FR-IN-13` |
-| UI is specified as a per-run stepper only; no portfolio, inbox or coverage view | [`02-orchestration-and-human-in-the-loop.md`](../architecture/02-orchestration-and-human-in-the-loop.md#ui-shape) | `FR-OV-*` |
-| `Finding.signal_type` omits `strategic_continuity` and `business_signal`, which [`01-agents.md`](../architecture/01-agents.md) has agents produce | [`04-data-model.md`](../architecture/04-data-model.md#finding) | `FR-AN-01`, `FR-AN-03` |
+| Inputs | Provided PDFs/Excel ingestion with citations; source channel/language/origin metadata; model-cited web summaries | PM-supplied URLs/social uploads, mapping confirmation, complete page snapshots, personal-data handling |
+| Analysis | All roster modules, deterministic availability proxy and Critic provenance checks | Separate competitor-scoping gates, live semantic verification, structured cluster editing |
+| PM control | Authenticated planning, plan edits before start, sequential live execution, reason-required acceptance/retry/rejection, summary edits, gap-or-abort decision | Mid-run plan adaptation and durable recovery |
+| Requirements and scoring | Cited draft/score output stored as step JSON; persisted backlog/latest-score reads and audited status reviews | Automatically publishing accepted outputs into backlog tables, versioning and scheduled lifecycle |
+| Overview and reports | Authenticated database portfolio, evidence counts, sales/catalog/study data, accepted research and requirement-level audit history | Successor targets, historical product metrics and board pack |
+| Lifecycle | Delta/Tracking module | Recurring refresh, weekly reports, automatic evidence-delta scheduling |
+
+See [decision 0023](../decisions/0023-database-backed-workspace.md) and the
+[repository guide](../architecture/12-repo-structure.md). Every build requires a same-origin `/api`; static files have no fixture fallback.
 
 ## Not functional requirements
 

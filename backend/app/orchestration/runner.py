@@ -92,10 +92,12 @@ def _json_safe(value: Any) -> Any:
 
 
 def _with_finding_ids(output: dict[str, Any]) -> dict[str, Any]:
-    """Later agents cite findings by id. A finding without one gets a stable id from its locator and text."""
+    """Later agents cite findings by id. Include source and scope so matching rows in different files stay distinct."""
     for finding in output.get("findings") or []:
         if isinstance(finding, dict) and not finding.get("id"):
-            finding["id"] = str(uuid5(NAMESPACE_URL, f"{finding.get('locator')}|{finding.get('text')}"))
+            identity = {key: finding.get(key) for key in ("source_file", "source_url", "source_id", "locator",
+                                                         "text", "vehicle_line", "market")}
+            finding["id"] = str(uuid5(NAMESPACE_URL, json.dumps(identity, sort_keys=True, default=str)))
     return output
 
 
@@ -161,16 +163,25 @@ def start_run(conn, run_id: UUID, actor: str = "pm") -> dict:
         raise StepConflict("this run has already started")
     messages: list[dict] = []
     started = _start_next(conn, run, messages, "Plan confirmed by the PM")
+    if started is not None:
+        _audit(conn, "pipeline_run", run_id, actor, "run_started",
+               after={"first_step_id": str(started)}, rationale="Confirmed the research plan")
     return _result(conn, run, messages, started)
 
 
 # ---------------------------------------------------------------- the PM's four actions
 
 def accept(conn, step_id: UUID, note: str | None = None, actor: str = "pm") -> dict:
-    """Accept is the only trigger for the next agent."""
+    """Accept usable output and start the next agent, or complete the run."""
     step, run = _locked_step(conn, step_id)
-    conn.execute("update public.step set status = %s, resolved_by = %s, resolved_at = now() where id = %s",
-                 (_transition(step, StepAction.ACCEPT), actor, step_id))
+    _transition(step, StepAction.ACCEPT)
+    if _output_of(step) is None:
+        raise StepConflict("a failed step cannot be accepted; retry it or reject it")
+    if not note or len(note.strip()) < 3:
+        raise StepConflict("accept needs a review reason of at least three characters")
+    note = note.strip()
+    conn.execute("update public.step set status = %s, pm_note = %s, resolved_by = %s, resolved_at = now() where id = %s",
+                 (_transition(step, StepAction.ACCEPT), note, actor, step_id))
     _audit(conn, "step", step_id, actor, "step_accepted", after={"agent": step["agent_name"], "attempt": step["attempt"]},
            rationale=note)
     messages: list[dict] = []
@@ -196,6 +207,8 @@ def reject(conn, step_id: UUID, note: str, proceed: bool, actor: str = "pm") -> 
     """Reject, then either go on without this agent (a coverage gap downstream) or abort the run."""
     step, run = _locked_step(conn, step_id)
     note = note.strip()
+    if len(note) < 3:
+        raise StepConflict("reject needs a review reason of at least three characters")
     conn.execute("update public.step set status = %s, pm_note = %s, resolved_by = %s, resolved_at = now() "
                  "where id = %s", (_transition(step, StepAction.REJECT), note, actor, step_id))
     messages = [service.add_message(conn, run["conversation_id"], "pm", "pushback", note, run_id=run["id"],
@@ -222,6 +235,8 @@ def edit(conn, step_id: UUID, summary: str, note: str | None = None, actor: str 
     step, run = _locked_step(conn, step_id)
     _transition(step, StepAction.EDIT)
     summary = summary.strip()
+    if len(summary) < 3:
+        raise StepConflict("the edited summary must have at least three characters")
     stored = step["structured_output_refs"] if isinstance(step["structured_output_refs"], dict) else {}
     if isinstance(stored.get("output"), dict):
         stored["output"]["summary"] = summary
@@ -229,7 +244,8 @@ def edit(conn, step_id: UUID, summary: str, note: str | None = None, actor: str 
                  (summary, Jsonb(stored), step_id))
     message = service.add_message(conn, run["conversation_id"], "pm", "step_card", summary, run_id=run["id"],
                                   step_id=step_id, payload={"agent": step["agent_name"], "attempt": step["attempt"],
-                                                            "edited_by": actor})
+                                                            "edited_by": actor, "failed": _output_of(step) is None,
+                                                            "critic": stored.get("critic") or {}, "output": stored.get("output")})
     _audit(conn, "step", step_id, actor, "step_edited", before={"summary": step["human_readable_summary"]},
            after={"summary": summary}, rationale=note)
     return _result(conn, run, [message])

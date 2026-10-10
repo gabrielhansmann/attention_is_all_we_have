@@ -1,12 +1,12 @@
 import { createContext, useContext } from 'react'
-import type { Audit, Line, Market, Metric, Page, Requirement, Source, Workspace } from './data'
+import type { Page } from './data'
+import type { StoredRequirement, WorkspaceConfig, WorkspaceSnapshot } from './types/api'
 
 export type WorkspaceContextValue = {
-  workspace: Workspace; line: Line; market: Market; requirements: Requirement[]; metrics: Metric[]; audits: Audit[]
+  data: WorkspaceSnapshot; config: WorkspaceConfig; line: string; market: string
+  lineLabel: (key: string) => string; marketLabel: (key: string) => string
   navigate: (page: Page) => void; notify: (message: string) => void
-  mutate: (title: string, detail: string, update: (state: Workspace) => Workspace, actor?: string) => void
-  openSource: (source: Source) => void; openRequirement: (requirement: Requirement) => void
-  openTarget: (metric: Metric) => void; openImport: () => void; openWeights: () => void
+  refresh: () => Promise<void>; openRequirement: (requirement: StoredRequirement) => void
 }
 export const WorkspaceContext = createContext<WorkspaceContextValue | null>(null)
 export function useWorkspace() {

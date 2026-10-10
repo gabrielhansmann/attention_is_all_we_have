@@ -229,6 +229,33 @@ class RequirementsDraftingAgentTest(unittest.TestCase):
         self.assertEqual(sum("insert into public.requirement_finding" in s for s in sql), 4)
         self.assertEqual(sum("insert into public.requirement_cluster" in s for s in sql), 2)
 
+    def test_a_pm_reviewed_requirement_keeps_its_original_evidence_links(self):
+        class ReviewedConn(FakeConn):
+            def execute(self, sql, params=None):
+                cursor = super().execute(sql, params)
+                return FakeCursor([]) if "insert into public.requirement (" in sql else cursor
+        conn = ReviewedConn()
+        store_result(conn, self.result, run_id="run-1", step_id="step-1")
+        assert not any("public.requirement_finding" in sql or "public.requirement_cluster" in sql
+                       for sql, _ in conn.calls)
+
+    def test_a_revised_draft_replaces_its_provenance_instead_of_accumulating_links(self):
+        class LinkConn(FakeConn):
+            def __init__(self):
+                super().__init__()
+                self.links = {req.id: {"obsolete-finding"} for req in self_result.requirements}
+            def execute(self, sql, params=None):
+                cursor = super().execute(sql, params)
+                if "delete from public.requirement_finding" in sql:
+                    self.links[params[0]] = set()
+                if "insert into public.requirement_finding" in sql:
+                    self.links[params[0]].add(params[1])
+                return cursor
+        self_result = self.result
+        conn = LinkConn()
+        store_result(conn, self.result, run_id="run-1", step_id="step-1")
+        assert conn.links == {req.id: set(req.linked_finding_ids) for req in self.result.requirements}
+
     def test_cli_dry_run_works_without_openai_or_database(self):
         completed = subprocess.run(
             [

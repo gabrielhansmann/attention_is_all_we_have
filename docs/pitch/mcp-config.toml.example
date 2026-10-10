@@ -1,0 +1,11 @@
+# Replace /ABSOLUTE/PATH/TO/REPO with your checkout path, then merge this block
+# into .codex/config.toml. Preserve any other settings and MCP servers.
+[mcp_servers.powerpoint]
+command = "/ABSOLUTE/PATH/TO/REPO/.venv-presentation/bin/python"
+args = ["-m", "ppt_mcp_server", "--transport", "stdio"]
+cwd = "/ABSOLUTE/PATH/TO/REPO/docs/pitch"
+startup_timeout_sec = 30
+tool_timeout_sec = 60
+
+[mcp_servers.powerpoint.env]
+PPT_TEMPLATE_PATH = "/ABSOLUTE/PATH/TO/REPO/docs/pitch"

@@ -27,8 +27,8 @@ def test_coverage_shows_real_gaps_not_just_totals(db):
     assert len(cells) == 16                                    # 4 lines x 4 markets, gaps included
     assert all(cells[(l, "CN")]["feedback"] == 0 for l in ("F70", "G60", "G68", "G70"))   # no China feedback exists
     assert cells[("G60", "US")]["feedback"] > cells[("G60", "EU")]["feedback"] > 0
-    assert cells[("G68", "CN")]["sales_2025"] == 75000 and cells[("G60", "CN")]["sales_2025"] is None
-    assert cells[("F70", "US")]["sales_2025"] == 0             # a recorded zero is not the same as no row
+    assert cells[("G68", "CN")]["sales_volume"] == 75000 and cells[("G60", "CN")]["sales_volume"] is None
+    assert cells[("F70", "US")]["sales_volume"] == 0             # a recorded zero is not the same as no row
     assert sum(c["feedback"] for c in body["cells"]) <= body["total_feedback"] == 13771
     assert body["options_by_line"]["G60"] == 62
 
@@ -41,3 +41,19 @@ def test_outages_are_503_without_details(path, monkeypatch):
     monkeypatch.setattr(library_api.library, "coverage", boom)
     r = client.get(path)
     assert r.status_code == 503 and "secret" not in r.text and "db.example" not in r.text
+
+
+def test_coverage_uses_latest_recorded_year_and_excludes_newer_forecasts(db, monkeypatch):
+    from uuid import uuid4
+    year = db.execute('select max(year) as year from public.sales_volume where not is_forecast').fetchone()['year'] + 1
+    source = db.execute("insert into public.source (type, uri) values ('internal_xlsx', %s) returning id", (f'test-sales-{uuid4()}',)).fetchone()['id']
+    for sales_year, forecast, volume in [(year, False, 17), (year + 100, True, 999)]:
+        db.execute(
+            "insert into public.sales_volume (source_id,sheet,row_no,market,market_code,year,volume,is_forecast,vehicle_line) "
+            "values (%s,'Test',1,'Europe','EU',%s,%s,%s,'G60')", (source, sales_year, volume, forecast))
+    monkeypatch.setattr(library_api.library.tools, '_conn', lambda: db)
+    response = client.get('/api/evidence/coverage')
+    assert response.status_code == 200
+    body = response.json()
+    assert body['sales_year'] == year
+    assert next(c for c in body['cells'] if c['line'] == 'G60' and c['market'] == 'EU')['sales_volume'] == 17

@@ -21,7 +21,7 @@ class StepAction(str, Enum):
     START = "start"        # orchestrator, when the previous step is accepted
     FINISH = "finish"      # agent done and the Critic passed its output
     ACCEPT = "accept"      # PM
-    EDIT = "edit"          # PM edits the summary/output; the step stays in review
+    EDIT = "edit"          # PM edits the summary; the step stays in review
     RETRY = "retry"        # PM with a steering note; the same agent re-runs
     REJECT = "reject"      # PM
 

@@ -50,6 +50,8 @@ def test_docs_source_uses_docs_search(monkeypatch):
 
 @pytest.mark.parametrize("params", [
     {"q": "x"},                                      # too short
+    {"q": "   "},                                    # whitespace must not reach embeddings
+    {"q": " x "},                                    # length is checked after trimming
     {"q": "seats", "line": "X99"},                   # unknown line
     {"q": "seats", "market": "MARS"},                # unknown market
     {"q": "seats", "k": 500},                        # too many

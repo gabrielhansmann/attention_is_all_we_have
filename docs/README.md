@@ -8,6 +8,9 @@ Technical architecture for the BMW "AI for Product Decision Making" hackathon ch
 multi-agent system that turns customer feedback, product data, sales data and web research into
 cited, PM-approved customer requirements for a successor vehicle.
 
+Presentation: [three-minute pitch](pitch/README.md), with an editable PowerPoint, a timed
+speaker script, and source notes that distinguish implemented features from the product vision.
+
 These docs are **living** — they change as we build. When a design decision changes, edit the
 relevant file in place and add a dated entry to [`decisions/`](decisions/) explaining what
 changed and why, instead of leaving the old reasoning to rot silently in a doc that still reads
@@ -36,7 +39,6 @@ Each doc opens with a status line:
 | [`architecture/07-audit-trail.md`](architecture/07-audit-trail.md) | The event log schema that makes everything traceable |
 | [`architecture/08-scaling-and-config.md`](architecture/08-scaling-and-config.md) | Why this isn't hardcoded to one vehicle line or market |
 | [`architecture/09-tech-stack.md`](architecture/09-tech-stack.md) | What we're actually building it with, and why |
-
 | [`architecture/10-competitor-benchmarking.md`](architecture/10-competitor-benchmarking.md) | How one BMW becomes a comparable rival set, and how rival evidence is compared fairly |
 | [`architecture/11-knowledge-layer.md`](architecture/11-knowledge-layer.md) | How the evidence is normalized, stored with citations, and queried by the agents |
 | [`architecture/12-repo-structure.md`](architecture/12-repo-structure.md) | How the repo is split into backend and frontend, the API, and the rules between them |
@@ -44,7 +46,7 @@ Each doc opens with a status line:
 ## Functional requirements
 
 The [frontend guide](../frontend/README.md) documents the delivered PM workspace, local setup,
-verification, Vercel hosting, and its explicit demo-data/backend limitations.
+verification, deployment, and the authenticated database-data boundary.
 
 What the system must do, as testable statements with IDs and priorities, in
 [`requirements/`](requirements/) — partly derived from the architecture docs above, partly new
@@ -66,3 +68,7 @@ can push back on later.
 - A rendered, presentation-friendly version of the pipeline/data-model/lifecycle diagrams in this
   doc set exists as a standalone artifact for pitching; these `.md` files are the source of truth
   for building.
+
+The current implementation boundaries and verified review fixes are recorded in [decision 0022](decisions/0022-project-review-and-live-step-controls.md). The pitch retains its explicitly labeled source snapshot; it is a historical artifact, not the latest implementation-status reference.
+
+The fixture workspace was removed in [decision 0023](decisions/0023-database-backed-workspace.md); all active views now read real backend data.

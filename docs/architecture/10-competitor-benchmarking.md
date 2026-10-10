@@ -1,12 +1,19 @@
 # Competitor benchmarking: from one BMW to a comparable rival set
 
-> Status: `draft` · Last updated: 2026-10-10
+> Status: `draft` · Last updated: 2026-10-10 (project review; [decision 0022](../decisions/0022-project-review-and-live-step-controls.md))
 
 [`01-agents.md`](01-agents.md) says the Competitor Agent "searches the web for competitor specs and
 reviews." That hides the hard part: *which* competitors, and how their evidence is made comparable
 to ours. This doc is a proposed processing structure for exactly that — start from one BMW (demo:
 5 Series / G60), end with findings that say where rivals in the same bracket are ahead or behind
 *as customers experience it*.
+
+## Current implementation
+
+Decision [0014](../decisions/0014-all-roster-agents-implemented.md) implements one Competitor step.
+Anchor profiles, bands, rivals and comparisons live in its output JSON, without the proposed tables below.
+Separate band/shortlist approval gates, a page scraper and full-corpus coverage are not implemented.
+The following six-stage design is a proposal, not a description of shipped UI controls.
 
 ## The six stages
 
@@ -90,8 +97,8 @@ Europe at all. Result is a `CompetitorSet` per `(anchor, market)`.
 
 ### 5 — Evidence collection: scrape per shortlisted rival
 
-For each rival, the existing web ingestion path is reused (robots.txt respected, trust tier per
-domain from the domain config, unknown domains treated as the lowest tier):
+The proposed scraper would respect robots.txt and tag source trust. Current web search uses provider citation
+annotations and stores cited summaries; it does not fetch or chunk full pages:
 
 | Source type | Trust tier | Used for |
 |---|---|---|
@@ -105,7 +112,8 @@ rival's `vehicle_id`.
 
 ### 6 — Relative comparison against the anchor
 
-This is where apples meet pears: BMW's side is internal survey data with known sample sizes, the
+This is where apples meet pears: BMW's side is internal survey data with comment counts (study respondent
+counts are unavailable), the
 rival's side is scraped public text. Putting raw numbers next to each other would be misleading.
 The comparison is therefore constrained on purpose:
 
@@ -141,7 +149,7 @@ it into three chained steps, each with the usual Run / Accept / Edit / Retry / R
 | Competitor Selection | 3–4 | ranked long-list per market; **Edit** = tick/untick rivals |
 | Competitor Evidence & Comparison | 5–6 | comparison matrix + resulting findings |
 
-The other four Situation Analysis agents stay independent of these and can run in parallel.
+The other Situation Analysis agents remain separate steps and run sequentially under the same PM gates.
 
 This is a proposal only: `02` and [`04-data-model.md`](04-data-model.md) are not yet updated, and
 adopting it needs an entry in [`../decisions/`](../decisions/).

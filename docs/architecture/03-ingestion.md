@@ -1,6 +1,6 @@
 # Ingestion: turning a PDF or spreadsheet into a cited Finding
 
-> Status: `draft` · Last updated: 2026-10-10 (web search through the LLM, see decision 0009)
+> Status: `draft` · Last updated: 2026-10-10 (project review; [decision 0022](../decisions/0022-project-review-and-live-step-controls.md))
 
 The provided PDFs (`F70_OptionList.PDF`, `G60_OptionList.PDF`, `G70_OptionList.PDF`) are
 structured option/equipment listings, not prose. Treating them as plain text to embed would throw
@@ -24,25 +24,28 @@ flowchart LR
 
 Pure ETL, no model in the loop: option code, name, category, market availability parsed straight
 into a relational `Options` table. High trust by construction — `evidence_level = Verified`. Feeds
-the Sales & Portfolio Agent directly, so qualitative feedback can be cross-checked against what
-customers actually paid for.
+the Sales & Portfolio Agent directly, so qualitative feedback can be cross-checked against equipment
+availability. Availability is not a record of what customers bought.
 
 ## Tier 2 — semantic (narrative text, web content)
 
 Any narrative text — in a PDF, in a web source the Competitor/Market Agents pull — is chunked by
-heading, not by fixed token count, embedded (OpenAI `text-embedding-3-small`, stored in `chunk.embedding` in Supabase), and indexed with
-its page/section locator kept on every chunk. Retrieval is always cited back to that locator. `evidence_level = Interpreted` by
+heading, not by fixed token count, embedded (OpenAI `text-embedding-3-small`, stored in `chunk.embedding` in
+Supabase), and indexed with
+its page/section locator kept on every chunk. Retrieval is always cited back to that locator. `evidence_level
+= Interpreted` by
 default; the Critic Agent (see [`01-agents.md`](01-agents.md#the-critic-agent)) can downgrade it
 further if the citation is thin.
 
 For web sources specifically, `evidence_level` is instead set by source-trust tier — OEM/official
-> trade press/reviews > forum/social — rather than by extraction method. Either grading can be
+> trade press/reviews > forum/social — rather than by extraction method. Automatic tiers use exact known domain roots and their subdomains, not brand-name substring matches; unknown domains default to `forum_social`. Extending or overriding the known roots requires an explicit configured tier. Either grading can be
 overridden by the PM on a specific finding (see
 [`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and-human-in-the-loop.md)); the
 override is logged and feeds back into how that source is graded next time.
 
 Web sources are currently found by the LLM's built-in web search tool, not a separate search API
-(see [decision 0009](../decisions/0009-web-search-through-the-llm.md)). Each cited URL becomes a
+(see [decision 0009](../decisions/0009-web-search-through-the-llm.md)). The standalone agent storage path can
+persist each cited URL as a
 `source` row (`type = web`, trust tier, `retrieved_at`), and findings are extracted from it like
 from any other source. The page itself is not fetched, so there are no chunks for web sources and
 the stored snapshot is the model's cited summary of the page.
@@ -56,7 +59,8 @@ feedback file."
 
 ## As implemented (decision 0006)
 
-Scripts live in `backend/app/ingest/` (run as `python -m app.ingest.<module>`); raw files stay in the gitignored `data/` folder. Both loaders are
+Scripts live in `backend/app/ingest/` (run as `python -m app.ingest.<module>`); raw files stay in the
+gitignored `data/` folder. Both loaders are
 idempotent (re-running replaces a file's rows) and need `OPENAI_API_KEY` and `SUPABASE_DB_URL` in `.env`.
 
 ### PDFs → `source` + `chunk` (`app/ingest/load_pdfs.py`, `app/ingest/pdf_chunks.py`)
@@ -103,6 +107,8 @@ to marks by x position.
 | `F70_G60_G68_G70_customer_studies.xlsx` | `study_response` | 1,627 | Cross-tabs unpacked to rows: China/EU sheet → `mean` per model; US sheet → answer `share` per model. Cell reference kept. No respondent counts exist in the file. |
 
 `public.match_feedback()` does cosine search over comments with optional vehicle-line and country
-filters. Counts, sample sizes and uptake come from SQL on these tables; only comments and PDF text
-are searched by meaning. `finding` rows are **not yet derived** from `feedback_raw` (that is the
-Customer Feedback Agent's job).
+filters. Comment counts and catalog availability come from SQL on these tables; measured option uptake and
+study respondent counts are unavailable; only comments and PDF text
+are searched by meaning. The Customer Feedback Agent derives findings, but the runner retains them as step
+JSON rather than persisting them into `finding`. The standalone storage helpers are separate from the
+review-gated runner.

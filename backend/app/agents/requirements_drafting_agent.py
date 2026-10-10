@@ -509,7 +509,7 @@ def store_result(conn: Any, result: DraftingResult, run_id: str | None, step_id:
             for row in conn.execute("select key, id from public.ontology where kind = 'domain' and parent_id is null").fetchall()
         }
         for req in result.requirements:
-            conn.execute(
+            saved = conn.execute(
                 "insert into public.requirement (id, title, description, ontology_domain_id, markets, vehicle_line, metric, "
                 "acceptance_criteria, evidence_level, assumptions, uncertainties, status, origin, created_by_run_id, step_id) "
                 "values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) "
@@ -518,7 +518,7 @@ def store_result(conn: Any, result: DraftingResult, run_id: str | None, step_id:
                 "metric = excluded.metric, acceptance_criteria = excluded.acceptance_criteria, "
                 "evidence_level = excluded.evidence_level, assumptions = excluded.assumptions, "
                 "uncertainties = excluded.uncertainties, step_id = excluded.step_id "
-                "where public.requirement.status = 'draft'",  # a requirement the PM has moved on is never overwritten
+                "where public.requirement.status = 'draft' returning id",  # leave PM-reviewed requirements untouched
                 (
                     req.id,
                     req.title,
@@ -536,7 +536,12 @@ def store_result(conn: Any, result: DraftingResult, run_id: str | None, step_id:
                     run_id,
                     stored_step_id,
                 ),
-            )
+            ).fetchone()
+            if saved is None:
+                continue
+            # A retry replaces a draft's provenance too; old links must not survive a revised result.
+            conn.execute("delete from public.requirement_finding where requirement_id = %s", (req.id,))
+            conn.execute("delete from public.requirement_cluster where requirement_id = %s", (req.id,))
             for finding_id in req.linked_finding_ids:
                 conn.execute(
                     "insert into public.requirement_finding (requirement_id, finding_id) values (%s, %s) on conflict do nothing",

@@ -25,6 +25,13 @@ class MarketTrendAgentTest(unittest.TestCase):
         self.assertEqual(evidence_from_trust("trade_press"), "Interpreted")
         self.assertEqual(evidence_from_trust("forum_social"), "Unverified")
 
+    def test_trust_uses_hostname_boundaries_rather_than_brand_substrings(self):
+        for url in ["https://bmwblog.com/review", "https://bmw.com.evil.example/review",
+                    "https://bmw.com@evil.example/review", "https://notcaranddriver.com/review"]:
+            self.assertEqual(infer_trust_tier(SourceDoc(url, "Review", "x")), "forum_social")
+        self.assertEqual(infer_trust_tier(SourceDoc("https://press.bmw.com:443/review", "OEM", "x")), "oem")
+        self.assertEqual(infer_trust_tier(SourceDoc("https://www.caranddriver.com:443/review", "Press", "x")), "trade_press")
+
     def test_build_result_keeps_citations_and_routes_out_of_scope(self):
         docs = [
             SourceDoc(
@@ -73,6 +80,14 @@ class MarketTrendAgentTest(unittest.TestCase):
         self.assertEqual(len(result.findings), 2)
         self.assertEqual(result.findings[0].trust_tier, "trade_press")
         self.assertEqual(result.findings[1].evidence_level, "Unverified")
+
+    def test_ordinary_review_language_is_not_a_regulatory_claim(self):
+        docs = [SourceDoc("https://example.com/review", "Review", "Seat comfort review", trust_tier="trade_press")]
+        texts = ["The seats feel fine on long journeys.", "Buyers call seat ventilation mandatory for comfort.",
+                 "Mandatory compliance with new regulations affects the vehicle.", "Regulatory fines increase."]
+        result = build_result("G60", "US", "comfort", docs, {
+            "findings": [{"source_index": 1, "text": text, "signal_type": "market_trend"} for text in texts]})
+        self.assertEqual([f.out_of_scope_reason is not None for f in result.findings], [False, False, True, True])
 
     def test_web_search_sources_come_from_citation_annotations(self):
         line_1 = "- Buyers expect charging stops in route planning ([caranddriver.com](https://www.caranddriver.com/a?utm_source=openai))"

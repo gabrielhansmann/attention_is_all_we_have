@@ -43,16 +43,19 @@ def main(argv: list[str] | None = None) -> int:
     load_env()
     if not os.environ.get("SUPABASE_DB_URL"):
         sys.exit("SUPABASE_DB_URL is not set in .env")
-    conn = psycopg.connect(os.environ["SUPABASE_DB_URL"], row_factory=dict_row, autocommit=True)
+    conn = psycopg.connect(os.environ["SUPABASE_DB_URL"], row_factory=dict_row)
     try:
         if args.cmd == "create-user":
             user = service.create_user(conn, args.email, args.name, ask_password(), args.role)
+            conn.commit()
             print(f"Created {user['role']} {user['email']}")
         elif args.cmd == "set-password":
             service.set_password(conn, args.email, ask_password())
+            conn.commit()
             print("Password changed; the user's sessions were signed out.")
         elif args.cmd in ("deactivate", "activate"):
             service.set_active(conn, args.email, args.cmd == "activate")
+            conn.commit()
             print(f"{args.cmd.capitalize()}d {args.email}")
         else:
             for u in service.list_users(conn):

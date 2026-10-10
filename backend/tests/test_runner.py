@@ -104,7 +104,7 @@ def test_start_runs_only_the_first_agent_and_puts_its_cited_answer_up_for_review
 def test_accept_starts_the_next_agent_with_the_accepted_output_and_the_last_accept_compiles_the_result(client):
     body = new_run(client)
     start(client, body)
-    assert client.post(f"/api/steps/{step_id(client, body)}/accept", json={}).status_code == 200
+    assert client.post(f"/api/steps/{step_id(client, body)}/accept", json={"note": "Reviewed the cited evidence"}).status_code == 200
     assert steps(client, body) == [(FEEDBACK, "accepted"), (TREND, "awaiting_review")]
     ctx = client.runners[TREND].seen[0]
     assert (ctx.vehicle_line, ctx.market, ctx.query) == ("G60", "US", "What do US customers say about seat comfort?")
@@ -115,7 +115,7 @@ def test_accept_starts_the_next_agent_with_the_accepted_output_and_the_last_acce
     assert done["run"]["status"] == "completed"
     final = done["messages"][-1]
     assert final["kind"] == "final_result" and FEEDBACK in final["content"] and LOCATOR in final["content"]
-    assert audit(client, body["runs"][0]["id"]) == ["plan_created", "run_completed"]
+    assert audit(client, body["runs"][0]["id"]) == ["plan_created", "run_started", "run_completed"]
 
 
 def test_an_unaccepted_step_never_reaches_the_next_agent(client):
@@ -125,7 +125,7 @@ def test_an_unaccepted_step_never_reaches_the_next_agent(client):
     assert rejected.status_code == 200
     assert steps(client, body) == [(FEEDBACK, "rejected"), (TREND, "awaiting_review")]
     assert client.runners[TREND].seen[0].accepted("findings") == []
-    done = client.post(f"/api/steps/{step_id(client, body, 2)}/accept", json={}).json()
+    done = client.post(f"/api/steps/{step_id(client, body, 2)}/accept", json={"note": "Reviewed the cited evidence"}).json()
     final = done["messages"][-1]
     assert "Coverage gaps" in final["content"] and "wrong market" in final["content"]
     assert final["payload"]["coverage_gaps"] == [FEEDBACK]
@@ -214,12 +214,12 @@ def test_a_failing_agent_ends_in_review_with_a_card_that_says_so(client):
 def test_actions_are_refused_outside_their_state(client):
     body = new_run(client)
     planned = step_id(client, body, 2)
-    assert client.post(f"/api/steps/{planned}/accept", json={}).status_code == 409
+    assert client.post(f"/api/steps/{planned}/accept", json={"note": "Reviewed the cited evidence"}).status_code == 409
     start(client, body)
     assert start(client, body).status_code == 409                       # a run starts once
     assert client.put(f"/api/runs/{body['runs'][0]['id']}/plan", json={"agents": [TREND]}).status_code == 409
     assert client.post(f"/api/steps/{planned}/retry", json={"note": "go ahead"}).status_code == 409
-    assert client.post("/api/steps/00000000-0000-0000-0000-000000000000/accept", json={}).status_code == 404
+    assert client.post("/api/steps/00000000-0000-0000-0000-000000000000/accept", json={"note": "Reviewed the cited evidence"}).status_code == 404
 
 
 def test_synthesis_steps_are_checked_against_the_accepted_findings(client):
@@ -235,7 +235,7 @@ def test_synthesis_steps_are_checked_against_the_accepted_findings(client):
     client.runners[CLUSTERING] = clustering
     body = new_run(client)
     start(client, body)
-    client.post(f"/api/steps/{step_id(client, body)}/accept", json={})
+    client.post(f"/api/steps/{step_id(client, body)}/accept", json={"note": "Reviewed the cited evidence"})
     card = detail(client, body)["messages"][-1]
     assert [c["label"] for c in card["payload"]["output"]["clusters"]] == ["Seat comfort"]
     assert [d["item"] for d in card["payload"]["critic"]["dropped"]]
@@ -276,3 +276,48 @@ def test_every_pm_action_on_a_step_records_who_the_signed_in_user_was(client):
     row = client.db.execute("select resolved_by from public.step where id = %s", (first,)).fetchone()
     assert row["resolved_by"] == me
     assert client.db.execute("select launched_by from public.step where id = %s", (second,)).fetchone()["launched_by"] == me
+
+
+def test_failed_output_cannot_be_accepted_or_disguised_by_editing(client):
+    client.runners[FEEDBACK] = FakeAgent(FEEDBACK, RuntimeError("provider unavailable"))
+    body = new_run(client)
+    start(client, body)
+    sid = step_id(client, body)
+    for _ in range(2):
+        response = client.post(f"/api/steps/{sid}/accept", json={"note": "Looks acceptable"})
+        assert response.status_code == 409 and "failed step" in response.json()["detail"]
+        assert client.runners[TREND].seen == []
+        client.post(f"/api/steps/{sid}/edit", json={"summary": "An edited failure summary"})
+    assert steps(client, body)[0][1] == "awaiting_review"
+
+
+def test_review_actions_reject_blank_reasons_and_summaries(client):
+    body = new_run(client)
+    start(client, body)
+    sid = step_id(client, body)
+    for action, payload in [("accept", {}), ("accept", {"note": "   "}), ("retry", {"note": "   "}),
+                            ("reject", {"note": "   ", "proceed": True}), ("edit", {"summary": "   "})]:
+        assert client.post(f"/api/steps/{sid}/{action}", json=payload).status_code == 422
+    assert steps(client, body) == [(FEEDBACK, "awaiting_review"), (TREND, "planned")]
+
+
+def test_plan_confirmation_and_acceptance_preserve_the_pm_and_reason(client):
+    body = new_run(client)
+    start(client, body)
+    run_id = body["runs"][0]["id"]
+    event = client.db.execute("select actor, rationale from public.audit_event where entity_id = %s "
+                              "and action = 'run_started'", (run_id,)).fetchone()
+    assert event["actor"] == "tester@example.com" and event["rationale"]
+    sid = step_id(client, body)
+    accepted = client.post(f"/api/steps/{sid}/accept", json={"note": "  Evidence covers the requested market  "}).json()
+    assert accepted["run"]["steps"][0]["pm_note"] == "Evidence covers the requested market"
+
+
+def test_finding_ids_are_stable_but_distinguish_sources_and_market_scope():
+    from app.orchestration.runner import _with_finding_ids
+    a = finding()
+    b = {**a, "source_file": "G70_feedback_hackathon.xlsx"}
+    c = {**a, "market": "EU"}
+    findings = _with_finding_ids({"findings": [dict(a), dict(b), dict(c), dict(a)]})["findings"]
+    assert len({f["id"] for f in findings}) == 3
+    assert findings[0]["id"] == findings[3]["id"]

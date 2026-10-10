@@ -15,6 +15,8 @@ import type {
   SearchSource,
   SourceInfo,
   StatsResponse,
+  WorkspaceConfig,
+  WorkspaceSnapshot,
 } from '@/types/api'
 
 export class ApiError extends Error {
@@ -71,6 +73,11 @@ async function request<T>(method: string, path: string, body?: unknown, signal?:
 const get = <T>(path: string, signal?: AbortSignal) => request<T>('GET', path, undefined, signal)
 
 export const api = {
+  workspaceConfig: (signal?: AbortSignal) => get<WorkspaceConfig>('/workspace/config', signal),
+  workspace: (line: string, market: string, signal?: AbortSignal) =>
+    get<WorkspaceSnapshot>(`/workspace?${query({ line: line || undefined, market: market || undefined })}`, signal),
+  reviewRequirement: (id: string, status: string, expectedStatus: string, reason: string) =>
+    request<{ id: string; status: string }>('PATCH', `/requirements/${id}/status`, { status, expected_status: expectedStatus, reason }),
   health: (signal?: AbortSignal) => get<Health>('/health', signal),
   filters: (signal?: AbortSignal) => get<FilterOptions>('/evidence/filters', signal),
   search: (q: string, source: SearchSource, f: EvidenceFilters, signal?: AbortSignal) =>
@@ -90,4 +97,11 @@ export const api = {
   postRequest: (id: string, content: string) =>
     request<PostResult>('POST', `/conversations/${id}/messages`, { content }),
   editPlan: (runId: string, agents: string[]) => request<PostResult>('PUT', `/runs/${runId}/plan`, { agents }),
+  startRun: (runId: string) => request<PostResult>('POST', `/runs/${runId}/start`),
+  acceptStep: (id: string, note: string) => request<PostResult>('POST', `/steps/${id}/accept`, { note }),
+  retryStep: (id: string, note: string) => request<PostResult>('POST', `/steps/${id}/retry`, { note }),
+  rejectStep: (id: string, note: string, proceed: boolean) =>
+    request<PostResult>('POST', `/steps/${id}/reject`, { note, proceed }),
+  editStep: (id: string, summary: string, note: string) =>
+    request<PostResult>('POST', `/steps/${id}/edit`, { summary, note }),
 }

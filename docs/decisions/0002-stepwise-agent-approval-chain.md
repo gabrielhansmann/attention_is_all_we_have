@@ -1,6 +1,6 @@
 # 0002 — Gate every agent step, not just the drafted requirement and its score
 
-> Date: 2026-10-10 · Status: accepted, partly superseded by [0005](0005-chat-entry-and-orchestrator-planned-steps.md) (the manual "Run" click per agent was removed; accepting a step now starts the next)
+> Date: 2026-10-10 · Status: superseded in part by [0005](0005-chat-entry-and-orchestrator-planned-steps.md), partly superseded by [0005](0005-chat-entry-and-orchestrator-planned-steps.md) (the manual "Run" click per agent was removed; accepting a step now starts the next)
 
 ## Context
 

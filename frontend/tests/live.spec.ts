@@ -1,6 +1,7 @@
 import { test, expect, type Page, type Route } from '@playwright/test'
 import { createRequire } from 'node:module'
 import type axe from 'axe-core'
+import { mockWorkspace } from './support'
 
 // Live mode talks to the backend through /api. Every call is mocked here: nothing reaches a real backend or database.
 const require = createRequire(import.meta.url)
@@ -42,6 +43,10 @@ const detail = (plan: [string, boolean][], changed = false) => ({
 })
 const json = (route: Route, body: unknown, status = 200) => route.fulfill({ status, json: body })
 
+test.beforeEach(async ({ page }) => {
+  await mockWorkspace(page)
+})
+
 async function mockBackend(page: Page, calls: { posted?: string; edited?: string[] } = {}) {
   let changed = false
   await page.route('**/api/health', r => json(r, { status: 'ok', db: 'ok', openai_key: true, version: 'test' }))
@@ -65,10 +70,9 @@ test.describe('live research (planner)', () => {
     const calls: { posted?: string; edited?: string[] } = {}
     await mockBackend(page, calls)
     await navigate(page, 'Research')
-    await page.getByRole('button', { name: 'Live planner (backend)', exact: true }).click()
     const live = page.getByTestId('live-research')
     await expect(live.getByText('No conversations yet.')).toBeVisible()
-    await expect(live.getByText('Agents do not run yet', { exact: false })).toBeVisible()
+    await expect(live.getByText('Confirm it to start research', { exact: false })).toBeVisible()
 
     await live.getByLabel('Research request', { exact: true }).fill('What do US G60 owners dislike most about the infotainment?')
     await live.getByRole('button', { name: 'Plan request', exact: true }).click()
@@ -78,7 +82,7 @@ test.describe('live research (planner)', () => {
     await expect(plan.getByText('Customer Feedback Agent', { exact: true })).toBeVisible()
     await expect(plan.getByText('Market & Trend Agent', { exact: true })).toBeVisible()
     await expect(plan.getByText('Not built yet')).toHaveCount(1)          // only the agent that does not exist is flagged
-    await expect(plan.getByText('G60 (5 Series)')).toBeVisible()
+    await expect(plan.getByText('Stored 5 Series')).toBeVisible()
     await expect(live.getByText('Not built yet: Customer Feedback Agent.', { exact: false })).toBeVisible()
     await expect(live.getByRole('button', { name: /^(Accept|Retry|Reject)$/ })).toHaveCount(0)   // no fake review controls
     await noViolations(page)
@@ -102,7 +106,6 @@ test.describe('live research (planner)', () => {
     await mockBackend(page)
     await page.route('**/api/runs/r1/plan', r => json(r, { detail: 'Customer Feedback Agent (or another stage 1 agent) is needed before Clustering Agent' }, 422))
     await navigate(page, 'Research')
-    await page.getByRole('button', { name: 'Live planner (backend)', exact: true }).click()
     const live = page.getByTestId('live-research')
     await live.getByLabel('Research request', { exact: true }).fill('Which trends matter for the G60?')
     await live.getByRole('button', { name: 'Plan request', exact: true }).click()
@@ -114,18 +117,15 @@ test.describe('live research (planner)', () => {
     await expect(live.getByRole('article', { name: 'Plan' })).toBeVisible()
   })
 
-  test('an unreachable backend is explained and the demo walkthrough still works', async ({ page }) => {
-    await page.route('**/api/**', r => json(r, { detail: 'planner unavailable: OPENAI_API_KEY is not set' }, 503))
+  test('a planner failure is explained without a fixture fallback', async ({ page }) => {
+    await page.route('**/api/conversations**', r => json(r, { detail: 'planner unavailable: OPENAI_API_KEY is not set' }, 503))
     await navigate(page, 'Research')
-    await page.getByRole('button', { name: 'Live planner (backend)', exact: true }).click()
     const live = page.getByTestId('live-research')
     await expect(live.getByText('Conversations unavailable:', { exact: false })).toBeVisible()
     await live.getByLabel('Research request', { exact: true }).fill('Which trends matter?')
     await live.getByRole('button', { name: 'Plan request', exact: true }).click()
     await expect(live.getByText('planner unavailable: OPENAI_API_KEY is not set', { exact: true })).toBeVisible()   // the composer's own error
-    await page.getByRole('button', { name: 'Demo walkthrough', exact: true }).click()
-    await expect(page.getByRole('heading', { name: 'Ask. Review. Decide.' })).toBeVisible()
-    await expect(page.getByLabel('What would you like to explore?')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Demo walkthrough', exact: true })).toHaveCount(0)
   })
 })
 
@@ -139,24 +139,23 @@ test.describe('live evidence library', () => {
       { id: 'b', file: 'G60_OptionList.PDF', type: 'internal_pdf', family: 'Product catalog', vehicle_line: 'G60', market: null, title: 'BMW 5er', retrieved_at: NOW, counts: { feedback: 0, pdf_chunks: 58, options: 62, study_cells: 0, sales_rows: 0 } },
     ]))
     await page.route('**/api/evidence/coverage', r => json(r, {
-      total_feedback: 5243, options_by_line: { G60: 62 },
+      sales_year: 2028, total_feedback: 5243, options_by_line: { G60: 62 },
       cells: [
-        { line: 'G60', market: 'US', feedback: 4365, study_cells: 721, sales_2025: 78000 },
-        { line: 'G60', market: 'EU', feedback: 238, study_cells: 37, sales_2025: 115000 },
-        { line: 'G60', market: 'RoW', feedback: 40, study_cells: 0, sales_2025: null },
-        { line: 'G60', market: 'CN', feedback: 0, study_cells: 0, sales_2025: null },
+        { line: 'G60', market: 'US', feedback: 4365, study_cells: 721, sales_volume: 78000 },
+        { line: 'G60', market: 'EU', feedback: 238, study_cells: 37, sales_volume: 115000 },
+        { line: 'G60', market: 'RoW', feedback: 40, study_cells: 0, sales_volume: null },
+        { line: 'G60', market: 'CN', feedback: 0, study_cells: 0, sales_volume: null },
       ],
     }))
     await page.goto('/')
     await navigate(page, 'Evidence library')
-    await page.getByRole('button', { name: 'Browse backend evidence', exact: true }).click()
     const lib = page.getByTestId('live-library')
     const table = lib.getByRole('table', { name: 'Stored evidence by vehicle line and market' })
     await expect(table.getByRole('cell', { name: /No customer feedback/ })).toHaveCount(1)       // China
-    await expect(table.getByRole('cell', { name: /Thin: 40 comments/ })).toHaveCount(1)          // under the 100 comment threshold
+    await expect(table.getByRole('cell', { name: /40 comments/ })).toHaveCount(1)          // under the 100 comment threshold
     await expect(table.getByRole('cell', { name: /4,365 comments/ })).toHaveCount(1)
-    await expect(table.getByRole('cell', { name: /2025 sales 115,000/ })).toBeVisible()
-    await expect(table.getByRole('cell', { name: /No 2025 sales row/ })).toHaveCount(2)
+    await expect(table.getByRole('cell', { name: /2028 sales 115,000/ })).toBeVisible()
+    await expect(table.getByRole('cell', { name: /No 2028 sales row/ })).toHaveCount(2)
     await expect(table.getByRole('rowheader', { name: /62 catalog options/ })).toBeVisible()
     const sources = lib.getByRole('table', { name: 'Source files loaded into the evidence store' })
     await expect(sources.getByRole('row', { name: /G60_feedback_hackathon.xlsx.*5,005 comments/ })).toBeVisible()
@@ -166,14 +165,38 @@ test.describe('live evidence library', () => {
   })
 
   test('library failures are shown without hiding the rest of the page', async ({ page }) => {
-    await page.route('**/api/**', r => json(r, { detail: 'evidence store unavailable (OperationalError)' }, 503))
+    await page.route('**/api/sources', r => json(r, { detail: 'evidence store unavailable (OperationalError)' }, 503))
+    await page.route('**/api/evidence/**', r => json(r, { detail: 'evidence store unavailable (OperationalError)' }, 503))
     await page.goto('/')
     await navigate(page, 'Evidence library')
-    await page.getByRole('button', { name: 'Browse backend evidence', exact: true }).click()
     const lib = page.getByTestId('live-library')
     await expect(lib.getByRole('alert').filter({ hasText: 'Coverage unavailable:' })).toBeVisible()
     await expect(lib.getByRole('alert').filter({ hasText: 'Sources unavailable:' })).toBeVisible()
-    await page.getByRole('button', { name: 'Demo sources', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Demo sources', exact: true })).toHaveCount(0)
     await expect(page.getByRole('heading', { name: 'Every claim has a source.' })).toBeVisible()
   })
+})
+
+
+test('evidence search uses the chosen database scope and clears stale hits when filters change', async ({ page }) => {
+  const calls: URL[] = []
+  await page.route('**/api/sources', r => json(r, []))
+  await page.route('**/api/evidence/coverage', r => json(r, { sales_year:null, total_feedback:0, options_by_line:{}, cells:[] }))
+  await page.route('**/api/evidence/filters', r => json(r, { lines:['G60','F70'], markets:[{ key:'EU', label:'Europe' }], domains:[], polarities:[], powertrains:[] }))
+  await page.route('**/api/evidence/stats?**', r => json(r, { group_by:'market_code', total:0, rows:[] }))
+  await page.route('**/api/evidence/search?**', r => {
+    const url = new URL(r.request().url()); calls.push(url)
+    return json(r, { query:url.searchParams.get('q'), source:'feedback', hits:[{ text:`Stored comment for ${url.searchParams.get('line')}`, citation:{ kind:'feedback', id:'real-row', file:'loaded-feedback.xlsx', locator:'sheet Feedback, row 9', quote:'Source wording' }, meta:{}, score:null }] })
+  })
+  await page.goto('/#evidence')
+  await expect(page.getByTestId('live-library')).toBeVisible()
+  await page.locator('#vehicle-line').selectOption('G60')
+  await page.locator('#market').selectOption('EU')
+  await page.getByLabel('Search', { exact:true }).fill('seat comfort')
+  await page.getByRole('button', { name:'Search', exact:true }).click()
+  await expect(page.getByText('Stored comment for G60', { exact:true })).toBeVisible()
+  expect(calls.at(-1)?.searchParams.get('line')).toBe('G60')
+  expect(calls.at(-1)?.searchParams.get('market')).toBe('EU')
+  await page.locator('#vehicle-line').selectOption('F70')
+  await expect(page.getByText('Stored comment for G60', { exact:true })).toHaveCount(0)
 })

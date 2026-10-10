@@ -9,7 +9,7 @@ help:
 	@echo "make dev        run backend and frontend together (BACKEND_PORT=$(BACKEND_PORT), frontend on 5173)"
 	@echo "make backend    run only the FastAPI backend"
 	@echo "make frontend   run only the Vite dev server"
-	@echo "make test       backend tests (no database or OpenAI key needed)"
+	@echo "make test       backend fixture tests; DB integration tests run when configured"
 	@echo "make build      type-check and build the frontend"
 	@echo "make lint       lint the frontend"
 	@echo "make check-db   verify the database connection and OpenAI key"

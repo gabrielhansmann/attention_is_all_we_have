@@ -1,6 +1,6 @@
 # Repository structure: frontend and backend
 
-> Status: `building` · Last updated: 2026-10-10 (PM workspace and demo/live evidence boundary; see [decision 0011](../decisions/0011-local-demo-frontend-and-vercel.md))
+> Status: `building` · Last updated: 2026-10-10 (database workspace; [decision 0023](../decisions/0023-database-backed-workspace.md))
 
 ```mermaid
 flowchart LR
@@ -11,7 +11,7 @@ flowchart LR
     AG --> K
     K --> DB[("Supabase Postgres<br/>+ pgvector")]
     ING["ingest<br/>loaders, parsers"] --> DB
-    AG -->|findings| DB
+    O -->|step JSON and audit events| DB
     K -.->|embeddings, answers| OAI["OpenAI API"]
 ```
 
@@ -26,15 +26,15 @@ backend/
     main.py               FastAPI app (CORS, routers)
     config.py             repo-root .env and data/ paths, settings; no secrets in logs
     auth/                 password hashing, users and sessions, the admin script (`python -m app.auth.manage`)
-    api/                  HTTP layer: health, evidence search / counts / cite / filters, response schemas
-    knowledge/            retrieval tools every agent uses; each hit carries a citation
-    agents/               LLM-backed agents (Market & Trend today)
-    orchestration/        agent catalog, planner, chat and plan persistence, step state machine
+    api/                  HTTP layer: auth, evidence, chat, workspace reads/reviews, response schemas
+    knowledge/            agent retrieval tools and database-backed workspace/library repositories
+    agents/               all roster modules; model-backed extraction plus deterministic scoring/audit
+    orchestration/        catalog, planner, persistence, Critic-gated step runner and state machine
     ingest/               loaders and parsers for the provided PDFs and Excel files
-  tests/                  pytest; no database or OpenAI key needed
+  tests/                  fixture tests plus optional transaction-rolled-back database integration tests
 frontend/                 Gabriel's PM workspace (npm, Vite + React + TypeScript), see frontend/README.md
-  src/App.tsx, components/   the five views over local demo data (fixtures, browser storage)
-  src/features/research/     live research: conversations, the planner's real plan, plan editing (calls /api)
+  src/App.tsx, components/   the five authenticated views over backend snapshots and stored results
+  src/features/research/     live research: conversations, planning, execution, polling and PM review actions (calls /api)
   src/features/library/      live evidence library: loaded sources and coverage matrix (calls /api)
   src/features/evidence/     live evidence search with exact counts (calls /api)
   src/components/ui/         shadcn/ui components used by the live views, restyled with BMW tokens
@@ -54,9 +54,10 @@ Makefile  .env.example    common tasks and the environment template (one .env at
   never depend on the working directory.
 - **One source for response shapes:** `backend/app/api/schemas.py`, mirrored by `frontend/src/types/api.ts`.
   Change both together.
-- **Every API result that states a fact carries a citation** (file, location, verbatim quote).
-- **The frontend never touches the database.** Every live view calls `/api`; all SQL is in the backend. The demo
-  views use fixtures, labelled as such, and the static Vercel build has no live mode.
+- **Evidence rows carry source references** (file/URL and locator). Raw search hits include the stored quote;
+  requirement citations contain the persisted finding text or source snapshot. Aggregates state their scope.
+- **The frontend never touches the database.** Every business view calls `/api`; all SQL is in the backend.
+  No fixture values or browser-only business state are generated. Production needs an API on the same origin.
 - **UI follows `design.md`:** BMW tokens, rectangular components, no shadows, Inter 300/700 as the
   approved substitute font, no dark theme. Components keep labels above fields and show loading, empty and
   error states.
@@ -76,7 +77,10 @@ Makefile  .env.example    common tasks and the environment template (one .env at
 | `GET /api/evidence/filters` | the values the UI offers as filters |
 | `GET /api/evidence/{kind}/{id}` | the citation for one stored row |
 | `GET /api/sources` | every loaded source file with what was extracted from it (comments, passages, options, study cells, sales rows) |
-| `GET /api/evidence/coverage` | comments, study cells and 2025 sales per vehicle line and market, so gaps are visible |
+| `GET /api/evidence/coverage` | comments, study cells and newest recorded-year sales per vehicle line and market, so gaps are visible |
+| `GET /api/workspace/config` | active vehicle-line/market keys and labels from ontology |
+| `GET /api/workspace?line=&market=` | scoped evidence counts, sales/forecasts, catalog/study rows, backlog/latest scores, accepted contributions and audit events |
+| `PATCH /api/requirements/{id}/status` | status review with expected previous status, required reason and audit event |
 | `GET /api/agents` | the agent catalog in pipeline order and which agents exist yet |
 | `GET, POST /api/conversations` | list, or create (optionally with a first request) |
 | `GET, PATCH /api/conversations/{id}` | the thread (messages and runs with steps), or rename / archive |
@@ -86,21 +90,22 @@ Makefile  .env.example    common tasks and the environment template (one .env at
 | `POST /api/steps/{id}/accept`, `retry`, `reject`, `edit` | the PM's four actions on a step in review; accept starts the next agent |
 
 Everything except `/api/health` and `/api/auth/login` needs `Authorization: Bearer <token>`; without it the answer is a
-uniform 401 and no database connection is opened. Bad parameters give 422, unknown rows 404, and an unreachable database 503 with no internals in the
+uniform 401 and no database connection is opened. Bad parameters give 422, unknown rows 404, and an
+unreachable database 503 with no internals in the
 message. Interactive docs are served at `/docs`.
 
 ## Not built yet
 
-- Starting the plan: accepting the plan, running the first step, and the PM actions on a step card (accept,
-  edit, retry, reject). The chat API and the planner exist; the agents behind the steps and the runner do not.
-- The Requirements, Overview and Reports views still show local demo data; they need requirements and findings in the database first.
+- Persisting accepted outputs into the finding/requirement/score backlog and recovering interrupted background steps.
+- Successor targets, persisted scoring-weight configuration and a PM input ingestion API.
 - A Docker setup and CI.
 
 ## Frontend delivery
 
-The active UI is the five-view PM workspace documented in [the frontend guide](../../frontend/README.md).
-Its portfolio, research, targets, and reports use explicitly illustrative fixtures and browser
-local storage. The retained API Evidence browser is available from Evidence library during
-local development, or with `VITE_LIVE_EVIDENCE=true` when the deployed origin serves `/api`.
-The static Vercel demo keeps live access disabled. Vite retains the backend proxy and `@` alias.
+The active five-view PM workspace is documented in [the frontend guide](../../frontend/README.md).
+Sign-in protects every view. Scope keys and labels come from ontology; business records come from
+`/api/workspace`, evidence/library endpoints and the real chat runner. Missing backlog rows, scores,
+targets and accepted results are displayed as missing. There is no demo mode or local business-data store.
+Accepted step output is visible in Overview and Reports without being misrepresented as a backlog row.
+Production must serve `/api`; Vite retains its backend proxy and `@` alias for local work.
 Dependencies use the npm lockfile; the Makefile and Vercel install with `npm ci`.

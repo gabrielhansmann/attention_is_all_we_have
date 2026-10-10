@@ -1,28 +1,24 @@
 # Tech stack
 
-> Status: `building` · Last updated: 2026-10-10 (local demo frontend and Vercel, see decision 0011)
+> Status: `building` · Last updated: 2026-10-10 (database workspace; [decision 0023](../decisions/0023-database-backed-workspace.md))
 
-Kept boring on purpose — a hackathon is not the place to debug infrastructure.
-
-| Layer | Choice | Why |
+| Layer | Implemented choice | Boundary |
 |---|---|---|
-| Orchestration | LangGraph | Its explicit interrupt-for-human-input pattern maps directly onto the per-step PM gates in [`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and-human-in-the-loop.md) — one `interrupt()` per `Step`, not one at the end, plus a planner node where the orchestrator chooses the agents. Its Postgres checkpointer stores run state in the same Supabase database (use the direct or session-pooler connection string, not the transaction pooler) |
-| LLM | Every agent is LLM-backed. Currently the OpenAI API (key in `.env`); the provider is a config choice and Claude remains an option | Extraction, cluster labeling, requirement drafting, scoring rationale, Critic verification, answering over retrieved evidence. Answers may only cite retrieved rows |
-| Web research | The LLM's built-in web search tool (OpenAI Responses API `web_search`), for now | No extra search API key or service. Sources are built from the tool's citation annotations, not from model-written text; source-trust tagging is applied at ingest time. A dedicated search API (Tavily/Brave) stays an option, see [decision 0009](../decisions/0009-web-search-through-the-llm.md) |
-| PDF parsing | `pdftotext -layout` (poppler) for text; pdfplumber / vision-LLM still planned for the equipment tables | Text extraction works (the catalogs have real text). Reliable ■/□ column mapping needs table-aware extraction or a vision pass — not built yet |
-| Excel | openpyxl (+ psycopg for loading) | Loaders in `backend/app/ingest/`; the customer-study cross-tabs need a custom parser |
-| Storage | Supabase (managed Postgres) + pgvector 0.8 | One database for both relational entities (`Finding`, `Requirement`, `AuditEvent`, …) and embeddings — keeps traceability joins simple instead of reconciling two stores. Schema is live: see `supabase/migrations/`. RLS is on for every table with no policies yet, so only the backend (service role / direct connection) can read or write; the frontend goes through the API |
-| Embeddings | OpenAI `text-embedding-3-small` (1536 dims, cosine, HNSW) | Key in `.env` as `OPENAI_API_KEY`. Only `finding.text` and `chunk.content` are embedded; option codes and sales numbers stay exact, un-embedded data. Changing the model means re-embedding and altering the column — see [decision 0004](../decisions/0004-supabase-and-openai-embeddings.md) |
-| API | FastAPI (`backend/app/api`), served by uvicorn | Evidence endpoints are implemented. Authentication and live orchestration remain future work; see [`12-repo-structure.md`](12-repo-structure.md) |
-| Frontend | React + TypeScript + Vite; Radix primitives and variant-based components following the shadcn pattern | Implemented in `frontend/`: scoped overview, targets, portfolio, review gates, evidence, reports, and local decision history. BMW tokens, self-hosted Inter, Phosphor icons; see [decision 0011](../decisions/0011-local-demo-frontend-and-vercel.md) |
-| Frontend persistence | Browser local storage (demo only) | Illustrative fixtures, local edits and previews, JSON/CSV export. No shared or immutable server persistence |
-| Deploy | Static Vercel frontend; Supabase hosts the backend database | Deploy `frontend/` as Vite. Python services are separate and are not deployed with this frontend. Docker-compose remains a possible future backend option |
+| Orchestration | Python planner and state machine; FastAPI background tasks with separate connections | Sequential PM gates, Critic retries and step JSON persistence. LangGraph/checkpointed durable execution remains planned; a server interruption can leave a running step stuck. |
+| Models | OpenAI API for planning, extraction, clustering and drafting | Sales/Portfolio findings, scoring, Documentation, Delta/Tracking and Critic checks are deterministic. See the model-use table in [01-agents.md](01-agents.md#implementation-status). |
+| Web research | OpenAI Responses API built-in `web_search` | URLs come from citation annotations. Stored snippets are cited summaries, not full-page verbatim snapshots. No separate scraper or search API is implemented. |
+| PDF parsing | Poppler `pdftotext -layout` plus pdfplumber | Text passages and positional equipment/variant extraction are implemented. Packages and technical-value pages remain searchable text rather than complete relational specifications. |
+| Excel | openpyxl and psycopg loaders | Feedback, line/market/year sales and customer-study cross-tabs with row or cell locators. No measured option take-rate or study respondent counts are supplied. |
+| Storage | Supabase Postgres and pgvector | Evidence, chat, steps, users, sessions and append-only audit events. Runs store outputs on steps; accepted results are not yet written into backlog tables. RLS is enabled; backend access only. |
+| Embeddings | OpenAI `text-embedding-3-small`, 1536 dimensions | Feedback comments, PDF chunks and the finding schema support vectors. Options and sales remain exact structured data. A different embedding model needs a migration and re-embedding. |
+| API | FastAPI and uvicorn | Evidence/library, planning, execution and review endpoints. All except health and login require a Bearer session. `APP_ENV=production` hides OpenAPI and interactive docs. |
+| Authentication | scrypt passwords and server-side hashed sessions | Admin CLI creates invited users; logout, password changes and deactivation revoke sessions. Concurrent sign-in attempts lock the account row to preserve failed-attempt counts. |
+| Frontend | React, TypeScript, Vite, Tailwind and shadcn-style primitives | BMW tokens and self-hosted Inter. Local live research now runs and reviews backend steps; live evidence shows citations and coverage. |
+| Frontend persistence | Authenticated backend API for every business view | Database ontology, raw evidence, backlog rows/latest scores, accepted step JSON and audit events. Requirement status reviews persist atomically; no browser business-data store or fixture fallback. |
+| Deployment | Vite frontend with backend `/api`; Supabase database | Development uses the Vite proxy. Production must serve `/api` on the same origin through a hosted backend/proxy; static files alone cannot supply the workspace. |
 
-The deployed PM workspace is a working local demo, not a live agent client. It does not query Supabase,
-perform LLM/web research, parse binary uploads, or schedule weekly reports. Service credentials
-remain backend-only. See the [frontend guide](../../frontend/README.md) for setup and verification.
+The frontend calls only `/api`, never Supabase or OpenAI directly. Provider and database credentials stay
+on the backend. See [the frontend guide](../../frontend/README.md) for setup, data boundaries and tests.
 
-The backend-connected Evidence browser from the repository restructure is retained in the local
-frontend, reached from Evidence library. Vite proxies its `/api` calls to FastAPI. It can also be
-enabled in another deployment with `VITE_LIVE_EVIDENCE=true` once that origin serves the API.
-The current static Vercel demo has no backend and keeps this option disabled.
+Recurring refresh, weekly reports, broader input ingestion, backlog persistence and durable recovery remain
+planned. No production worker model or measured recommendation accuracy is claimed.

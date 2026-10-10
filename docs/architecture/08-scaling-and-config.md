@@ -1,10 +1,12 @@
 # Scaling & configuration
 
-> Status: `draft` · Last updated: 2026-10-10 (chat wording)
+> Status: `draft` · Last updated: 2026-10-10 (database workspace; [decision 0023](../decisions/0023-database-backed-workspace.md))
 
-Nothing about G60 or "Europe" is hardcoded. Every `PipelineRun` (one per chat request) takes a config:
-`{vehicle_line, market, generation_baseline}`, read from the PM's message or asked back by the
-orchestrator if missing. Swapping to the 1 Series in China is a config
+Runs are not limited to G60 or Europe, although supported vehicle-line/market codes are currently mirrored in
+backend evidence API types and planner catalog. Workspace selector labels and values are read from active
+database ontology rows; the workspace API validates scope against those rows. Every `PipelineRun` (one per chat request) takes a config:
+`{vehicle_line, market}` from the PM's message; omitted values become `ALL`. A generation baseline is used by
+the Baseline agent, not a separate run column. Swapping to the 1 Series in China is a config
 change, not a rewrite.
 
 ## Domain taxonomy is config, not code
@@ -23,7 +25,8 @@ system plugs in without touching clustering, drafting, or scoring.
 ## Markets compose, they don't collapse
 
 A requirement can carry per-market sub-scores and a market-fit flag ("fits EU, doesn't fit China")
-rather than forcing one global priority — this is the direct answer to the PM pain point raised
+(planned; no persisted per-market sub-score API yet) rather than forcing one global priority — this is the
+direct answer to the PM pain point raised
 about balancing requirements across regions with different climate, usage, and culture.
 
 ## Regulatory guardrail

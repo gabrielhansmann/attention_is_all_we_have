@@ -77,8 +77,9 @@ is the locator, and the PM who pasted it is recorded as the origin.
 | FR-IN-18 | Filter out content that is not a customer statement about the vehicle — advertising, spam, bot-like repetition, off-topic replies — and count what was filtered in the ingest report. | S | new |
 | FR-IN-19 | Ingest directly from a platform through a connector only where the platform's terms permit it; the set of enabled connectors is configuration. | C | new |
 
-**FR-IN-12** — the export route is the demo path: it needs no platform access and is legally
-unproblematic. **FR-IN-13** — a post with 4,000 likes is one voice with reach, not 4,000
+**FR-IN-12** — the export route is the demo path: it needs no direct platform access. Permission to use the
+exported material depends on its source. **FR-IN-13** — a post with 4,000 likes is one voice with reach, not
+4,000
 respondents; prioritization (`FR-PR-02`) treats the two differently.
 
 ## Normalization

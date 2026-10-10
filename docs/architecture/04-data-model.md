@@ -1,6 +1,6 @@
 # Data model
 
-> Status: `draft` · Last updated: 2026-10-10 (option availability and seeded ontology)
+> Status: `draft` · Last updated: 2026-10-10 (database workspace; [decision 0023](../decisions/0023-database-backed-workspace.md))
 
 Everything is traceable because everything points backward. A PM looking at a requirement can walk
 back to the exact cell or paragraph that produced it; a PM looking at the audit log can tell who or
@@ -29,11 +29,14 @@ erDiagram
 
 `id, type (internal_pdf | internal_xlsx | web), uri, vehicle_line, market, retrieved_at`
 
+The flexible-input migration also adds input family, channel, language, origin, added-by and ingest-report
+metadata. `dossier` is not an allowed source type yet.
+
 ## Finding
 
 `id, source_id, locator (page/row/cell or url+retrieved_at), text, signal_type (complaint |
 unmet_need | competitor_advantage | market_trend | praise), evidence_level (Verified | Interpreted
-| source-trust tier), sentiment, sample_size, market, extracted_by, created_at`
+| Unverified), sentiment, sample_size, market, extracted_by, created_at`
 
 See [`03-ingestion.md`](03-ingestion.md) for how `locator` and `evidence_level` get set.
 
@@ -81,24 +84,34 @@ Introduced in [`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and
 status (in_progress | completed | aborted), created_by, created_at`
 
 **Step:** `id, run_id, agent_name, stage, depends_on_step_ids[], status (planned | running |
-awaiting_review | accepted | rejected), plan_reason, planned_by (orchestrator | pm), human_readable_summary, structured_output_refs[],
+awaiting_review | accepted | rejected), plan_reason, planned_by (orchestrator | pm), human_readable_summary,
+structured_output_refs (jsonb),
 launched_by, launched_at, resolved_by, resolved_at, pm_note`
 
 Every launch, accept, edit, retry, and reject on a `Step` is also an `AuditEvent` — the run itself
 is fully reconstructable from the audit log alone.
+
+## Runner persistence boundary
+
+The diagrams above describe the target relational graph. The current runner stores `{output, critic}`
+as step JSON and writes messages/audit events, without creating finding, cluster, requirement or score rows.
+Scores carry their weights and breakdown in the step output; the `score` table currently has no weight-vector
+or breakdown column. Backlog persistence and searchable dossier chunks need a further design and migration.
 
 ## As implemented (Supabase, `supabase/migrations/20261010_init_schema.sql`)
 
 Differences and additions relative to the sketch above:
 
 - **Extra tables:** `chunk` (Tier 2 heading-aware text chunks with their own locator, `page`,
-  `chunk_index` and embedding), `option` + `option_availability` (Tier 1 equipment rows with per-variant standard/optional status and
+  `chunk_index` and embedding), `option` + `option_availability` (Tier 1 equipment rows with per-variant
+standard/optional status and
   price, 198 + 1,352 rows),
   raw-data tables `feedback_raw`, `sales_volume`, `study_response` (see
   [`03-ingestion.md`](03-ingestion.md#as-implemented-decision-0006)), and join tables `cluster_finding`,
   `requirement_finding`, `requirement_cluster` in place of the `member_finding_ids[]` /
   `linked_*_ids[]` arrays.
-- **Embeddings:** `finding.embedding`, `chunk.embedding` and `feedback_raw.embedding`, `vector(1536)`, HNSW cosine indexes.
+- **Embeddings:** `finding.embedding`, `chunk.embedding` and `feedback_raw.embedding`, `vector(1536)`, HNSW
+  cosine indexes.
 - **Enum additions:** `finding.signal_type` also allows `business_signal` and
   `strategic_continuity`; `evidence_level` also allows `Unverified`.
 - **Extra columns:** `requirement.code` (human id such as `R-2031`, next to the UUID key),
@@ -135,13 +148,14 @@ audit trail): archive it instead. One without runs can be deleted and its messag
 **Message:** `id, seq, conversation_id, role (pm | orchestrator | agent | system), kind (request | plan |
 plan_change | step_card | pushback | final_result | system_note), run_id, step_id, content, payload (jsonb),
 created_at`. `content` is the text shown in the thread; `payload` holds the structured part of a card (plan
-items, citations, summary sections). A `step_card` or `pushback` must have a `step_id`. `seq` is an identity number that orders the thread:
+items, citations, summary sections). A `step_card` or `pushback` must have a `step_id`. `seq` is an identity
+number that orders the thread:
 `created_at` cannot, because messages written in one transaction share the same timestamp.
 
 **PipelineRun** gains `conversation_id`. **Step** now has the states `planned | running |
 awaiting_review | accepted | rejected` (the old `queued` and `awaiting_launch` are gone) and the columns
 `position` (order in the plan, unique per run), `plan_reason`, `planned_by (orchestrator | pm)` and
-`attempt` (incremented by every Retry); `pm_note` holds the latest steering note.
+`attempt` (incremented by every Retry); `pm_note` holds the latest review reason or steering note.
 
 The database enforces the one-at-a-time rule: a unique partial index allows at most one step per run in
 `running` or `awaiting_review`. `backend/app/orchestration/steps.py` holds the transition rules and a test
@@ -156,5 +170,15 @@ failed_attempts, locked_until, last_login_at, created_at`.
 
 **AuthSession:** `id, user_id, token_hash (SHA-256 of the random token, unique), created_at, expires_at, last_used_at,
 revoked_at`. The token itself is never stored. The signed-in user's email is written to `conversation.created_by`,
-`pipeline_run.created_by`, `message.payload.author` (PM messages) and `audit_event.actor` (plan edits and every step action); the planner's
+`pipeline_run.created_by`, `message.payload.author` (PM messages) and `audit_event.actor` (plan edits and
+every step action); the planner's
 `plan_created` event records `requested_by`.
+
+## Workspace reads and reviews
+
+The authenticated workspace API reads the existing ontology, evidence, requirement, score, pipeline/step
+and audit tables. The newest stored score is selected per requirement; absent scores remain null.
+Accepted contributions are read from step JSON and are not implicitly imported into the backlog.
+Requirement status changes lock the row, compare the caller's expected status and write an audit event
+in the same transaction. No schema change is needed for this workspace integration. See
+[decision 0023](../decisions/0023-database-backed-workspace.md).

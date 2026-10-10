@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api, ApiError } from '@/lib/api'
+import { useWorkspace } from '@/context'
 import type {
   EvidenceFilters,
   FilterOptions,
@@ -39,11 +40,14 @@ const message = (e: unknown) => (e instanceof ApiError ? e.message : 'Something 
 const aborted = (e: unknown) => e instanceof DOMException && e.name === 'AbortError'
 
 export function EvidencePage() {
+  const { line, market } = useWorkspace()
   const [options, setOptions] = useState<FilterOptions | null>(null)
   const [optionsError, setOptionsError] = useState<string | null>(null)
   const [q, setQ] = useState('')
   const [source, setSource] = useState<SearchSource>('feedback')
-  const [filters, setFilters] = useState<EvidenceFilters>({})
+  const [filters, setFilters] = useState<EvidenceFilters>(() => ({
+    ...(line ? { line: line as Line } : {}), ...(market ? { market: market as Market } : {}),
+  }))
   const [groupBy, setGroupBy] = useState<GroupBy>('market_code')
   const [results, setResults] = useState<Load<{ query: string; hits: Hit[] }>>({ kind: 'idle' })
   // Loading is derived: a result only counts if it was fetched for the current group and filters.
@@ -51,6 +55,7 @@ export function EvidencePage() {
   const statsKey = JSON.stringify([groupBy, filters])
   const stats: Load<StatsResponse> = statsDone?.key === statsKey ? statsDone.result : { kind: 'loading' }
   const searchCtrl = useRef<AbortController | null>(null)
+  useEffect(() => () => searchCtrl.current?.abort(), [])
 
   useEffect(() => {
     const ctrl = new AbortController()
@@ -68,8 +73,14 @@ export function EvidencePage() {
     return () => ctrl.abort()
   }, [groupBy, filters, statsKey])
 
-  const set = <K extends keyof EvidenceFilters>(key: K, value: EvidenceFilters[K]) =>
+  function resetResults() {
+    searchCtrl.current?.abort()
+    setResults({ kind: 'idle' })
+  }
+  const set = <K extends keyof EvidenceFilters>(key: K, value: EvidenceFilters[K]) => {
+    resetResults()
     setFilters((f) => ({ ...f, [key]: value }))
+  }
 
   function onSearch(e: FormEvent) {
     e.preventDefault()
@@ -105,6 +116,7 @@ export function EvidencePage() {
               onChange={(e) => setQ(e.target.value)}
               placeholder="For example: seat ventilation too weak"
               minLength={2}
+              maxLength={300}
               required
             />
           </div>
@@ -113,7 +125,7 @@ export function EvidencePage() {
             label="Source"
             value={source}
             options={SOURCES}
-            onChange={(v) => setSource((v as SearchSource) ?? 'feedback')}
+            onChange={(v) => { resetResults(); setSource((v as SearchSource) ?? 'feedback') }}
             allLabel="Customer feedback"
           />
         </div>
@@ -152,6 +164,7 @@ export function EvidencePage() {
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
         <section aria-labelledby="results-h" aria-live="polite" className="flex flex-col gap-4">
           <h2 id="results-h" className="text-xl">Results</h2>
+          {results.kind === 'ok' && <p className="text-sm text-muted-foreground">Search: {results.data.query}</p>}
           {results.kind === 'idle' && (
             <p className="text-muted-foreground">Enter a question above to see cited evidence.</p>
           )}

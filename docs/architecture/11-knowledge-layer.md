@@ -1,6 +1,6 @@
 # Knowledge layer: normalized evidence the agents can query
 
-> Status: `stable` for normalization and retrieval, `building` for findings · Last updated: 2026-10-11 (see [decision 0008](../decisions/0008-knowledge-layer-normalization-and-retrieval.md))
+> Status: `stable` for normalization and retrieval, `building` for findings · Last updated: 2026-10-10 (project review; [decision 0022](../decisions/0022-project-review-and-live-step-controls.md))
 
 The knowledge layer sits between ingestion and the agents. Ingestion parses files and keeps
 provenance per row and page ([`03-ingestion.md`](03-ingestion.md)); the knowledge layer makes those
@@ -18,7 +18,7 @@ flowchart LR
     NORM --> TOOLS
     EV --> TOOLS
     TOOLS <--> AG
-    AG -->|findings, requirements| EV
+    AG -.->|accepted-output persistence planned| EV
 ```
 
 ## 1. Normalization
@@ -48,7 +48,8 @@ Assumptions to confirm with BMW (all recorded here so nobody has to rediscover t
 
 ## 2. Evidence store
 
-`finding` is a cited claim, for example "312 US G60 comments report weak seat ventilation". Each
+`finding` is a cited claim, for example an illustrative claim such as "312 US G60 comments report weak seat
+ventilation". Each
 finding links to the raw rows behind it through `finding_evidence`, which holds exactly one reference
 per row (feedback comment, study cell, sales row, option or PDF chunk) with foreign keys, so a finding
 cannot point at a row that does not exist. `finding` also carries `domain_id`, `polarity`, `market`,
@@ -88,6 +89,8 @@ general enquiries or service). Agents state these gaps instead of implying cover
 
 ## What is not here yet
 
-- `finding` rows are not derived yet (that is the first agent's job); `requirement` versioning
-  ("versioned sets" in the architecture diagram) is not built.
-- Web research (Competitor and Market/Trend agents) runs through the LLM's search tool (decision 0009); the pages are not fetched.
+- Agent modules now derive findings and requirements, but the runner retains them as step JSON rather than
+  persisting them into the knowledge/backlog tables. `requirement` versioning and accepted-output persistence
+  are not built.
+- Web research (Competitor and Market/Trend agents) runs through the LLM's search tool (decision 0009); the
+  pages are not fetched.

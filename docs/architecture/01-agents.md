@@ -1,6 +1,6 @@
 # Agents
 
-> Status: `building` · Last updated: 2026-10-10 (all roster agents implemented and run by the step runner, see decisions [0014](../decisions/0014-all-roster-agents-implemented.md) and [0015](../decisions/0015-step-runner-and-step-output-on-the-step.md))
+> Status: `building` · Last updated: 2026-10-10 (project review; [decision 0022](../decisions/0022-project-review-and-live-step-controls.md))
 
 Every agent reads some slice of evidence and produces either new evidence (`Finding`s) or a
 synthesis of existing evidence (`Cluster`, `Requirement`, `Score`, dossier). None of them change a
@@ -14,14 +14,14 @@ their output actually gets used.
 |---|---|---|---|
 | Baseline Agent | 01 Situation analysis | Previous-gen feedback, BMW portfolio docs, prior sales trend | Findings tagged `strategic_continuity` |
 | Customer Feedback Agent | 01 | `*_feedback_hackathon.xlsx`, `*_customer_studies.xlsx` | Findings (`complaint` / `unmet_need` / `praise`), each with sample size + market |
-| Sales & Portfolio Agent | 01 | `sales_volumes.xlsx`, parsed OptionList rows | Revealed-preference findings — option uptake % as a `business_signal` input |
+| Sales & Portfolio Agent | 01 | `sales_volumes.xlsx`, parsed OptionList rows | Sales trends and share of catalog variants with standard equipment, explicitly a thin `business_signal` proxy rather than measured uptake |
 | Competitor Agent | 01 | Live web search — competitor spec pages, reviews, teardown data | Findings tagged `competitor_advantage`, source-trust tier |
 | Market & Trend Agent | 01 | Live web search — trend reports, forward-looking analyst pieces | Findings tagged `market_trend`; explicitly flagged as assumption-heavy, not fact |
 | Clustering / Ontology Agent | 02 | All findings across sources | Deduplicated clusters mapped onto the domain taxonomy |
-| Critic Agent | cross-cutting | Any agent's draft output before it reaches the PM | Verifies every claim has a live citation; flags unsupported or weakly-sourced statements and forces a retry before the step reaches `awaiting_review` |
+| Critic Agent | cross-cutting | Any agent's draft output before it reaches the PM | Checks source locators and references to accepted findings; flags unsupported or weakly-sourced statements and forces a retry before the step reaches `awaiting_review` |
 | Requirements Drafting Agent (Synthesizer) | 03 | Clusters + linked findings | Draft requirement: description, metric, acceptance criteria |
 | Prioritization Agent | 04 | Draft requirements + findings + sales/option data | Score + weight breakdown + one-line rationale |
-| Documentation Agent | 05 | Every accepted step + every PM decision in a run | Human-readable dossier (markdown), re-embedded into the knowledge layer |
+| Documentation Agent | 05 | Every accepted step + every PM decision in a run | Human-readable dossier (markdown); knowledge-layer re-embedding remains pending |
 | Delta / Tracking Agent | ongoing | New ingestion batches vs. existing requirement evidence | `new evidence` / `contradicting` / `stale` flags, routed to PM review |
 
 Competitor and Market/Trend are kept as **two separate agents**, not one: competitor findings are
@@ -89,8 +89,10 @@ Supabase.
 The Critic doesn't sit at a stage of its own — it sits between every agent and the PM. Before any
 step reaches `awaiting_review`, the Critic Agent:
 
-1. Checks that every factual claim in the agent's output links to a real source with a locator
-   (page/row for provided files, URL + retrieval date for web sources).
+1. Checks that structured claims carry well-formed source locators and synthesis references resolve to
+   accepted finding ids
+   (page/row for provided files, URL + retrieval date for web sources). These are provenance checks, not live
+page fetching or proof that a source supports the claim semantically.
 2. Flags claims that don't — the step is automatically sent back for a retry (same agent, same
    scope, instructed to either find a citation or drop the claim) *before* the PM ever sees it.
 3. Downgrades `evidence_level` on anything that's technically cited but thin (single source, no
@@ -109,8 +111,8 @@ Not an agent that produces findings. It does three things:
    reason each. The plan is shown in the chat and the PM can edit it.
 2. **Sequences.** Holds the `PipelineRun`/`Step` state machine (see next doc) and starts the next
    planned agent when the PM accepts the current one, passing along the accepted output as context.
-3. **Adapts.** May propose adding or dropping agents as results come in; the PM can veto, and a
-   step already accepted is never silently re-run.
+3. **Adaptation is planned.** Today the plan is locked after execution starts; the PM can edit it before
+   confirming. Accepted steps are never silently re-run.
 
 Not every request uses every agent. See
 [`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and-human-in-the-loop.md) and

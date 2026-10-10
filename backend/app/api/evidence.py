@@ -35,6 +35,9 @@ def search(
     powertrain: Powertrain | None = None,
     k: Annotated[int, Query(ge=1, le=50)] = 10,
 ) -> SearchResponse:
+    q = q.strip()
+    if len(q) < 2:
+        raise HTTPException(status_code=422, detail="search needs at least two non-whitespace characters")
     try:
         if source == "docs":
             hits = tools.search_docs(q, line=line, k=k)

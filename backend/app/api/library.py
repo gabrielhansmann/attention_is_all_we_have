@@ -25,7 +25,7 @@ def sources():
 
 @router.get("/evidence/coverage", response_model=CoverageOut)
 def coverage():
-    """Customer comments, study cells and 2025 sales per vehicle line and market, so gaps are visible."""
+    """Customer comments, study cells and latest recorded sales per scope, so gaps are visible."""
     try:
         return library.coverage()
     except Exception as e:

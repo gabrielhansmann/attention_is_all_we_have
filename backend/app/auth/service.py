@@ -89,7 +89,8 @@ def authenticate(conn, email: str, password: str) -> dict:
     """The user row on success. Raises InvalidCredentials (wrong password, unknown or inactive account, all
     indistinguishable) or AccountLocked. The caller must commit before turning the exception into a response,
     because the failed-attempt counter has to persist."""
-    user = conn.execute("select * from public.app_user where email = %s", (normalize_email(email),)).fetchone()
+    # Serialize attempts for one account: concurrent wrong passwords must not overwrite each other's counter.
+    user = conn.execute("select * from public.app_user where email = %s for update", (normalize_email(email),)).fetchone()
     if user is None:
         burn_time()
         raise InvalidCredentials()

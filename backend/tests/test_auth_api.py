@@ -46,7 +46,7 @@ def test_login_returns_a_token_that_works_and_exposes_no_secrets(client):
 
 def test_only_a_hash_of_the_token_is_stored(client):
     token = login(client).json()["token"]
-    rows = client.db.execute("select token_hash from public.auth_session").fetchall()
+    rows = client.db.execute("select token_hash from public.auth_session where user_id = %s", (client.user["id"],)).fetchall()
     assert [r["token_hash"] for r in rows] == [hashlib.sha256(token.encode()).hexdigest()]
     assert token not in rows[0]["token_hash"]
 
@@ -95,7 +95,8 @@ def test_logout_revokes_only_that_session(client):
 ])
 def test_expired_revoked_and_deactivated_sessions_are_refused_with_the_same_message(client, break_it):
     token = login(client).json()["token"]
-    client.db.execute(break_it)
+    client.db.execute(break_it + (" where id = %s" if "app_user" in break_it else " where user_id = %s"),
+                      (client.user["id"],))
     r = client.get("/api/auth/me", headers=bearer(token))
     assert r.status_code == 401 and r.json() == {"detail": "not authenticated"}
 

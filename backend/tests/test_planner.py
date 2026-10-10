@@ -100,3 +100,14 @@ def test_llm_planner_failures_are_planner_errors_not_silent_fallbacks():
         LLMPlanner(client=Boom(""), model="m").plan("x")
     assert "secret-key" not in str(e.value)
     assert get("Competitor Agent").stage == 1
+
+
+@pytest.mark.parametrize("agents", [None, "Competitor Agent", 1, {"name": "Competitor Agent"}])
+def test_malformed_agent_lists_raise_a_controlled_planner_error(agents):
+    with pytest.raises(PlannerError, match="must be a list"):
+        parse_proposal({"agents": agents}, "competitors")
+
+
+def test_unhashable_model_agent_names_are_dropped_without_crashing():
+    proposal = parse_proposal({"agents": [{"name": []}, {"name": {}}, {"name": "Competitor Agent"}]}, "competitors")
+    assert names(proposal.steps) == ["Competitor Agent"]

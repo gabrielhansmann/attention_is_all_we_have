@@ -1,6 +1,6 @@
 # 0011 — Local demo PM workspace and static Vercel deployment
 
-Date: 2026-10-10 · Status: accepted
+Date: 2026-10-10 · Status: superseded by [0023](0023-database-backed-workspace.md)
 
 ## Context
 

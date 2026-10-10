@@ -43,7 +43,7 @@ alone whether it is decided, how important it is, and how well supported.
 
 | ID | Requirement | Prio | Origin |
 |---|---|---|---|
-| FR-OV-10 | Show one list of everything waiting for a PM action: steps awaiting launch or review, requirements in review, requirements re-opened by new or contradicting evidence, findings with unassigned market or vehicle line, column mappings to confirm. | M | new |
+| FR-OV-10 | Show one list of everything waiting for a PM action: plans awaiting confirmation or steps awaiting review, requirements in review, requirements re-opened by new or contradicting evidence, findings with unassigned market or vehicle line, column mappings to confirm. | M | new |
 | FR-OV-11 | Let the PM act on an inbox item directly or jump to it in one click. | S | new |
 | FR-OV-12 | Show the state of every run — which steps are done, which is next — without opening the run. | S | [02](../architecture/02-orchestration-and-human-in-the-loop.md#ui-shape) |
 
