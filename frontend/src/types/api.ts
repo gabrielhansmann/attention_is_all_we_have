@@ -146,6 +146,14 @@ export interface SourceInfo {
   counts: { feedback: number; pdf_chunks: number; options: number; study_cells: number; sales_rows: number }
 }
 
+export interface UploadResult {
+  file: string
+  kind: 'pdf' | 'feedback' | 'sales' | 'studies'
+  replaced: boolean
+  counts: SourceInfo['counts']
+  notes: string[]
+}
+
 export interface CoverageCell {
   line: string
   market: string

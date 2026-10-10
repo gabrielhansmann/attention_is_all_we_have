@@ -165,6 +165,14 @@ class SourceOut(BaseModel):
     counts: SourceCounts
 
 
+class UploadOut(BaseModel):
+    file: str
+    kind: Literal["pdf", "feedback", "sales", "studies"]
+    replaced: bool
+    counts: SourceCounts
+    notes: list[str]
+
+
 class CoverageCell(BaseModel):
     line: str
     market: str

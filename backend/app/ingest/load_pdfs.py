@@ -6,11 +6,11 @@ Re-running replaces a file's existing chunks, so it is safe to repeat.
 """
 import argparse
 import os
-import sys
 from pathlib import Path
 
 import psycopg
 from app.config import DATA_DIR, load_env
+from app.ingest.load_excel import source_id as register_source
 from app.ingest.pdf_chunks import chunk_pdf
 from openai import OpenAI
 
@@ -21,6 +21,29 @@ BATCH = 100
 
 def vec(v: list[float]) -> str:
     return "[" + ",".join(f"{x:.7f}" for x in v) + "]"
+
+
+def embed_chunks(client, chunks) -> list[list[float]]:
+    embeddings: list[list[float]] = []
+    for i in range(0, len(chunks), BATCH):
+        batch = [c.embed_input for c in chunks[i:i + BATCH]]
+        resp = client.embeddings.create(model=EMBED_MODEL, input=batch)
+        embeddings += [d.embedding for d in resp.data]
+    return embeddings
+
+
+def store_chunks(conn, name, vehicle_line, chunks, embeddings):
+    """Register the file as a source and replace its chunks. Returns the source id."""
+    with conn.transaction():
+        source_id = register_source(conn, name, vehicle_line, type="internal_pdf", title=chunks[0].title)
+        conn.execute("delete from public.chunk where source_id = %s", (source_id,))
+        for c, e in zip(chunks, embeddings):
+            conn.execute(
+                "insert into public.chunk (source_id, locator, heading, content, embedding, page, chunk_index) "
+                "values (%s, %s, %s, %s, %s::extensions.vector, %s, %s)",
+                (source_id, c.locator, c.heading, c.text, vec(e), c.page, c.index),
+            )
+    return source_id
 
 
 def main() -> None:
@@ -34,33 +57,12 @@ def main() -> None:
     conn = None if args.dry_run else psycopg.connect(os.environ["SUPABASE_DB_URL"])
 
     for path in files:
-        vehicle_line = path.name.split("_")[0]
         chunks = chunk_pdf(path)
-        embeddings: list[list[float]] = []
-        for i in range(0, len(chunks), BATCH):
-            batch = [c.embed_input for c in chunks[i:i + BATCH]]
-            resp = client.embeddings.create(model=EMBED_MODEL, input=batch)
-            embeddings += [d.embedding for d in resp.data]
+        embeddings = embed_chunks(client, chunks)
         print(f"{path.name}: {len(chunks)} chunks embedded ({len(embeddings[0])} dims)")
         if conn is None:
             continue
-
-        with conn.transaction():
-            row = conn.execute("select id from public.source where uri = %s", (path.name,)).fetchone()
-            if row:
-                source_id = row[0]
-                conn.execute("delete from public.chunk where source_id = %s", (source_id,))
-            else:
-                source_id = conn.execute(
-                    "insert into public.source (type, uri, vehicle_line, title) values ('internal_pdf', %s, %s, %s) returning id",
-                    (path.name, vehicle_line, chunks[0].title),
-                ).fetchone()[0]
-            for c, e in zip(chunks, embeddings):
-                conn.execute(
-                    "insert into public.chunk (source_id, locator, heading, content, embedding, page, chunk_index) "
-                    "values (%s, %s, %s, %s, %s::extensions.vector, %s, %s)",
-                    (source_id, c.locator, c.heading, c.text, vec(e), c.page, c.index),
-                )
+        source_id = store_chunks(conn, path.name, path.name.split("_")[0], chunks, embeddings)
         print(f"  stored in Supabase as source {source_id}")
 
 

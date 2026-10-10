@@ -14,6 +14,7 @@ import type {
   SearchSource,
   SourceInfo,
   StatsResponse,
+  UploadResult,
 } from '@/types/api'
 
 export class ApiError extends Error {
@@ -33,7 +34,9 @@ function query(params: Record<string, string | number | undefined>): string {
 async function request<T>(method: string, path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   let res: Response
   const headers: Record<string, string> = {}
-  if (body !== undefined) headers['Content-Type'] = 'application/json'
+  // A file goes as the raw request body; everything else is JSON.
+  const raw = body instanceof Blob
+  if (body !== undefined) headers['Content-Type'] = raw ? 'application/octet-stream' : 'application/json'
   const token = getToken()
   if (token) headers.Authorization = `Bearer ${token}`
   try {
@@ -41,7 +44,7 @@ async function request<T>(method: string, path: string, body?: unknown, signal?:
       method,
       signal,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : raw ? body : JSON.stringify(body),
     })
   } catch (e) {
     if (e instanceof DOMException && e.name === 'AbortError') throw e
@@ -81,6 +84,8 @@ export const api = {
   logout: () => request<void>('POST', '/auth/logout'),
   sources: (signal?: AbortSignal) => get<SourceInfo[]>('/sources', signal),
   coverage: (signal?: AbortSignal) => get<Coverage>('/evidence/coverage', signal),
+  uploadSource: (file: File, line: string | undefined, replace: boolean) =>
+    request<UploadResult>('POST', `/sources?${query({ filename: file.name, line, replace: replace ? 'true' : undefined })}`, file),
   conversations: (signal?: AbortSignal) => get<Conversation[]>('/conversations', signal),
   conversation: (id: string, signal?: AbortSignal) => get<ConversationDetail>(`/conversations/${id}`, signal),
   createConversation: (requestText: string) =>

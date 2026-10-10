@@ -1,6 +1,6 @@
 # Repository structure: frontend and backend
 
-> Status: `building` · Last updated: 2026-10-14 (minimal live-only frontend; see [decision 0017](../decisions/0017-minimal-live-only-frontend.md)))
+> Status: `building` · Last updated: 2026-10-14 (file upload endpoint; see [decision 0020](../decisions/0020-file-upload-reuses-the-loaders.md))
 
 ```mermaid
 flowchart LR
@@ -30,12 +30,12 @@ backend/
     knowledge/            retrieval tools every agent uses; each hit carries a citation
     agents/               LLM-backed agents (Market & Trend today)
     orchestration/        agent catalog, orchestrator (decides the next agent), the LangGraph loop, step runner, chat persistence
-    ingest/               loaders and parsers for the provided PDFs and Excel files
+    ingest/               loaders and parsers for PDFs and Excel files, provided or uploaded
   tests/                  pytest; no database or OpenAI key needed
 frontend/                 Gabriel's PM workspace (npm, Vite + React + TypeScript), see frontend/README.md
   src/App.tsx                shell: sign-in gate, top bar, hash navigation between the three views
   src/features/research/     live research: conversations and the orchestrator's decisions, agent results and final result, read-only (calls /api)
-  src/features/library/      live sources view: loaded sources and coverage matrix (calls /api)
+  src/features/library/      live sources view: coverage matrix, loaded sources, file upload (calls /api)
   src/features/evidence/     live evidence search with exact counts (calls /api)
   src/components/ui/         shadcn/ui components used by the live views, restyled with BMW tokens
   src/lib/api.ts             the only place the frontend talks to the backend; src/types/api.ts mirrors the schemas
@@ -76,6 +76,7 @@ Makefile  .env.example    common tasks and the environment template (one .env at
 | `GET /api/evidence/filters` | the values the UI offers as filters |
 | `GET /api/evidence/{kind}/{id}` | the citation for one stored row |
 | `GET /api/sources` | every loaded source file with what was extracted from it (comments, passages, options, study cells, sales rows) |
+| `POST /api/sources?filename=&line=&replace=` | upload one PDF or Excel file as the raw request body; it is stored by the loaders in `app/ingest` and the answer reports what was stored and skipped ([decision 0020](../decisions/0020-file-upload-reuses-the-loaders.md)) |
 | `GET /api/evidence/coverage` | comments, study cells and 2025 sales per vehicle line and market, so gaps are visible |
 | `GET /api/agents` | the agent catalog in pipeline order and which agents exist yet |
 | `GET, POST /api/conversations` | list, or create (optionally with a first request) |

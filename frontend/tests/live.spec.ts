@@ -107,6 +107,49 @@ test.describe('sources', () => {
     await noViolations(page)
   })
 
+  test('a file is uploaded, what was stored is reported, and the tables refresh', async ({ page }) => {
+    const row = (file: string, sales_rows: number) => ({ id: file, file, type: 'internal_xlsx', family: 'Sales volumes', vehicle_line: null, market: null, title: file, retrieved_at: NOW, counts: { feedback: 0, pdf_chunks: 0, options: 0, study_cells: 0, sales_rows } })
+    const files = [row('sales_volumes.xlsx', 36)]
+    const posted: { url?: URL; body?: string | null; type?: string } = {}
+    await page.route('**/api/sources', r => json(r, files))
+    await page.route('**/api/evidence/coverage', r => json(r, { total_feedback: 0, options_by_line: {}, cells: [{ line: 'G60', market: 'EU', feedback: 150, study_cells: 0, sales_2025: null }] }))
+    await page.route('**/api/sources?**', async r => {
+      const req = r.request()
+      Object.assign(posted, { url: new URL(req.url()), body: req.postData(), type: req.headers()['content-type'] })
+      if (posted.url!.searchParams.get('filename') === 'broken.xlsx') return json(r, { detail: 'The spreadsheet layout was not recognised.' }, 422)
+      files.push(row('G60_dealer_sales.xlsx', 12))
+      return json(r, { file: 'G60_dealer_sales.xlsx', kind: 'sales', replaced: false, notes: ['1 cells skipped: no market code or no number.'], counts: { feedback: 0, pdf_chunks: 0, options: 0, study_cells: 0, sales_rows: 12 } }, 201)
+    })
+    await page.goto('/#sources')
+    const form = page.getByRole('form', { name: 'Add a file' })
+    const upload = form.getByRole('button', { name: 'Upload file' })
+    await expect(upload).toBeDisabled()                                                         // nothing chosen yet
+
+    await form.getByLabel('File').setInputFiles({ name: 'broken.xlsx', mimeType: 'application/octet-stream', buffer: Buffer.from('PK-broken') })
+    await upload.click()
+    await expect(form.getByRole('alert')).toHaveText('Upload failed: The spreadsheet layout was not recognised.')
+
+    await form.getByLabel('File').setInputFiles({ name: 'G60_dealer_sales.xlsx', mimeType: 'application/octet-stream', buffer: Buffer.from('PK-sales') })
+    await expect(form.getByRole('alert')).toHaveCount(0)
+    await expect(form.getByLabel('Vehicle line')).toContainText('G60')                          // offered from the file name
+    await upload.click()
+    await expect(form.getByRole('status')).toContainText('Stored G60_dealer_sales.xlsx: 12 sales rows.')
+    await expect(form.getByRole('status')).toContainText('1 cells skipped')
+    expect(posted.url!.searchParams.get('line')).toBe('G60')
+    expect(posted.url!.searchParams.get('replace')).toBeNull()
+    expect(posted.body).toBe('PK-sales')
+    expect(posted.type).toBe('application/octet-stream')
+    await expect(page.getByRole('table', { name: 'Source files loaded into the evidence store' }).getByRole('row', { name: /G60_dealer_sales.xlsx.*12 sales rows/ })).toBeVisible()
+
+    // a name that is already loaded has to be sent as a replacement, and the form says so first
+    await form.getByLabel('File').setInputFiles({ name: 'sales_volumes.xlsx', mimeType: 'application/octet-stream', buffer: Buffer.from('PK-again') })
+    await expect(form.getByText('sales_volumes.xlsx is already loaded.', { exact: false })).toBeVisible()
+    await form.getByRole('button', { name: 'Replace file' }).click()
+    await expect.poll(() => posted.url!.searchParams.get('replace')).toBe('true')
+    await noOverflow(page)
+    await noViolations(page)
+  })
+
   test('failures are shown without hiding the rest of the page', async ({ page }) => {
     await page.route('**/api/sources', r => json(r, { detail: 'evidence store unavailable (OperationalError)' }, 503))
     await page.route('**/api/evidence/coverage', r => json(r, { detail: 'evidence store unavailable (OperationalError)' }, 503))

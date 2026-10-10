@@ -1,26 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api, ApiError } from '@/lib/api'
 import type { Coverage, CoverageCell, SourceInfo } from '@/types/api'
+import { contents, fmt } from './format'
+import { UploadForm } from './UploadForm'
 
 type Load<T> = { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ok'; data: T }
 const THIN = 100 // fewer customer comments than this is shown as thin evidence
 
-const fmt = (n: number) => n.toLocaleString('en-US')
 const aborted = (e: unknown) => e instanceof DOMException && e.name === 'AbortError'
 const message = (e: unknown) => (e instanceof ApiError ? e.message : 'Something went wrong.')
-
-function contents(c: SourceInfo['counts']): string {
-  const parts = [
-    c.feedback && `${fmt(c.feedback)} comments`,
-    c.pdf_chunks && `${fmt(c.pdf_chunks)} text passages`,
-    c.options && `${fmt(c.options)} equipment options`,
-    c.study_cells && `${fmt(c.study_cells)} study cells`,
-    c.sales_rows && `${fmt(c.sales_rows)} sales rows`,
-  ].filter(Boolean)
-  return parts.join(', ') || 'Nothing extracted'
-}
 
 function CoverageCellView({ cell }: { cell?: CoverageCell }) {
   if (!cell) return <span className="text-muted-foreground">No data</span>
@@ -47,14 +37,22 @@ export function LiveLibrary() {
   const [sources, setSources] = useState<Load<SourceInfo[]>>({ kind: 'loading' })
   const [coverage, setCoverage] = useState<Load<Coverage>>({ kind: 'loading' })
 
+  // Also called after an upload: the tables then change in place, without going back to the loading state.
+  const load = useCallback((signal?: AbortSignal) => {
+    api.sources(signal).then((data) => setSources({ kind: 'ok', data }))
+      .catch((e) => !aborted(e) && setSources({ kind: 'error', message: message(e) }))
+    api.coverage(signal).then((data) => setCoverage({ kind: 'ok', data }))
+      .catch((e) => !aborted(e) && setCoverage({ kind: 'error', message: message(e) }))
+  }, [])
+
   useEffect(() => {
     const ctrl = new AbortController()
-    api.sources(ctrl.signal).then((data) => setSources({ kind: 'ok', data }))
-      .catch((e) => !aborted(e) && setSources({ kind: 'error', message: message(e) }))
-    api.coverage(ctrl.signal).then((data) => setCoverage({ kind: 'ok', data }))
-      .catch((e) => !aborted(e) && setCoverage({ kind: 'error', message: message(e) }))
+    load(ctrl.signal)
     return () => ctrl.abort()
-  }, [])
+  }, [load])
+
+  const lines = coverage.kind === 'ok' ? [...new Set(coverage.data.cells.map((c) => c.line))] : []
+  const loaded = sources.kind === 'ok' ? sources.data.map((s) => s.file) : []
 
   return (
     <div className="flex flex-col gap-8" data-testid="live-library">
@@ -105,6 +103,7 @@ export function LiveLibrary() {
 
       <section aria-labelledby="sources-h" className="flex flex-col gap-3">
         <h2 id="sources-h" className="text-lg">Files</h2>
+        <UploadForm lines={lines} loaded={loaded} onStored={load} />
         {sources.kind === 'loading' && <Skeleton className="h-40 w-full" aria-label="Loading sources" />}
         {sources.kind === 'error' && (
           <p role="alert" className="border border-destructive p-4 text-destructive">{`Sources unavailable: ${sources.message}`}</p>

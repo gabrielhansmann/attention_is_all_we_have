@@ -35,6 +35,22 @@ def get_conn() -> Iterator[psycopg.Connection]:
         conn.close()
 
 
+def get_ingest_conn() -> Iterator[psycopg.Connection]:
+    """A connection for loading a file: autocommit with plain rows, as the loaders in app.ingest expect, so each
+    `with conn.transaction()` block there commits by itself and a failed file leaves nothing behind."""
+    settings = get_settings()
+    if not settings.db_url:
+        raise HTTPException(status_code=503, detail="database not configured")
+    try:
+        conn = psycopg.connect(settings.db_url, autocommit=True, connect_timeout=10)
+    except psycopg.Error:
+        raise HTTPException(status_code=503, detail="database unavailable")
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+
 def get_orchestrator() -> Orchestrator:
     """ORCHESTRATOR=llm (default) uses the OpenAI orchestrator; ORCHESTRATOR=rules uses the keyword orchestrator for
     local work without a key. There is no automatic fallback: a missing key is an error the PM can see."""

@@ -1,6 +1,6 @@
 # Ingestion: turning a PDF or spreadsheet into a cited Finding
 
-> Status: `draft` · Last updated: 2026-10-10 (web search through the LLM, see decision 0009)
+> Status: `draft` · Last updated: 2026-10-10 (file upload, see [decision 0020](../decisions/0020-file-upload-reuses-the-loaders.md))
 
 The provided PDFs (`F70_OptionList.PDF`, `G60_OptionList.PDF`, `G70_OptionList.PDF`) are
 structured option/equipment listings, not prose. Treating them as plain text to embed would throw
@@ -106,3 +106,26 @@ to marks by x position.
 filters. Counts, sample sizes and uptake come from SQL on these tables; only comments and PDF text
 are searched by meaning. `finding` rows are **not yet derived** from `feedback_raw` (that is the
 Customer Feedback Agent's job).
+
+### Uploads (`app/ingest/upload.py`, `POST /api/sources`, decision 0020)
+
+A signed-in PM adds a file in the Sources view. The file goes to `POST /api/sources` as the raw request body and is
+stored by the loaders above, so an uploaded file and a provided file end up in the same tables with the same
+citations.
+
+| Upload | Recognised by | Stored as |
+|---|---|---|
+| PDF | extension and file signature | `chunk` (always); `option` + `option_availability` when the catalog's equipment tables are found and a vehicle line is given |
+| Feedback export `.xlsx` | 12 header columns, an ID in the first column | `feedback_raw`, comments embedded |
+| Sales volumes `.xlsx` | a market code (`EU`, `CN`, `US`, `RoW`) and a number in the first rows; one sheet per vehicle line | `sales_volume`; years are read from the header |
+| Customer studies `.xlsx` | sheet names starting `CN_EU` or `US_` | `study_response` |
+
+- Each loader **normalizes the rows it loads** (vehicle line, market, domain, polarity, powertrain, model variant),
+  with the rules of the knowledge-layer migration. Search filters and the coverage table see an upload at once.
+- The answer is the **ingest report**: what was stored, and what was skipped and why (rows without an ID, cells
+  without a number, comments whose country maps to no market, equipment options found without a vehicle line).
+- A file name that is already loaded is refused unless sent as a replacement, which replaces that file's rows.
+  Rows that findings already cite cannot be replaced.
+- Refused with a reason: other file types, a spreadsheet in an unknown layout, a PDF without selectable text
+  (scanned), files over 25 MB. Not built: column mapping for unknown spreadsheets (`FR-IN-09`), Word and pasted
+  text (`FR-IN-10`), and recording who uploaded a file (`FR-IN-02`).
