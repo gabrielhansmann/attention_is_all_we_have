@@ -110,7 +110,7 @@ Differences and additions relative to the sketch above:
 - **Row counts today:** `chunk` 277, `feedback_raw` 13,771, `sales_volume` 36, `study_response`
   1,627. `finding`, `cluster`, `requirement`, `score` are still empty.
 - **Docs mirror:** `design_decisions` and `architecture_docs` hold a copy of these docs after each
-  push (see `CLAUDE.md`). Git stays the source of truth.
+  push (see `AGENTS.md`). Git stays the source of truth.
 - **Access:** RLS enabled on all tables, no policies yet (backend-only access).
 
 ## Conversation & Message (chat entry point, not yet in the database)
