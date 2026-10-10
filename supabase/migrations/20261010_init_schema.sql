@@ -192,7 +192,7 @@ create trigger audit_event_no_truncate
   before truncate on public.audit_event
   for each statement execute function public.audit_event_block_mutation();
 
--- ---------- Git -> Supabase docs mirror (see CLAUDE.md) ----------
+-- ---------- Git -> Supabase docs mirror (see AGENTS.md) ----------
 create table public.design_decisions (
   id text primary key,                 -- e.g. 0001
   title text not null,
