@@ -1,0 +1,81 @@
+make the powerpoint presentaiton with the pptx mcp
+
+---
+
+download libreoffice
+
+---
+
+delete all deprecated powerpoint slides
+
+---
+
+pull the new changes and run frontend with backend like shown in the docs
+
+---
+
+update the frontend and backend and run it
+
+---
+
+my email is gabrielhansmann@web.de with Name "Gabriel Hansmann"
+
+---
+
+reiterate the whole project and fix all mistakes found. also relook at all docs to update your infromation. take 30 min
+
+---
+
+dont ask for something i have to give permisson for for the next 30 min
+
+---
+
+delete all hardcoded values and only use real data that is coming from the database and the web crawlers,...
+
+---
+
+push it on a new branch
+
+---
+
+use the main branch and deploy it on vercel and show it on localhost
+
+---
+
+<send_user_message_question_reply>
+[{"answer":"Approve encrypted server-only configuration","question":"May I store the existing SUPABASE_DB_URL and OPENAI_API_KEY as encrypted, server-only environment variables in your Vercel project “bmw-product-intelligence”? This enables hosted sign-in, database data and AI research; Vercel’s backend will receive these credentials. Automatic approval review blocked the transfer because it needs your explicit approval.","questionItemId":"[\"request_user_input_async\",\"call_pFXC6zq98zkxl3IR0uKqC8vc\",0]"}]
+</send_user_message_question_reply>
+
+---
+
+for vercel i want an account with email: "test" and password: "test"
+
+---
+
+rework the powerpoint presentation and delete the old powerpoints. they should use the correct information from supabase and the thing deployed on vercel. think hard and carefully.
+
+---
+
+include for all models found in the dataset an overview page with the most important sections and how these section of our model competes with the market. so web scrape what the competitors are of the models found in the data and also allow to manually include models. these models should be searched on the web and differentiate the findings to the data from our model. all the findings should be shown on diagrams also with a mean. our model and the mean should have different colors. for every overview of every model i want to include the chat that is implemented at the moment with specific model data from out models and competitors already loaded. the overview should be compact but show a well defined amount of information. the source for everything has to be exposed so everything can be validated by a human. think extremely hard, this is incedibly important.
+
+---
+
+<send_user_message_question_reply>
+[{"answer":"Germany / Europe","question":"Which market should the model comparisons open with by default? I recommend Germany/Europe because the supplied BMW catalogs are German. You’ll still be able to switch markets.","questionItemId":"[\"request_user_input_async\",\"call_ep1w7huaCTyqwvqoctyeOjni\",0]"}]
+</send_user_message_question_reply>
+
+---
+
+the comparisons should be made directly from the api on the supabase/vercel instance
+
+---
+
+every information crawled from the internet should show when it was crawled and have the ability to recrawl the informtation from the internet to validate. it should also be possible to reevaluate every infromation that is shown.
+
+---
+
+make all the information easily digestable by using diagrams and graphs to differentiate between our model, the competitors and the median
+
+---
+
+all the rivals should also be able to be web crawled etc inside the software itself
