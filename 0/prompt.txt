@@ -1,0 +1,1 @@
+from main (pull main) start a new branch where you visualise a map where you can see in red or green if a chosen feature would negatively or positively impact the share in that market (optional feature), and delete the workflowmd if it doesnt do anything (is empty)
