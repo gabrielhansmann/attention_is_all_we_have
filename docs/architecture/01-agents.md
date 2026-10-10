@@ -1,0 +1,55 @@
+# Agents
+
+> Status: `draft` · Last updated: 2026-10-10
+
+Every agent reads some slice of evidence and produces either new evidence (`Finding`s) or a
+synthesis of existing evidence (`Cluster`, `Requirement`, `Score`, dossier). None of them change a
+requirement's status, priority tier, or scope on their own — see
+[`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and-human-in-the-loop.md) for how
+their output actually gets used.
+
+## Roster
+
+| Agent | Stage | Reads | Produces |
+|---|---|---|---|
+| Baseline Agent | 01 Situation analysis | Previous-gen feedback, BMW portfolio docs, prior sales trend | Findings tagged `strategic_continuity` |
+| Customer Feedback Agent | 01 | `*_feedback_hackathon.xlsx`, `*_customer_studies.xlsx` | Findings (`complaint` / `unmet_need` / `praise`), each with sample size + market |
+| Sales & Portfolio Agent | 01 | `sales_volumes.xlsx`, parsed OptionList rows | Revealed-preference findings — option uptake % as a `business_signal` input |
+| Competitor Agent | 01 | Live web search — competitor spec pages, reviews, teardown data | Findings tagged `competitor_advantage`, source-trust tier |
+| Market & Trend Agent | 01 | Live web search — trend reports, forward-looking analyst pieces | Findings tagged `market_trend`; explicitly flagged as assumption-heavy, not fact |
+| Clustering / Ontology Agent | 02 | All findings across sources | Deduplicated clusters mapped onto the domain taxonomy |
+| Critic Agent | cross-cutting | Any agent's draft output before it reaches the PM | Verifies every claim has a live citation; flags unsupported or weakly-sourced statements and forces a retry before the step reaches `awaiting_review` |
+| Requirements Drafting Agent (Synthesizer) | 03 | Clusters + linked findings | Draft requirement: description, metric, acceptance criteria |
+| Prioritization Agent | 04 | Draft requirements + findings + sales/option data | Score + weight breakdown + one-line rationale |
+| Documentation Agent | 05 | Every accepted step + every PM decision in a run | Human-readable dossier (markdown), re-embedded into the knowledge layer |
+| Delta / Tracking Agent | ongoing | New ingestion batches vs. existing requirement evidence | `new evidence` / `contradicting` / `stale` flags, routed to PM review |
+
+Competitor and Market/Trend are kept as **two separate agents**, not one: competitor findings are
+closer to verifiable fact (a rival ships a feature or doesn't), while trend findings are inherently
+speculative (what will 2030 customers want). Collapsing them into one "market research" agent was
+the original shape of this design — splitting them keeps that evidence-character difference
+visible in each requirement's assumptions. See
+[`decisions/0003-critic-agent-and-agent-split.md`](../decisions/0003-critic-agent-and-agent-split.md).
+
+## The Critic Agent
+
+The Critic doesn't sit at a stage of its own — it sits between every agent and the PM. Before any
+step reaches `awaiting_review`, the Critic Agent:
+
+1. Checks that every factual claim in the agent's output links to a real source with a locator
+   (page/row for provided files, URL + retrieval date for web sources).
+2. Flags claims that don't — the step is automatically sent back for a retry (same agent, same
+   scope, instructed to either find a citation or drop the claim) *before* the PM ever sees it.
+3. Downgrades `evidence_level` on anything that's technically cited but thin (single source, no
+   corroboration, low source-trust tier) rather than silently passing it through at full confidence.
+
+This is what makes "push back on agent results" cheap for the PM: obviously weak output never
+reaches the review queue in the first place. The PM still pushes back on anything the Critic let
+through but the PM disagrees with — that's a normal `Retry` or `Reject` action on the step, see
+next doc.
+
+## Orchestrator
+
+Not an agent that produces findings — the thing that holds the `PipelineRun`/`Step` state machine
+(see next doc), decides which steps are unlocked, and routes a PM's "run this agent" click to the
+right agent with the right scope and the right accumulated context from prior accepted steps.
