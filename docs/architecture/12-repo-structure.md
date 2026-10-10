@@ -31,17 +31,13 @@ backend/
     orchestration/        agent catalog, planner, chat and plan persistence, step state machine
     ingest/               loaders and parsers for the provided PDFs and Excel files
   tests/                  pytest; no database or OpenAI key needed
-frontend/
-  src/
-    App.tsx, data.ts      PM workspace shell, typed fixtures, local persistence and actions
-    components/           overview, requirements, research, evidence, reports and dialogs
-    components/ui/        retained shadcn/ui components (generated, restyled with BMW tokens)
-    components/layout/    app shell, backend health badge
-    components/evidence/  citation block, hit card, filter select
-    features/evidence/    evidence explorer (live, uses the API)
-    features/chat/        earlier chat shell (retained, not the active workspace)
-    lib/api.ts            typed API client
-    types/api.ts          mirrors backend/app/api/schemas.py
+frontend/                 Gabriel's PM workspace (npm, Vite + React + TypeScript), see frontend/README.md
+  src/App.tsx, components/   the five views over local demo data (fixtures, browser storage)
+  src/features/research/     live research: conversations, the planner's real plan, plan editing (calls /api)
+  src/features/library/      live evidence library: loaded sources and coverage matrix (calls /api)
+  src/features/evidence/     live evidence search with exact counts (calls /api)
+  src/components/ui/         shadcn/ui components used by the live views, restyled with BMW tokens
+  src/lib/api.ts             the only place the frontend talks to the backend; src/types/api.ts mirrors the schemas
 supabase/migrations/      schema, applied in filename order
 docs/                     architecture, decisions, requirements
 skills/                   agent skills (database setup, scripts)
@@ -58,6 +54,8 @@ Makefile  .env.example    common tasks and the environment template (one .env at
 - **One source for response shapes:** `backend/app/api/schemas.py`, mirrored by `frontend/src/types/api.ts`.
   Change both together.
 - **Every API result that states a fact carries a citation** (file, location, verbatim quote).
+- **The frontend never touches the database.** Every live view calls `/api`; all SQL is in the backend. The demo
+  views use fixtures, labelled as such, and the static Vercel build has no live mode.
 - **UI follows `design.md`:** BMW tokens, rectangular components, no shadows, Inter 300/700 as the
   approved substitute font, no dark theme. Components keep labels above fields and show loading, empty and
   error states.
@@ -74,6 +72,8 @@ Makefile  .env.example    common tasks and the environment template (one .env at
 | `GET /api/evidence/stats?group_by=&line=&market=...` | exact counts and their total |
 | `GET /api/evidence/filters` | the values the UI offers as filters |
 | `GET /api/evidence/{kind}/{id}` | the citation for one stored row |
+| `GET /api/sources` | every loaded source file with what was extracted from it (comments, passages, options, study cells, sales rows) |
+| `GET /api/evidence/coverage` | comments, study cells and 2025 sales per vehicle line and market, so gaps are visible |
 | `GET /api/agents` | the agent catalog in pipeline order and which agents exist yet |
 | `GET, POST /api/conversations` | list, or create (optionally with a first request) |
 | `GET, PATCH /api/conversations/{id}` | the thread (messages and runs with steps), or rename / archive |
@@ -87,7 +87,7 @@ message. Interactive docs are served at `/docs`.
 
 - Starting the plan: accepting the plan, running the first step, and the PM actions on a step card (accept,
   edit, retry, reject). The chat API and the planner exist; the agents behind the steps and the runner do not.
-- Chat in the frontend: the Chat screen still shows its empty state.
+- The Requirements, Overview and Reports views still show local demo data; they need requirements and findings in the database first.
 - Authentication: the API is open, which is fine for a local demo and must change before it is exposed.
 - A Docker setup and CI.
 

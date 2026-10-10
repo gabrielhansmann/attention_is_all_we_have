@@ -63,3 +63,106 @@ export interface EvidenceFilters {
   polarity?: Polarity
   powertrain?: Powertrain
 }
+
+// ---------------------------------------------------------------- chat (mirrors backend/app/api/schemas.py)
+
+export interface AgentInfo {
+  name: string
+  stage: number
+  description: string
+  available: boolean
+}
+
+export interface Conversation {
+  id: string
+  title: string
+  vehicle_line: string | null
+  market_code: string | null
+  status: 'active' | 'archived'
+  created_at: string
+  updated_at: string
+}
+
+export type MessageKind =
+  | 'request'
+  | 'plan'
+  | 'plan_change'
+  | 'step_card'
+  | 'pushback'
+  | 'final_result'
+  | 'system_note'
+
+export interface ChatMessage {
+  id: string
+  seq: number
+  conversation_id: string
+  role: 'pm' | 'orchestrator' | 'agent' | 'system'
+  kind: MessageKind
+  run_id: string | null
+  step_id: string | null
+  content: string
+  payload: Record<string, unknown>
+  created_at: string
+}
+
+export interface RunStep {
+  id: string
+  position: number
+  agent_name: string
+  stage: number
+  status: 'planned' | 'running' | 'awaiting_review' | 'accepted' | 'rejected'
+  plan_reason: string | null
+  planned_by: 'orchestrator' | 'pm'
+  attempt: number
+  available: boolean
+}
+
+export interface Run {
+  id: string
+  conversation_id: string | null
+  vehicle_line: string
+  market: string
+  query_text: string | null
+  status: 'in_progress' | 'completed' | 'aborted'
+  created_at: string
+  steps: RunStep[]
+}
+
+export interface ConversationDetail {
+  conversation: Conversation
+  messages: ChatMessage[]
+  runs: Run[]
+}
+
+export interface PostResult {
+  messages: ChatMessage[]
+  run: Run | null
+}
+
+// ---------------------------------------------------------------- evidence library
+
+export interface SourceInfo {
+  id: string
+  file: string
+  type: string
+  family: string
+  vehicle_line: string | null
+  market: string | null
+  title: string | null
+  retrieved_at: string
+  counts: { feedback: number; pdf_chunks: number; options: number; study_cells: number; sales_rows: number }
+}
+
+export interface CoverageCell {
+  line: string
+  market: string
+  feedback: number
+  study_cells: number
+  sales_2025: number | null
+}
+
+export interface Coverage {
+  cells: CoverageCell[]
+  options_by_line: Record<string, number>
+  total_feedback: number
+}

@@ -143,3 +143,39 @@ class UpdateConversation(BaseModel):
 
 class EditPlan(BaseModel):
     agents: list[str] = Field(min_length=1, max_length=12)
+
+
+# ---------------------------------------------------------------- evidence library
+
+class SourceCounts(BaseModel):
+    feedback: int
+    pdf_chunks: int
+    options: int
+    study_cells: int
+    sales_rows: int
+
+
+class SourceOut(BaseModel):
+    id: UUID
+    file: str
+    type: str
+    family: str
+    vehicle_line: str | None
+    market: str | None
+    title: str | None
+    retrieved_at: datetime
+    counts: SourceCounts
+
+
+class CoverageCell(BaseModel):
+    line: str
+    market: str
+    feedback: int
+    study_cells: int
+    sales_2025: int | None
+
+
+class CoverageOut(BaseModel):
+    cells: list[CoverageCell]
+    options_by_line: dict[str, int]
+    total_feedback: int

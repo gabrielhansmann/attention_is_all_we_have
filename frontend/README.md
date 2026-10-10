@@ -48,6 +48,16 @@ proxies them to port 8000, or `VITE_API_PROXY` when set. This mode has separate 
 and does not import live hits into the local portfolio. It is disabled in the static Vercel
 demo; another deployment can enable it with `VITE_LIVE_EVIDENCE=true` once `/api` is served.
 
+### Live mode (backend)
+
+In local development, **Research** has a **Live planner (backend)** switch and **Evidence library** has **Browse
+backend evidence**. Both call `/api` only (the frontend never reads the database). Live research posts your request,
+shows the orchestrator's real plan (which agents, why, and which are not built yet), and lets you edit the plan until an
+agent starts. Agents do not run yet, so there are no accept/retry controls in live mode. The live library shows every
+loaded source file and a coverage matrix per vehicle line and market with gaps marked. Live mode is off in the static
+Vercel build unless `VITE_LIVE_EVIDENCE=true` and `/api` is served. `npm run dev` listens on localhost only; use
+`npm run dev:lan` to expose it, which also exposes the proxied, unauthenticated API to your network.
+
 Edits and previews are stored in this browser's local storage. There is no account system,
 server persistence, shared workspace, immutable audit log, or restore-from-JSON UI yet.
 Export a backup to retain work outside this browser. See
