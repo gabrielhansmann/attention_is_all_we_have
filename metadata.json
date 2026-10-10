@@ -1,0 +1,54 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4KA07NNKNW4WEA8Q0B5CJMB",
+  "strategy": "manual-commit",
+  "branch": "frontend/pm-workspace",
+  "checkpoints_count": 4,
+  "files_touched": [
+    ".gitignore",
+    "README.md",
+    "docs/README.md",
+    "docs/architecture/02-orchestration-and-human-in-the-loop.md",
+    "docs/architecture/09-tech-stack.md",
+    "docs/decisions/README.md",
+    "frontend/.vercelignore",
+    "frontend/README.md",
+    "frontend/index.html",
+    "frontend/package.json",
+    "frontend/playwright.config.ts",
+    "frontend/public/favicon.svg",
+    "frontend/src/App.tsx",
+    "frontend/src/components/Evidence.tsx",
+    "frontend/src/components/Overview.tsx",
+    "frontend/src/components/Reports.tsx",
+    "frontend/src/components/Requirements.tsx",
+    "frontend/src/components/Research.tsx",
+    "frontend/src/components/WorkspaceDialogs.tsx",
+    "frontend/src/components/ui.tsx",
+    "frontend/src/context.tsx",
+    "frontend/src/data.ts",
+    "frontend/src/main.tsx",
+    "frontend/src/styles.css",
+    "frontend/tests/workspace.spec.ts",
+    "frontend/tsconfig.json",
+    "frontend/vercel.json",
+    "frontend/vite.config.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 305037,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 10656095,
+    "output_tokens": 83120,
+    "api_call_count": 124,
+    "subagent_tokens_complete": true
+  }
+}
