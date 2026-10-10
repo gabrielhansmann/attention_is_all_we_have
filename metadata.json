@@ -5,9 +5,14 @@
   "branch": "feat/model-comparison-overviews",
   "checkpoints_count": 4,
   "files_touched": [
+    "backend/app/deploy/vercel.py",
+    "backend/pyproject.toml",
+    "backend/tests/test_deployment.py",
     "docs/architecture/12-repo-structure.md",
     "docs/decisions/0027-git-backed-full-stack-vercel-deployment.md",
-    "pyproject.toml"
+    "docs/validation/model-comparisons-2026-10-11.md",
+    "pyproject.toml",
+    "vercel.json"
   ],
   "sessions": [
     {
@@ -19,10 +24,10 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 6657,
+    "input_tokens": 39473,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 997902,
-    "output_tokens": 3433,
-    "api_call_count": 7
+    "cache_read_tokens": 4564450,
+    "output_tokens": 20993,
+    "api_call_count": 28
   }
 }
