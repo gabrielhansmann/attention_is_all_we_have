@@ -38,6 +38,7 @@ Each doc opens with a status line:
 | [`architecture/09-tech-stack.md`](architecture/09-tech-stack.md) | What we're actually building it with, and why |
 
 | [`architecture/10-competitor-benchmarking.md`](architecture/10-competitor-benchmarking.md) | How one BMW becomes a comparable rival set, and how rival evidence is compared fairly |
+| [`architecture/11-knowledge-layer.md`](architecture/11-knowledge-layer.md) | How the evidence is normalized, stored with citations, and queried by the agents |
 
 ## Functional requirements
 

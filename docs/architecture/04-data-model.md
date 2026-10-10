@@ -111,6 +111,11 @@ Differences and additions relative to the sketch above:
 - **Ontology seeded:** 10 domains, 4 vehicle lines (F70, G60, G68, G70), 4 markets, and 222 customer-feedback
   category labels as children of the domains (`ingest/seed_ontology.py`; labels classified by an
   OpenAI model plus hand overrides, 3 non-product labels left unmapped).
+- **Knowledge layer (decision 0008):** `feedback_raw`, `study_response`, `sales_volume` and `finding`
+  carry normalized `vehicle_line`, `market_code`, `domain_id`, `polarity`, `powertrain` where they apply;
+  reference tables `country_market` and `model_variant`; `finding_evidence` (one FK per cited row, five
+  kinds); view `evidence_item`; hybrid search functions `search_feedback` and `search_docs`. See
+  [`11-knowledge-layer.md`](11-knowledge-layer.md).
 - **Row counts today:** `chunk` 149, `feedback_raw` 13,771, `sales_volume` 36, `study_response`
   1,627. `finding`, `cluster`, `requirement`, `score` are still empty.
 - **Docs mirror:** `design_decisions` and `architecture_docs` hold a copy of these docs after each
