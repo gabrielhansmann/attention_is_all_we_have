@@ -32,6 +32,8 @@ Each doc opens with a status line:
 | [`architecture/08-scaling-and-config.md`](architecture/08-scaling-and-config.md) | Why this isn't hardcoded to one vehicle line or market |
 | [`architecture/09-tech-stack.md`](architecture/09-tech-stack.md) | What we're actually building it with, and why |
 
+| [`architecture/10-competitor-benchmarking.md`](architecture/10-competitor-benchmarking.md) | How one BMW becomes a comparable rival set, and how rival evidence is compared fairly |
+
 ## Decision log
 
 Dated, append-only records of the choices that weren't obvious, in [`decisions/`](decisions/).

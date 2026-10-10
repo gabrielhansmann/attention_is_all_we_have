@@ -31,6 +31,9 @@ the original shape of this design — splitting them keeps that evidence-charact
 visible in each requirement's assumptions. See
 [`decisions/0003-critic-agent-and-agent-split.md`](../decisions/0003-critic-agent-and-agent-split.md).
 
+How the Competitor Agent decides *which* rivals to look at and makes their evidence comparable is
+its own doc: [`10-competitor-benchmarking.md`](10-competitor-benchmarking.md).
+
 ## The Critic Agent
 
 The Critic doesn't sit at a stage of its own — it sits between every agent and the PM. Before any
