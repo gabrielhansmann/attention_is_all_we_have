@@ -35,7 +35,7 @@ needed, then review each agent's answer in turn.
   editable.
 - Step states become `planned → running → awaiting_review → accepted | rejected`. This needs a
   schema migration: `step.status` currently allows `queued` / `awaiting_launch`, and there are no
-  `conversation` / `message` tables yet. **Pending — not yet applied.**
+  `conversation` / `message` tables yet. **Applied in `supabase/migrations/20261011_chat_tables.sql`.**
 - LangGraph still maps well: one `interrupt()` per step, plus a planner node at the start.
 
 See [`../architecture/02-orchestration-and-human-in-the-loop.md`](../architecture/02-orchestration-and-human-in-the-loop.md).
