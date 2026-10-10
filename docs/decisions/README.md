@@ -13,3 +13,4 @@ changes — note the supersession in the new file and update the old one's statu
 | [0006](0006-raw-tables-and-cited-pdf-chunks.md) | Load Excel as raw relational tables; chunk PDFs per page with real citations | accepted |
 | [0007](0007-option-availability-and-ontology-seed.md) | Parse equipment tables by position; seed the ontology from the feedback labels | accepted |
 | [0008](0008-knowledge-layer-normalization-and-retrieval.md) | Normalize all evidence to one vocabulary; one retrieval interface that returns citations | accepted |
+| [0009](0009-web-search-through-the-llm.md) | Web search runs through the LLM's built-in search tool for now, not a separate search API | accepted |

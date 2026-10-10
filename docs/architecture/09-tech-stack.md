@@ -1,6 +1,6 @@
 # Tech stack
 
-> Status: `draft` · Last updated: 2026-10-10 (Supabase + OpenAI embeddings, see decision 0004)
+> Status: `draft` · Last updated: 2026-10-10 (web search through the LLM, see decision 0009)
 
 Kept boring on purpose — a hackathon is not the place to debug infrastructure.
 
@@ -8,7 +8,7 @@ Kept boring on purpose — a hackathon is not the place to debug infrastructure.
 |---|---|---|
 | Orchestration | LangGraph | Its explicit interrupt-for-human-input pattern maps directly onto the per-step PM gates in [`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and-human-in-the-loop.md) — one `interrupt()` per `Step`, not one at the end, plus a planner node where the orchestrator chooses the agents. Its Postgres checkpointer stores run state in the same Supabase database (use the direct or session-pooler connection string, not the transaction pooler) |
 | LLM | Every agent is LLM-backed. Currently the OpenAI API (key in `.env`); the provider is a config choice and Claude remains an option | Extraction, cluster labeling, requirement drafting, scoring rationale, Critic verification, answering over retrieved evidence. Answers may only cite retrieved rows |
-| Web research | Search API tool-call (Tavily/Brave) | Source-trust tagging applied at ingest time, not after the fact |
+| Web research | The LLM's built-in web search tool (OpenAI Responses API `web_search`), for now | No extra search API key or service. Sources are built from the tool's citation annotations, not from model-written text; source-trust tagging is applied at ingest time. A dedicated search API (Tavily/Brave) stays an option, see [decision 0009](../decisions/0009-web-search-through-the-llm.md) |
 | PDF parsing | `pdftotext -layout` (poppler) for text; pdfplumber / vision-LLM still planned for the equipment tables | Text extraction works (the catalogs have real text). Reliable ■/□ column mapping needs table-aware extraction or a vision pass — not built yet |
 | Excel | openpyxl (+ psycopg for loading) | Loaders in `ingest/`; the customer-study cross-tabs need a custom parser |
 | Storage | Supabase (managed Postgres) + pgvector 0.8 | One database for both relational entities (`Finding`, `Requirement`, `AuditEvent`, …) and embeddings — keeps traceability joins simple instead of reconciling two stores. Schema is live: see `supabase/migrations/`. RLS is on for every table with no policies yet, so only the backend (service role / direct connection) can read or write; the frontend goes through the API |

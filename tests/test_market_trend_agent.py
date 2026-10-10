@@ -14,6 +14,7 @@ from agents.market_trend_agent import (
     infer_trust_tier,
     load_market_trend_draft,
     load_seed_sources,
+    sources_from_web_search_response,
 )
 
 
@@ -72,6 +73,49 @@ class MarketTrendAgentTest(unittest.TestCase):
         self.assertEqual(len(result.findings), 2)
         self.assertEqual(result.findings[0].trust_tier, "trade_press")
         self.assertEqual(result.findings[1].evidence_level, "Unverified")
+
+    def test_web_search_sources_come_from_citation_annotations(self):
+        line_1 = "- Buyers expect charging stops in route planning ([caranddriver.com](https://www.caranddriver.com/a?utm_source=openai))"
+        line_2 = "- Owners complain about climate menus ([forum](https://forum.example/t/1?page=2&utm_source=openai))"
+        line_3 = "- Voice control is becoming the default ([caranddriver.com](https://www.caranddriver.com/a?utm_source=openai))"
+        text = "\n".join([line_1, line_2, line_3])
+
+        def citation(line, url, title):
+            start = text.index(line) + line.index("([")
+            return {"type": "url_citation", "url": url, "title": title, "start_index": start, "end_index": text.index(line) + len(line)}
+
+        response = {
+            "output": [
+                {"type": "web_search_call", "status": "completed"},
+                {
+                    "type": "message",
+                    "content": [
+                        {
+                            "type": "output_text",
+                            "text": text,
+                            "annotations": [
+                                citation(line_1, "https://www.caranddriver.com/a?utm_source=openai", "Sedan trends"),
+                                citation(line_2, "https://forum.example/t/1?page=2&utm_source=openai", "Thread"),
+                                citation(line_3, "https://www.caranddriver.com/a?utm_source=openai", "Sedan trends"),
+                            ],
+                        }
+                    ],
+                },
+            ]
+        }
+
+        docs = sources_from_web_search_response(response, limit=5)
+
+        self.assertEqual([d.url for d in docs], ["https://www.caranddriver.com/a", "https://forum.example/t/1?page=2"])
+        self.assertEqual(docs[0].title, "Sedan trends")
+        self.assertEqual(
+            docs[0].snippet,
+            "Buyers expect charging stops in route planning\nVoice control is becoming the default",
+        )
+        self.assertEqual(infer_trust_tier(docs[0]), "trade_press")
+        self.assertEqual(infer_trust_tier(docs[1]), "forum_social")
+        self.assertEqual(len(sources_from_web_search_response(response, limit=1)), 1)
+        self.assertEqual(sources_from_web_search_response({"output": []}, limit=5), [])
 
     def test_cli_dry_run_works_without_openai_or_database(self):
         completed = subprocess.run(

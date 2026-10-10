@@ -1,6 +1,6 @@
 # Ingestion: turning a PDF or spreadsheet into a cited Finding
 
-> Status: `draft` · Last updated: 2026-10-10 (Tier 1 option extraction built, see decision 0007)
+> Status: `draft` · Last updated: 2026-10-10 (web search through the LLM, see decision 0009)
 
 The provided PDFs (`F70_OptionList.PDF`, `G60_OptionList.PDF`, `G70_OptionList.PDF`) are
 structured option/equipment listings, not prose. Treating them as plain text to embed would throw
@@ -40,6 +40,12 @@ For web sources specifically, `evidence_level` is instead set by source-trust ti
 overridden by the PM on a specific finding (see
 [`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and-human-in-the-loop.md)); the
 override is logged and feeds back into how that source is graded next time.
+
+Web sources are currently found by the LLM's built-in web search tool, not a separate search API
+(see [decision 0009](../decisions/0009-web-search-through-the-llm.md)). Each cited URL becomes a
+`source` row (`type = web`, trust tier, `retrieved_at`), and findings are extracted from it like
+from any other source. The page itself is not fetched, so there are no chunks for web sources and
+the stored snapshot is the model's cited summary of the page.
 
 ## Excel sources
 

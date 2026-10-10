@@ -17,7 +17,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, urlencode, urlparse, urlsplit, urlunsplit
 
 try:
     import psycopg
@@ -82,6 +82,8 @@ OUT_OF_SCOPE_RE = re.compile(
     r"mandatory|compliance|safety standard|fine|tax credit)\b",
     re.IGNORECASE,
 )
+
+MARKDOWN_LINK_RE = re.compile(r"\(?\[[^\]]*\]\([^)]*\)\)?")
 
 
 @dataclass
@@ -257,33 +259,71 @@ def extract_market_trends_with_openai(
     return json.loads(response.output_text)
 
 
+def clean_cited_url(url: str) -> str:
+    """Drop the tracking parameter OpenAI appends, so the same page maps to one `source.uri`."""
+    parts = urlsplit(url)
+    query = [(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True) if k != "utm_source"]
+    return urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(query), ""))
+
+
+def _field(obj: Any, name: str) -> Any:
+    return obj.get(name) if isinstance(obj, dict) else getattr(obj, name, None)
+
+
+def sources_from_web_search_response(response: Any, limit: int) -> list[SourceDoc]:
+    """Build sources from the search tool's `url_citation` annotations.
+
+    URLs and titles come from the annotations, never from the text the model wrote, so a source
+    row always points at a page the search actually returned. The snippet is the line of the
+    model's answer that carries the citation: a summary of the page, not a verbatim quote.
+    """
+    retrieved_at = datetime.now(timezone.utc).isoformat()
+    docs: dict[str, SourceDoc] = {}
+    for item in _field(response, "output") or []:
+        if _field(item, "type") != "message":
+            continue
+        for part in _field(item, "content") or []:
+            text = _field(part, "text") or ""
+            for annotation in _field(part, "annotations") or []:
+                if _field(annotation, "type") != "url_citation" or not _field(annotation, "url"):
+                    continue
+                url = clean_cited_url(str(_field(annotation, "url")))
+                line_start = text.rfind("\n", 0, _field(annotation, "start_index") or 0) + 1
+                line_end = text.find("\n", _field(annotation, "end_index") or 0)
+                line = text[line_start : line_end if line_end != -1 else len(text)]
+                passage = MARKDOWN_LINK_RE.sub("", line).strip(" -*\t")
+                if not passage:
+                    continue
+                doc = docs.get(url)
+                if doc is None:
+                    if len(docs) >= limit:
+                        continue
+                    docs[url] = SourceDoc(
+                        url=url,
+                        title=str(_field(annotation, "title") or url),
+                        snippet=passage,
+                        retrieved_at=retrieved_at,
+                    )
+                elif passage not in doc.snippet:
+                    doc.snippet = f"{doc.snippet}\n{passage}"
+    return list(docs.values())
+
+
 def collect_with_web_search(client: "OpenAIClient", vehicle_line: str, market: str, query: str, limit: int) -> list[SourceDoc]:
-    search_query = f"{vehicle_line} {market} automotive customer trends {query}"
     response = client.responses.create(
         model=RESEARCH_MODEL,
-        tools=[{"type": "web_search_preview"}],
+        tools=[{"type": "web_search"}],
+        tool_choice="required",
         input=(
             "Search the web for current, citable automotive market or technology trend sources. "
-            f"Scope: vehicle line {vehicle_line}, market {market}. Query: {search_query}. "
-            f"Return up to {limit} results as JSON: "
-            '{"sources":[{"url":"...","title":"...","snippet":"...","published_at":null,"language":null}]}'
+            f"Scope: vehicle line {vehicle_line}, market {market}. PM query: {query}. "
+            "Prefer manufacturer pages and trade press over forums. "
+            f"Answer with up to {limit} lines, one source per line: state what that source reports "
+            "that is relevant to the query, with the concrete facts and figures it gives, and cite it. "
+            "Do not add an introduction, a conclusion, or any statement without a citation."
         ),
-        text={"format": {"type": "json_object"}},
     )
-    payload = json.loads(response.output_text)
-    docs = []
-    for item in payload.get("sources", [])[:limit]:
-        if item.get("url") and item.get("snippet"):
-            docs.append(
-                SourceDoc(
-                    url=str(item["url"]),
-                    title=str(item.get("title") or item["url"]),
-                    snippet=str(item["snippet"]),
-                    published_at=item.get("published_at"),
-                    language=item.get("language"),
-                )
-            )
-    return docs
+    return sources_from_web_search_response(response, limit)
 
 
 def build_result(vehicle_line: str, market: str, query: str, docs: list[SourceDoc], draft: dict[str, Any]) -> MarketTrendResult:

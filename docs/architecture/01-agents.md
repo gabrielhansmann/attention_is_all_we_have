@@ -1,6 +1,6 @@
 # Agents
 
-> Status: `draft` · Last updated: 2026-10-10 (Market & Trend Agent prototype implemented)
+> Status: `draft` · Last updated: 2026-10-10 (web search through the LLM, see decision 0009)
 
 Every agent reads some slice of evidence and produces either new evidence (`Finding`s) or a
 synthesis of existing evidence (`Cluster`, `Requirement`, `Score`, dossier). None of them change a
@@ -41,14 +41,18 @@ The first implemented agent is the **Market & Trend Agent** in
 web research:
 
 - reads PM scope (`vehicle_line`, `market`) plus a research query
-- can collect web-search source snippets through OpenAI, or use local `--seed-sources` fixtures for
-  deterministic tests
+- searches the web through the LLM's built-in search tool (OpenAI Responses API `web_search`, no
+  separate search API; see [decision 0009](../decisions/0009-web-search-through-the-llm.md)), or uses
+  local `--seed-sources` fixtures for deterministic tests
+- takes each source's URL and title from the search tool's citation annotations, never from text
+  the model wrote; an uncited statement produces no source
 - extracts cited `market_trend` findings, keeping URL + retrieval date as the locator
 - stores web source metadata (`input_family = website`, channel/domain, origin `agent_search`,
   language where known, trust tier, ingest report)
 - assigns evidence from source trust tier (`oem` → `Verified`, `trade_press` → `Interpreted`,
   `forum_social` → `Unverified`)
-- stores a cited passage snapshot and explicit assumptions on each finding
+- stores a snapshot and explicit assumptions on each finding. For searched sources the snapshot is
+  the model's cited summary of the page, not a verbatim quote from it
 - routes pricing, regulatory/type-approval and engineering-internal claims to the visible
   out-of-scope bin via `finding.out_of_scope_reason`
 - leaves the step in `awaiting_review`; it does not accept, reject, score, prioritize or draft
