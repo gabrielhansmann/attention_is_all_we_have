@@ -1,1 +1,7 @@
 .env
+
+# Provided BMW data (do not commit)
+data/
+
+__pycache__/
+*.pyc

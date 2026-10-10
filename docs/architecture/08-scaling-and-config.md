@@ -1,9 +1,10 @@
 # Scaling & configuration
 
-> Status: `draft` · Last updated: 2026-10-10
+> Status: `draft` · Last updated: 2026-10-10 (chat wording)
 
-Nothing about G60 or "Europe" is hardcoded. Every `PipelineRun` takes a config:
-`{vehicle_line, market, generation_baseline}`. Swapping to the 1 Series in China is a config
+Nothing about G60 or "Europe" is hardcoded. Every `PipelineRun` (one per chat request) takes a config:
+`{vehicle_line, market, generation_baseline}`, read from the PM's message or asked back by the
+orchestrator if missing. Swapping to the 1 Series in China is a config
 change, not a rewrite.
 
 ## Domain taxonomy is config, not code

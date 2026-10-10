@@ -23,7 +23,7 @@ Each doc opens with a status line:
 |---|---|
 | [`architecture/00-overview.md`](architecture/00-overview.md) | What is this, in scope / out of scope, the five-stage pipeline at a glance |
 | [`architecture/01-agents.md`](architecture/01-agents.md) | Every agent: what it reads, what it produces, how autonomous it is |
-| [`architecture/02-orchestration-and-human-in-the-loop.md`](architecture/02-orchestration-and-human-in-the-loop.md) | **How the PM actually stays in control** — the step-by-step run/review/advance model |
+| [`architecture/02-orchestration-and-human-in-the-loop.md`](architecture/02-orchestration-and-human-in-the-loop.md) | **How the PM actually stays in control** — the chat → orchestrator plan → review-and-accept-each-agent model |
 | [`architecture/03-ingestion.md`](architecture/03-ingestion.md) | How a PDF or Excel file becomes a cited `Finding` |
 | [`architecture/04-data-model.md`](architecture/04-data-model.md) | Every entity and how they reference each other |
 | [`architecture/05-requirement-lifecycle.md`](architecture/05-requirement-lifecycle.md) | What happens to a requirement after it's accepted, over the ~2-year program |
