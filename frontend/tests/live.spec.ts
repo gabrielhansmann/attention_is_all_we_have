@@ -139,3 +139,47 @@ test.describe('evidence', () => {
     await noViolations(page)
   })
 })
+
+test.describe('source viewer', () => {
+  const ref = { kind: 'feedback', id: 'e1', file: 'G60_feedback_hackathon.xlsx', locator: 'sheet Feedback_Explorer, row 12 (G60-0012)', quote: 'The voice assistant never understands me.' }
+  const finding = { id: 'F-1', text: 'Owners find the voice assistant unreliable.', locator: ref.locator, citations: [ref] }
+  const card = msg(2, 'agent', 'step_card', 'Owners find the voice assistant unreliable.', { agent: 'Customer Feedback Agent', failed: false, output: { findings: [finding] } }, 's1')
+  const result = msg(3, 'orchestrator', 'final_result', '# Research dossier: voice\n\n## Customer signals\n\n- Voice control is unreliable. [F-1]\n')
+  const context = {
+    kind: 'feedback', id: 'e1', file: ref.file, locator: ref.locator, title: null, page: null, vehicle_line: 'G60', market_code: 'US',
+    passages: [
+      { id: 'e0', label: 'row 11 (G60-0011)', text: 'Nice seats.', cited: false },
+      { id: 'e1', label: 'row 12 (G60-0012)', text: ref.quote, cited: true },
+    ],
+    document: { source_id: 'src1', type: 'internal_xlsx', openable: true },
+  }
+
+  test('a claim has a numbered source that opens the cited passage in context', async ({ page }) => {
+    await withSession(page)
+    await page.route('**/api/conversations', r => json(r, [conversation]))
+    await page.route('**/api/conversations/c1', r => json(r, { conversation, messages: [msg(1, 'pm', 'request', 'voice?'), card, result], runs: [run('completed', [step(1, 'Customer Feedback Agent', 'accepted')])] }))
+    await page.route('**/api/evidence/feedback/e1/context', r => json(r, context))
+    await page.goto('/')
+    await openMenu(page)
+    await page.locator('[data-testid=sidebar]:visible').getByText(conversation.title).click()
+    await closeMenu(page)
+
+    const live = page.getByTestId('live-research')
+    await live.getByText('Findings and sources (1)').click()
+    const chip = live.getByRole('article').getByRole('button', { name: /Source 1: G60_feedback_hackathon.xlsx/ })
+    await chip.focus()          // focus shows the same preview as hover, and works on touch devices
+    await expect(live.getByRole('tooltip').first()).toContainText('The voice assistant never understands me.')
+    await noOverflow(page)
+
+    // the [F-1] marker in the final result is resolved to the same source
+    await live.getByText('Voice control is unreliable.').locator('..').getByRole('button', { name: /Source 1/ }).click()
+    const panel = page.getByTestId('source-panel')
+    await expect(panel).toContainText('G60_feedback_hackathon.xlsx')
+    await expect(panel.locator('[aria-current="true"]')).toContainText('The voice assistant never understands me.')
+    await expect(panel.getByText('Nice seats.')).toBeVisible()
+    await expect(panel.getByRole('button', { name: 'Open original file' })).toBeEnabled()
+    await noViolations(page)
+    await page.keyboard.press('Escape')
+    await expect(panel).toHaveCount(0)
+  })
+})
