@@ -34,6 +34,13 @@ Each doc opens with a status line:
 
 | [`architecture/10-competitor-benchmarking.md`](architecture/10-competitor-benchmarking.md) | How one BMW becomes a comparable rival set, and how rival evidence is compared fairly |
 
+## Functional requirements
+
+What the system must do, as testable statements with IDs and priorities, in
+[`requirements/`](requirements/) — partly derived from the architecture docs above, partly new
+(PM overview, flexible feedback / website / social media inputs). Start at
+[`requirements/README.md`](requirements/README.md).
+
 ## Decision log
 
 Dated, append-only records of the choices that weren't obvious, in [`decisions/`](decisions/).
