@@ -1,0 +1,24 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "fastapi",
+  "installCommand": "",
+  "buildCommand": "PYTHONPATH=backend python -m app.deploy.build",
+  "outputDirectory": "public",
+  "functions": {
+    "backend/app/deploy/vercel.py": {
+      "maxDuration": 300,
+      "excludeFiles": "{docs/**,data/**,backend/tests/**,frontend/**,skills/**,**/__pycache__/**}"
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "X-Frame-Options", "value": "DENY" }
+      ]
+    }
+  ],
+  "env": { "APP_ENV": "production" }
+}

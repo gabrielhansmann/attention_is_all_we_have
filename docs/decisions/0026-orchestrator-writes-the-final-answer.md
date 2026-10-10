@@ -1,8 +1,11 @@
-# 0023 — The orchestrator writes the final answer to the PM
+# 0026 — The orchestrator writes the final answer to the PM
 
 > Date: 2026-10-11 · Status: accepted · Builds on [0018](0018-orchestrator-decides-in-an-agentic-loop.md)
 
 ## Context
+
+Renumbered from 0023 when integrating main: that number was already assigned to file uploads.
+Decision IDs must remain unique because the Supabase documentation mirror upserts by ID.
 
 The final result in the chat was the agents' own summaries stitched together (or the whole dossier). The PM saw the
 same text twice, with raw citation strings and no judgement about what mattered. The orchestrator already reads every

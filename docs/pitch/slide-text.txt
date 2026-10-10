@@ -1,0 +1,209 @@
+SLIDE 1
+BMW PRODUCT INTELLIGENCE
+
+BMW hackathon prototype  |  2026-10-10  |  Pitch
+01
+Which customer needs
+should shape the next vehicle?
+Cited research across feedback, product data and the web.
+
+Ask a question. Inspect the evidence.
+Make the product decision.
+Gabriel Hansmann  |  attention_is_all_we_have
+
+SLIDE 2
+BMW PRODUCT INTELLIGENCE
+A real evidence base.
+Every number comes from Supabase.
+
+BMW hackathon prototype  |  2026-10-10  |  Pitch
+02
+13,771
+customer-feedback comments
+11 registered sources
+8 internal files + 3 web sources
+Original file, row or page stays attached.
+
+1,627
+customer-study cells
+198
+equipment options
+149
+BMW catalog passages
+49
+stored web passages
+
+SLIDE 3
+BMW PRODUCT INTELLIGENCE
+Ask once.
+The orchestrator chooses the agents.
+
+BMW hackathon prototype  |  2026-10-10  |  Pitch
+03
+
+Example question: What do US G60 owners dislike about comfort?
+01
+Ask
+Vehicle, market
+and research question
+
+02
+Decide
+Choose one agent;
+validate prerequisites
+
+03
+Check
+Run the agent;
+verify its citations
+
+04
+Answer
+Cited results
+and visible reasoning
+The loop reacts to results. No manual approval of agent steps.
+
+SLIDE 4
+BMW PRODUCT INTELLIGENCE
+The app is deployed.
+Its frontend and backend are connected.
+
+BMW hackathon prototype  |  2026-10-10  |  Pitch
+04
+Actual Vercel screen, captured 21:01 UTC
+Research
+Chat, agent decisions and cited results
+Evidence
+Filtered search and exact grouped counts
+Sources
+Registered files and market coverage
+
+Verified: database healthy; hosted build matches main.
+
+SLIDE 5
+BMW PRODUCT INTELLIGENCE
+A concrete signal.
+A source the PM can inspect.
+
+BMW hackathon prototype  |  2026-10-10  |  Pitch
+05
+139
+negative comments
+G60 / US
+Comfort & Space
+396 comments in this category
+
+ONE STORED CUSTOMER COMMENT
+“having to reach the heated steering wheel through the climate options feels cumbersome and they miss having a dedicated button.”
+G60_feedback_hackathon.xlsx
+sheet Feedback_Explorer, row 361 (G60-0287)
+The count covers the category; the quote supports one specific issue.
+
+SLIDE 6
+BMW PRODUCT INTELLIGENCE
+Pilot one vehicle line.
+Measure the value of cited research.
+
+BMW hackathon prototype  |  2026-10-10  |  Pitch
+06
+01
+Time to a cited answer
+Compare with the current research process.
+02
+Citation correctness
+Check source, context and market relevance.
+03
+Evidence coverage
+Keep missing evidence visible.
+bmw-product-intelligence.vercel.app
+Live app. Sign-in required. Prototype limits are listed in Q&A.
+
+SLIDE 7
+BMW PRODUCT INTELLIGENCE  /  Q&A
+One evidence layer.
+A visible chain from source to answer.
+
+BMW hackathon prototype  |  2026-10-10  |  Q&A
+07
+
+React
+Research / Evidence / Sources
+
+
+FastAPI
+/api and server-side sessions
+
+
+Knowledge
+Shared tools: search,
+lookup, count and cite
+
+
+Supabase
+Postgres + pgvector
+
+LangGraph loop + Critic checks + Postgres checkpoints
+Current hosting: in-process research, 300-second function setting.
+A durable worker remains a next step for longer runs.
+
+SLIDE 8
+BMW PRODUCT INTELLIGENCE  /  Q&A
+Coverage is uneven.
+A source tag still needs review.
+
+BMW hackathon prototype  |  2026-10-10  |  Q&A
+08
+United States
+
+
+8,783
+Europe
+
+
+3,292
+Rest of world
+
+
+1,696
+China
+
+0
+
+REVIEW BEFORE USE
+Genesis G70 page
+tagged as G70.
+Vehicle identity and
+market relevance need
+validation.
+China has study and sales data for G68 / G70; no customer comments.
+Study cells are not respondents. Forecast sales are not observed sales.
+
+SLIDE 9
+BMW PRODUCT INTELLIGENCE  /  Q&A
+What the evidence proves.
+What still needs validation.
+
+BMW hackathon prototype  |  2026-10-10  |  Q&A
+09
+CAPABILITY
+STATUS
+VERIFICATION / LIMIT
+
+Public app + DB health
+Verified
+Live frontend, DB ok, auth boundary enforced
+Research / Evidence / Sources
+Shipped in main
+Frontend bundle matches deployed main
+
+Orchestrator + Critic + resume
+Shipped code
+Full authenticated hosted run not exercised
+Stored execution history
+Observed in DB
+5 completed runs; 1 older run in progress
+
+Requirement backlog + original files
+Incomplete
+Backlog tables empty; hosted originals absent
+Snapshot: 2026-10-10 21:01 UTC  |  Deployed main: 7c7ba86

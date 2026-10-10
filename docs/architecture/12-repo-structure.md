@@ -1,6 +1,6 @@
 # Repository structure: frontend and backend
 
-> Status: `building` · Last updated: 2026-10-14 (website sources and the tabbed Sources view; see [decision 0024](../decisions/0024-websites-as-sources-and-tabbed-sources-view.md))
+> Status: `building` · Last updated: 2026-10-11 (Git-backed full-stack deployment; see [decision 0027](../decisions/0027-git-backed-full-stack-vercel-deployment.md))
 
 ```mermaid
 flowchart LR
@@ -31,6 +31,7 @@ backend/
     agents/               LLM-backed agents (Market & Trend today)
     orchestration/        agent catalog, orchestrator (decides the next agent), the LangGraph loop, step runner, chat persistence
     ingest/               loaders and parsers for PDFs and Excel files, provided or uploaded
+    deploy/               repository-root Vercel build, produces public/ from frontend/dist
   tests/                  pytest; no database or OpenAI key needed
 frontend/                 Gabriel's PM workspace (npm, Vite + React + TypeScript), see frontend/README.md
   src/App.tsx                shell: sign-in gate, top bar, hash navigation between the three views
@@ -44,6 +45,10 @@ docs/                     architecture, decisions, requirements
 skills/                   agent skills (database setup, scripts)
 data/                     provided BMW files, gitignored
 Makefile  .env.example    common tasks and the environment template (one .env at the repo root)
+pyproject.toml           Vercel deployment adapter and local backend package source
+requirements.txt         installs backend/ with its runtime dependencies
+vercel.json              root full-stack build and function settings
+public/                  generated CDN frontend build, gitignored
 ```
 
 ## Rules
@@ -57,8 +62,8 @@ Makefile  .env.example    common tasks and the environment template (one .env at
 - **Every API result that states a fact carries a citation** (file, location, verbatim quote).
 - **The frontend never touches the database.** Every live view calls `/api`; all SQL is in the backend. There is no
   demo data in the frontend.
-- **UI follows `design.md`:** BMW tokens, rectangular components, no shadows, Inter 300/700 as the
-  approved substitute font, no dark theme. Components keep labels above fields and show loading, empty and
+- **UI follows `design.md` and decision 0021:** BMW tokens, rounded components, soft shadows and
+  the approved Inter substitute font, no dark theme. Components keep labels above fields and show loading, empty and
   error states.
 - **Tests:** `make test` for the backend (the API tests replace the knowledge tools with fakes). The
   frontend is checked by `make build` (type-check and bundle), `make lint`, and `npm test`
@@ -94,11 +99,37 @@ message. Interactive docs are served at `/docs`.
 ## Not built yet
 
 - A separate worker or queue for runs (they execute in the API process; a restart resumes them, decision 0019).
-- Requirements, targets and report views: they need requirements and findings in the database first.
+- Successor target editing and scheduled reports. Requirement, tracking and dossier views are implemented.
 - A Docker setup and CI.
 
 ## Frontend delivery
 
-The UI is a minimal shell over three live views (Research, Evidence, Sources) documented in
+The UI includes live research, models, requirements, tracking, dossiers, evidence and sources documented in
 [the frontend guide](../../frontend/README.md). It holds no fixtures and needs `/api` on its origin; Vite proxies it
 in development. Dependencies use the npm lockfile; the Makefile installs with `npm ci`.
+
+## Model overviews (decision 0025)
+
+`backend/app/comparisons/` contains local catalog parsing, public-source discovery/scraping,
+quote validation and the context-loaded chat adapter. `backend/app/knowledge/models.py` owns
+model evidence access and deterministic cohort median/mean calculations. `backend/app/api/models.py`
+exposes the authenticated `/api/models` endpoints. `frontend/src/features/models/` renders the
+compact model/variant/market comparison workspace, diagrams, source validation controls and
+the existing chat. `20261016_model_comparisons.sql` adds the persistence and chat bindings.
+All comparisons are calculated by the server against Supabase; no database keys or business
+fixtures are shipped to the frontend.
+
+## Vercel deployment (decision 0027)
+
+Deploy from the repository root. The root pyproject.toml points Vercel to the existing FastAPI
+deployment adapter and installs the locally sourced backend package (requirements.txt supports pip).
+`app.deploy.build` runs the
+frontend lockfile install and production build, then prepares public/ for CDN delivery.
+The adapter registers the generated frontend with FastAPI for explicit CDN promotion. Protected
+API routes take priority. Hash navigation requires no SPA fallback, preserving missing-file and
+disabled-documentation errors. A frontend-only dependency returns 404 when CDN promotion omits
+the static directory from the function bundle; API routes retain their normal handlers.
+The API shares that origin and uses
+encrypted server-only Supabase/OpenAI configuration.
+The root ignore/configuration files omit credentials, BMW files and development artifacts.
+Deployment runs no migrations or user-management commands. The local `make dev` workflow remains.

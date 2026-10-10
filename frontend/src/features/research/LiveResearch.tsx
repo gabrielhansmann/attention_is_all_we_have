@@ -9,6 +9,7 @@ import { Prose } from '@/features/sources/Prose'
 import { findingIndex, type Finding } from '@/features/sources/citations'
 import { SourceViewerProvider } from '@/features/sources/SourceViewer'
 import { StepCard } from './StepCard'
+import type { ModelScope } from '@/features/models/types'
 
 const POLL_MS = 2500
 const errorText = (e: unknown) => (e instanceof ApiError ? e.message : 'Something went wrong.')
@@ -71,8 +72,12 @@ function Message({ message, findings }: { message: ChatMessage; findings: Map<st
   )
 }
 
-export function LiveResearch() {
-  const { activeId, select, refresh } = useChats()
+export function LiveResearch({ modelScope }: { modelScope?: ModelScope } = {}) {
+  const chats = useChats()
+  const [modelActiveId, setModelActiveId] = useState<string | null>(modelScope?.conversation_id ?? null)
+  const activeId = modelScope ? modelActiveId : chats.activeId
+  const select = modelScope ? setModelActiveId : chats.select
+  const refresh = chats.refresh
   const [detail, setDetail] = useState<ConversationDetail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [text, setText] = useState('')
@@ -119,7 +124,7 @@ export function LiveResearch() {
     try {
       let id = detail?.conversation.id
       if (id) await api.postRequest(id, content)
-      else id = (await api.createConversation(content)).conversation.id
+      else id = (await api.createConversation(content, modelScope)).conversation.id
       const next = await api.conversation(id)
       setDetail(next)
       select(id)
@@ -165,22 +170,22 @@ export function LiveResearch() {
   return (
     <SourceViewerProvider>
     <div className="flex min-h-0 flex-1 flex-col" data-testid="live-research">
-      <header className="hidden h-14 shrink-0 items-center border-b border-border px-6 md:flex">
-        <h1 className="truncate text-sm font-semibold">{detail ? detail.conversation.title : 'New chat'}</h1>
+      <header className="flex min-h-14 shrink-0 items-center border-b border-border px-6">
+        {modelScope ? <h2 className="text-sm font-semibold">Model chat</h2> : <h1 className="truncate text-sm font-semibold">{detail ? detail.conversation.title : 'New chat'}</h1>}
       </header>
 
       {empty ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-8 overflow-y-auto px-4 py-10">
           <div className="flex flex-col items-center gap-3 text-center">
             <span className="grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary"><Sparkles className="size-7" /></span>
-            <h2 className="text-2xl sm:text-3xl">What would you like to research?</h2>
+            <h2 className={modelScope ? 'text-xl' : 'text-2xl sm:text-3xl'}>{modelScope ? `Ask about ${modelScope.name}` : 'What would you like to research?'}</h2>
             <p className="max-w-lg text-sm text-muted-foreground">
-              The orchestrator chooses which agents to call, reads each result, and decides whether it needs more. Every claim comes with a source.
+              {modelScope ? `Context ready: ${modelScope.comparison_variant || 'model family'}, ${modelScope.comparison_market}, ${modelScope.rival_count} selected competitors. The chat reads the model’s stored evidence and comparisons when you send a request.` : 'The orchestrator chooses which agents to call, reads each result, and decides whether it needs more. Every claim comes with a source.'}
             </p>
           </div>
           <div className="w-full max-w-3xl">{composer}</div>
           <ul className="flex max-w-3xl flex-wrap justify-center gap-2">
-            {SUGGESTIONS.map((s) => (
+            {(modelScope ? ['Where does this model lead or trail the selected competitors?', 'Which comparisons have missing or incompatible evidence?', 'What do customers say about comfort and connectivity?'] : SUGGESTIONS).map((s) => (
               <li key={s}>
                 <button type="button" onClick={() => { setText(s); input.current?.focus() }}
                   className="flex items-center gap-2 rounded-2xl border border-border bg-background px-4 py-2.5 text-left text-sm text-foreground/80 transition-colors hover:border-primary/40 hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring">

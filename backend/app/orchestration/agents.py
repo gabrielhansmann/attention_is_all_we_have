@@ -25,6 +25,7 @@ class StepContext:
     instruction: str | None = None        # the Critic's instruction on an automatic retry
     steps: list[dict[str, Any]] = field(default_factory=list)       # earlier steps of the run, with `output`
     decisions: list[dict[str, Any]] = field(default_factory=list)   # the run's audit events so far
+    comparison_context: dict | None = None
 
     @property
     def steering(self) -> str | None:
@@ -34,7 +35,9 @@ class StepContext:
     @property
     def task(self) -> str:
         """The request plus any steering, for agents whose model reads the query."""
-        return f"{self.query}\n{self.steering}" if self.steering else self.query
+        from app.knowledge.models import context_text
+        request = f"{self.query}\n{self.steering}" if self.steering else self.query
+        return request + context_text(self.comparison_context)
 
     def accepted(self, key: str) -> list[dict[str, Any]]:
         """Items of one kind (`findings`, `clusters`, `requirements`) from the accepted steps, in plan order."""
@@ -59,6 +62,9 @@ def _market_trend(ctx: StepContext) -> Any:
 
 
 def _competitor(ctx: StepContext) -> Any:
+    if ctx.comparison_context:
+        from app.comparisons.chat import answer
+        return answer(ctx, _client())
     from app.agents import competitor_agent as agent
     docs, draft = agent.research_with_openai(_client(), ctx.vehicle_line, ctx.market, ctx.task, max_sources=MAX_WEB_SOURCES)
     return agent.build_result(ctx.vehicle_line, ctx.market, ctx.query, docs, draft)

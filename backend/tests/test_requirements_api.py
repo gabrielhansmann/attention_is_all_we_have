@@ -1,7 +1,7 @@
 """Requirement register, decisions, tracking and dossiers. Real database, rolled back after every test; no model or
 embedding call is made (the evidence search is a fake)."""
 from types import SimpleNamespace
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -88,19 +88,19 @@ def test_a_tracking_check_flags_new_and_contradicting_evidence_until_acknowledge
     client.post(f"/api/requirements/{REQ_ID}/decision", json={"action": "approve"})
     fake = lambda query, **kw: [hit("n-1", "Seat ventilation is much too weak again", "negative"),
                                 hit("n-2", "Seat ventilation works great and is fast", "positive")]
-    result = tracking.check(db, "tester@example.com", search=fake)
+    result = tracking.check(db, "tester@example.com", requirement_ids=[UUID(REQ_ID)], search=fake)
     assert result["checked"] == 1 and not result["errors"]
     assert {f["flag_type"] for f in result["flags"]} == {"new_evidence", "contradicting"}
 
-    [row] = client.get("/api/tracking").json()["requirements"]
+    [row] = [r for r in client.get("/api/tracking").json()["requirements"] if r['id']==REQ_ID]
     assert len(row["flags"]) == 2 and client.get("/api/tracking").json()["last_checked"]
 
     client.post(f"/api/requirements/{REQ_ID}/decision", json={"action": "acknowledge"})
-    assert client.get("/api/tracking").json()["requirements"][0]["flags"] == []
+    assert next(r for r in client.get("/api/tracking").json()["requirements"] if r['id']==REQ_ID)["flags"] == []
 
 
 def test_a_draft_is_not_checked(db, run):
-    assert tracking.check(db, search=lambda *a, **k: [])["checked"] == 0
+    assert tracking.check(db, requirement_ids=[UUID(REQ_ID)], search=lambda *a, **k: [])["checked"] == 0
 
 
 def test_dossiers_come_with_their_findings(client, run):

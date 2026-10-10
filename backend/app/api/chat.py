@@ -26,6 +26,9 @@ Checkpoints = Annotated[loop.CheckpointerFactory, Depends(get_checkpointer)]
 
 
 def _http(e: Exception) -> HTTPException:
+    from app.knowledge.models import ModelNotFound
+    if isinstance(e, ModelNotFound):
+        return HTTPException(404, str(e))
     if isinstance(e, (service.ConversationNotFound, service.RunNotFound, runner.StepNotFound)):
         return HTTPException(404, "not found")
     if isinstance(e, (service.ConversationArchived, service.RunInProgress, runner.StepConflict)):
@@ -34,6 +37,8 @@ def _http(e: Exception) -> HTTPException:
         return HTTPException(503, f"orchestrator unavailable: {e}")
     if isinstance(e, psycopg.Error):
         return HTTPException(503, f"database error ({type(e).__name__})")
+    if isinstance(e, ValueError):
+        return HTTPException(422, str(e))
     raise e
 
 
@@ -62,7 +67,8 @@ def list_conversations(conn: Conn, status: Literal["active", "archived"] = "acti
 def create_conversation(body: CreateConversation, conn: Conn, background: BackgroundTasks, connect: Connect,
                         orchestrator: Orchestrate, runners: Runners, checkpointer: Checkpoints, user: User):
     try:
-        conv = service.create_conversation(conn, body.title, user["email"])
+        conv = service.create_conversation(conn, body.title, user["email"], model_id=body.comparison_model_id,
+                                           variant=body.comparison_variant, market=body.comparison_market)
         started = service.post_request(conn, conv["id"], body.request, orchestrator, user["email"]) if body.request else None
         conn.commit()
         detail = _detail(conn, conv["id"])

@@ -1,168 +1,110 @@
-# Competitor benchmarking: from one BMW to a comparable rival set
+# Model overviews and competitor benchmarking
 
-> Status: `draft` · Last updated: 2026-10-10
+> Status: `building` · Last updated: 2026-10-11
 
-[`01-agents.md`](01-agents.md) says the Competitor Agent "searches the web for competitor specs and
-reviews." That hides the hard part: *which* competitors, and how their evidence is made comparable
-to ours. This doc is a proposed processing structure for exactly that — start from one BMW (demo:
-5 Series / G60), end with findings that say where rivals in the same bracket are ahead or behind
-*as customers experience it*.
+See [decision 0025](../decisions/0025-server-owned-model-comparisons.md). Model overviews are a
+protected backend API feature backed by Supabase. The browser never reads the database directly
+or computes comparison benchmarks. Germany/Europe is the user-selected default market.
 
-## The six stages
+## Identity and scope
+
+`app.knowledge.models` discovers family names from `study_response.model` and the active vehicle-line
+ontology, then loads every variant from `model_variant`. There is no hardcoded model roster, rival
+list, specification value, rating, sales forecast or market average in the frontend. Models added
+manually have their own registry identity. Bare chassis identifiers are not reliable web identities:
+BMW G70 must not be mistaken for Genesis G70. G68 remains the China-specific dataset model and is
+not silently merged with the German G60.
+
+Every overview fixes a model, variant and market. The dataset currently contains family-level
+customer studies and feedback alongside variant-level catalog tables. The UI labels this granularity;
+family-level opinions are not represented as measurements of a specific engine variant.
+
+## Collection and validation
 
 ```mermaid
 flowchart LR
-    A["1 Anchor<br/>fix one vehicle<br/>→ VehicleProfile"]
-    B["2 Segment definition<br/>bands on price · range ·<br/>seats · equipment"]
-    G1{{"PM gate:<br/>confirm bands"}}
-    C["3 Long-list<br/>load every model<br/>inside the bands"]
-    D["4 Shortlist<br/>rank by similarity,<br/>split by market"]
-    G2{{"PM gate:<br/>pick rivals"}}
-    E["5 Evidence collection<br/>specs · reviews ·<br/>owner reports"]
-    F["6 Relative comparison<br/>per aspect, vs. the<br/>anchor's own feedback"]
-    G3{{"PM gate:<br/>accept findings"}}
-    A --> B --> G1 --> C --> D --> G2 --> E --> F --> G3
+    A[Dataset identities and selected variant] --> B[Authenticated comparison API]
+    B --> C[Local catalog table parser]
+    B --> D[Public web search: proposed rival leads]
+    D --> E[Permitted public OEM HTML or technical PDF]
+    E --> F[Quote-backed extraction and validation]
+    C --> G[Supabase observations and explicit cohort]
+    F --> G
+    G --> H[Server-calculated median, mean and exclusions]
+    H --> I[Charts, sources and model-bound chat]
 ```
 
-### 1 — Anchor: fix one vehicle
+The existing web search service proposes candidates. Leads and selection rationales are interpretations,
+not verified competitor performance. Each URL must appear in an actual search-tool result. A safe
+HTTP fetch validates public addresses and redirects, honors robots.txt and bounds size/time. Login,
+bot checks, unavailable robots files, oversized documents and JavaScript-only pages become visible
+coverage gaps. No access restriction is bypassed.
 
-"5 Series" is not one car: it spans combustion, plug-in and electric (i5), saloon and Touring, and
-a price range wide enough to overlap two segments. The PM picks a vehicle line **and** an anchor
-variant (or a small set of them); everything downstream is relative to that.
+Internal catalog extraction is deterministic and local: match registered variant names against the
+technical table header, use the corresponding column, preserve the complete row/header and omit
+incomplete or ambiguous cells. System power is distinct from a hybrid's combustion-engine power.
+Fuel/energy intervals stay intervals; seats-up boot capacity is distinct from seats-folded capacity.
 
-Output is a `VehicleProfile` — the same structure later filled in for every rival:
+Public-source extraction proposes facts from fetched passages. Backend validation requires an actual
+passage ID, a verbatim quote, a scope quote, an exact numeric token in canonical units, the expected
+powertrain and an explicit WLTP/EPA/CLTC standard where applicable. The source panel exposes the
+complete stored passage so a human can check interpretation and identity. These are extracted claims,
+not independently certified measurements.
 
-| Attribute | Example (illustrative) | Filled from |
-|---|---|---|
-| body style, seats | saloon, 5 | OptionList / official spec |
-| powertrain | BEV | official spec |
-| base price, typical transaction price | per market, in local currency | official price list |
-| range / consumption | WLTP (EU), EPA (US), CLTC (CN) | official spec |
-| dimensions, boot volume | length, wheelbase, litres | official spec |
-| equipment flags | standard vs. optional per feature | parsed `Options` table ([`03-ingestion.md`](03-ingestion.md)) |
+## Benchmarks and diagrams
 
-Every value carries a source locator, like any other `Finding`.
+One selected rival family contributes once per metric. Exclude the reference model. Units, test
+standards, powertrain, measurement basis and period must match. Missing or incompatible observations
+and conflicting values in a source snapshot have no vote and have an explicit exclusion reason.
 
-### 2 — Segment definition: what "the same bracket" means
+For comparable point values: mean is `sum(values)/n`; median is the middle sorted value, averaging the
+two middle values for even n. For comparable reported intervals, calculate median and mean separately
+for lower and upper endpoints and plot both endpoints. Never collapse an interval to a midpoint or
+call the selected cohort the entire market. n is a count of models, not a customer sample size.
 
-A `SegmentDefinition` is a set of criteria over `VehicleProfile` attributes, each either a **hard
-filter** (outside → excluded) or a **soft criterion** (only affects similarity ranking).
+The compact overview displays up to six numerical charts with distinct reference, rival, median and
+mean treatments, and can expand all metrics. Each chart exposes individual values, interval bounds,
+contributors, exclusions and citations. Qualitative sections use a sourced comparison matrix: no
+invented scores or statistical median of text. Internal feedback counts, study scores/shares and
+sales rows are shown separately with their actual file/cell/row provenance. Forecasts are labelled.
 
-| Criterion | Default derived from the anchor | Kind |
-|---|---|---|
-| Price | anchor base price −15 % … +25 % | hard |
-| Body style | same class (saloon/estate ↔ saloon/estate) | hard |
-| Seats | equal | hard |
-| Powertrain | same type | soft (hard if PM wants BEV-only) |
-| Range | ±20 % | soft |
-| Dimensions | length ±5 % | soft |
-| Equipment level | overlap of standard-equipment flags | soft |
+## Freshness and reevaluation
 
-The percentages are placeholders to be calibrated, and the defaults are a proposal, not a rule:
-**the PM can override any band by hand** ("price 55–80 k €", "include PHEVs") before anything is
-searched. The chosen bands are stored with the run, so the rival set is reproducible and an auditor
-can see *why* a car was in or out.
+`source.retrieved_at` is the crawl time for a web snapshot; `comparison_observation.extracted_at` is
+the evaluation time. The overview has a separate calculation timestamp. These clocks are not
+interchangeable. Every rival card can crawl its official sources directly, including a rival with zero existing
+observations, and reevaluate stored rival snapshots. Both actions use the same protected validation
+API with a cohort-scoped `rival_id`. Recrawling one source saves a new source and passage snapshot. Reevaluation reads
+current database evidence and re-extracts stored public snapshots, without changing their crawl date.
+Prior values and citations remain available. An unsuccessful refresh retains the earlier evidence
+with its original timestamps and a failure/coverage note.
 
-Price is used here only to draw the bracket. It never becomes a requirement — pricing stays out of
-scope per [`00-overview.md`](00-overview.md#scope).
+## API
 
-### 3 — Long-list: load every model inside the bands
+| Endpoint | Behavior |
+|---|---|
+| `GET /api/models` | Database-derived families, variants, manual models and market choices |
+| `POST /api/models` | Register a manually supplied full model identity |
+| `GET /api/models/{id}/overview?variant=...&market=...` | Read evidence and calculate current benchmarks on the server |
+| `POST /api/models/{id}/research` | Discover/scrape competitors, or research a manually supplied rival |
+| `PATCH /api/models/{id}/rivals/{cohort_id}` | Remove/include a rival in the explicit cohort |
+| `POST /api/models/{id}/validate` | Reevaluate all evidence or reevaluate/recrawl one observation source |
 
-Goal is recall, not precision: every model on sale in the target market that passes the hard
-filters. Two sources, merged and deduplicated on `(make, model, generation, variant)`:
+These routes require the existing application session. Collection remains inside a bounded request
+suitable for the Vercel function duration; interrupted requests have a research record and can be retried.
 
-- **Structured catalogues first** — official manufacturer spec/price pages and public vehicle
-  databases. `official` trust tier, deterministic parse where possible.
-- **Web search as a gap-filler** — "alternatives to …" / comparison-test articles surface rivals
-  the catalogue pass missed (new entrants, China-only brands).
+## Model chat
 
-Each candidate gets a `VehicleProfile`. Attributes that could not be sourced stay `null` and are
-shown as such — a missing range figure must not silently pass a range filter.
+The existing chat accepts optional registry ID, variant and market at creation. The backend validates
+this binding and every request snapshots the current comparison packet in `pipeline_run.comparison_context`.
+The first Competitor Agent call answers from this packet and citable dataset/web evidence. The remaining
+orchestrator/agent flow stays available. Untrusted source text cannot override the fixed identity,
+cohort or market. A model without a BMW line uses `EXTERNAL`, not `ALL`, for internal retrieval.
 
-### 4 — Shortlist: pick the comparison vehicles
+The earlier proposed per-agent PM gates in this document are superseded by decision 0018. A user may
+edit the cohort and manually add models; this is configuration of the comparison, not step approval.
 
-Candidates are ranked by a similarity score (weighted distance over the soft criteria, weights
-visible and editable). The PM sees a table per market and ticks the rivals to carry forward —
-typically 3–6 per market.
-
-Markets are separate lists, not one global one: a rival that matters in China may not be sold in
-Europe at all. Result is a `CompetitorSet` per `(anchor, market)`.
-
-### 5 — Evidence collection: scrape per shortlisted rival
-
-For each rival, the existing web ingestion path is reused (robots.txt respected, trust tier per
-domain from the domain config, unknown domains treated as the lowest tier):
-
-| Source type | Trust tier | Used for |
-|---|---|---|
-| Manufacturer spec / price pages | `official` | completing the `VehicleProfile` |
-| Comparison tests, long-term reviews | `trade_press` | expert judgement per aspect |
-| Owner reviews, forums | `forum_social` | customer experience — the counterpart to our own feedback data |
-
-Text is chunked, classified onto the same domain taxonomy as BMW's own feedback
-([`08-scaling-and-config.md`](08-scaling-and-config.md)), and stored as `Finding`s tagged with the
-rival's `vehicle_id`.
-
-### 6 — Relative comparison against the anchor
-
-This is where apples meet pears: BMW's side is internal survey data with known sample sizes, the
-rival's side is scraped public text. Putting raw numbers next to each other would be misleading.
-The comparison is therefore constrained on purpose:
-
-1. **Compare per aspect, never per car.** Unit of comparison is one ontology domain or sub-topic
-   ("rear legroom", "charging speed", "infotainment responsiveness"), not an overall verdict.
-2. **Like with like.** Owner voice is compared with owner voice, expert tests with expert tests,
-   spec with spec. For the anchor, the same public sources are scraped too — so the public-data
-   comparison is BMW-public vs. rival-public, and the internal feedback is used to *confirm or
-   contradict* it, not as the other side of the scale.
-3. **Relative, not absolute.** Per aspect and source type: share of mentions and sentiment balance
-   within that vehicle's own corpus. "18 % of rival-X owner posts mention charging, mostly
-   positive; 9 % of 5 Series posts do, mostly negative" is comparable; raw counts are not.
-4. **Hard facts stay hard.** Spec deltas (range, boot litres, standard equipment) are compared
-   directly and marked `Verified` — same measurement standard only (no WLTP vs. EPA).
-5. **Thin evidence is shown as thin.** An aspect with fewer than *n* mentions on either side yields
-   "insufficient data", not a finding.
-
-Output per aspect is a `ComparisonCell`: `anchor value · rival value · delta · source type ·
-n on each side · evidence_level`. Cells with a clear delta become `Finding`s — `competitor_advantage`
-where the rival leads, and (proposed new signal type) `competitor_weakness` where BMW leads and the
-lead is worth defending. From there they enter clustering like any other finding.
-
-## How this fits the step model
-
-In [`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and-human-in-the-loop.md) the
-Competitor Agent is one `Step`. Running stages 1–6 unattended inside it would be exactly what that
-doc argues against — a wrong price band at stage 2 invalidates everything after it. Proposal: split
-it into three chained steps, each with the usual Run / Accept / Edit / Retry / Reject card.
-
-| Step | Stages | What the PM reviews |
-|---|---|---|
-| Competitor Scoping | 1–2 | anchor profile + proposed bands; **Edit** = override bands |
-| Competitor Selection | 3–4 | ranked long-list per market; **Edit** = tick/untick rivals |
-| Competitor Evidence & Comparison | 5–6 | comparison matrix + resulting findings |
-
-The other four Situation Analysis agents stay independent of these and can run in parallel.
-
-This is a proposal only: `02` and [`04-data-model.md`](04-data-model.md) are not yet updated, and
-adopting it needs an entry in [`../decisions/`](../decisions/).
-
-## Data model additions (proposed)
-
-- **Vehicle:** `id, make, model, generation, variant, is_anchor`
-- **VehicleProfile:** `vehicle_id, market, attribute, value, unit, source_id, locator`
-  (long format — one row per attribute, so every value is individually cited and may be `null`)
-- **SegmentDefinition:** `id, run_id, anchor_vehicle_id, criteria[] {attribute, min, max, kind
-  (hard | soft), weight, set_by (default | pm)}`
-- **CompetitorSet:** `id, segment_definition_id, market, vehicle_ids[], similarity_scores{}`
-- **ComparisonCell:** `id, competitor_set_id, rival_vehicle_id, ontology_domain_id, source_type,
-  anchor_value, rival_value, delta, n_anchor, n_rival, evidence_level`
-- **Finding** gains a nullable `vehicle_id` so rival evidence is distinguishable from BMW evidence.
-
-## Open questions
-
-- Which structured catalogue is reliable and legally usable per market (EU / US / CN)?
-- Transaction price vs. list price for the band — list price is sourceable, transaction price is
-  what customers actually compare.
-- Minimum-mention threshold *n* for a comparison cell; needs calibrating on real scraped volume.
-- Whether three competitor steps is too much clicking for the demo — fallback is one step with the
-  band and shortlist confirmations as inline prompts.
+Manual competitor entry can optionally specify an exact variant and public source URL. This lets
+the PM correct unsuitable discovery pages without changing the verification rules: SSRF and
+redirect checks, robots.txt, exact source quotations and variant matching still apply. The
+selection is labelled manual. An inaccessible page remains a coverage gap.

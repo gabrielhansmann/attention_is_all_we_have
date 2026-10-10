@@ -12,6 +12,13 @@ export const json = (route: Route, body: unknown, status = 200) => route.fulfill
 export const authed = (route: Route) => route.request().headers().authorization === `Bearer ${TOKEN}`
 
 export async function noViolations(page: Page) {
+  // Audit the rendered state after finite entrance transitions settle. Scanning a fading
+  // message mid-animation measures its temporary opacity instead of its text colours.
+  await page.evaluate(async () => {
+    await Promise.all(document.getAnimations()
+      .filter((animation) => Number.isFinite(animation.effect?.getComputedTiming().iterations))
+      .map((animation) => animation.finished.catch(() => undefined)))
+  })
   await page.addScriptTag({ path: require.resolve('axe-core/axe.min.js') })
   const violations = await page.evaluate(async () =>
     (await (window as unknown as { axe: typeof axe }).axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'] } }))
@@ -25,6 +32,8 @@ export async function noOverflow(page: Page) {
 
 /** Skip the sign-in form: the token is what the app keeps after a login. */
 export async function withSession(page: Page) {
+  // A fixture session must never fall through to the user's live backend.
+  await page.route('**/api/**', (r) => json(r, { detail: 'API response not provided by this test' }, 404))
   await page.addInitScript(([k, v]) => window.sessionStorage.setItem(k, v), ['bmw-api-token', TOKEN])
   await page.route('**/api/auth/me', (r) => json(r, user))
   await page.route('**/api/health', (r) => json(r, { status: 'ok', db: 'ok', openai_key: true, version: 'test' }))

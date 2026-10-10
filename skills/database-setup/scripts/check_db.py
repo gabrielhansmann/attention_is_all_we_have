@@ -19,7 +19,7 @@ EXPECTED_TABLES = [
     "source", "feedback_raw", "chunk", "option", "option_availability", "sales_volume", "study_response",
     "ontology", "finding", "finding_evidence", "cluster", "requirement", "score",
     "pipeline_run", "step", "conversation", "message", "app_user", "auth_session", "audit_event", "country_market", "model_variant",
-    "design_decisions", "architecture_docs",
+    "design_decisions", "architecture_docs", "comparison_model", "comparison_research", "comparison_observation", "comparison_rival",
 ]
 EXPECTED_FUNCTIONS = ["match_chunks", "match_feedback", "search_feedback", "search_docs"]
 problems: list[str] = []

@@ -2,6 +2,7 @@
 !.gitignore
 !.env.example
 !.oxlintrc.json
+!.vercelignore
 .env
 
 # Provided BMW data (do not commit)
@@ -15,6 +16,7 @@ __pycache__/
 # Frontend
 node_modules/
 dist/
+/public/
 
 # Workspace test and deployment artifacts
 frontend/test-results/

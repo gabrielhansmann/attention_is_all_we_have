@@ -1,0 +1,1006 @@
+{
+  "captured_at": "2026-10-10T21:01:22.195974+00:00",
+  "source_commit": "7c7ba8619daee786309e8ef10caca85b7b5d24f2",
+  "live_url": "https://bmw-product-intelligence.vercel.app",
+  "sources": [
+    {
+      "id": "f139d41a-c154-41df-acbc-e42e223fa2ca",
+      "file": "F70_feedback_hackathon.xlsx",
+      "type": "internal_xlsx",
+      "vehicle_line": "F70",
+      "market": null,
+      "title": "F70_feedback_hackathon.xlsx",
+      "retrieved_at": "2026-10-10 15:09:47.087602+00:00",
+      "counts": {
+        "feedback": 4076,
+        "pdf_chunks": 0,
+        "options": 0,
+        "study_cells": 0,
+        "sales_rows": 0
+      },
+      "family": "Customer feedback"
+    },
+    {
+      "id": "f98d667a-3371-4832-b180-91478b05a438",
+      "file": "F70_G60_G68_G70_customer_studies.xlsx",
+      "type": "internal_xlsx",
+      "vehicle_line": null,
+      "market": null,
+      "title": "F70_G60_G68_G70_customer_studies.xlsx",
+      "retrieved_at": "2026-10-10 15:09:04.599453+00:00",
+      "counts": {
+        "feedback": 0,
+        "pdf_chunks": 0,
+        "options": 0,
+        "study_cells": 1627,
+        "sales_rows": 0
+      },
+      "family": "Customer study"
+    },
+    {
+      "id": "85782bef-835a-431f-a0a2-979ace23083a",
+      "file": "F70_OptionList.PDF",
+      "type": "internal_pdf",
+      "vehicle_line": "F70",
+      "market": null,
+      "title": "BMW 1er Katalog Juli 2026",
+      "retrieved_at": "2026-10-10 15:01:05.516567+00:00",
+      "counts": {
+        "feedback": 0,
+        "pdf_chunks": 39,
+        "options": 53,
+        "study_cells": 0,
+        "sales_rows": 0
+      },
+      "family": "Product catalog"
+    },
+    {
+      "id": "8ffd4506-dbcb-4576-9314-ecf7ea923b52",
+      "file": "G60_feedback_hackathon.xlsx",
+      "type": "internal_xlsx",
+      "vehicle_line": "G60",
+      "market": null,
+      "title": "G60_feedback_hackathon.xlsx",
+      "retrieved_at": "2026-10-10 15:10:13.259043+00:00",
+      "counts": {
+        "feedback": 5005,
+        "pdf_chunks": 0,
+        "options": 0,
+        "study_cells": 0,
+        "sales_rows": 0
+      },
+      "family": "Customer feedback"
+    },
+    {
+      "id": "b407994a-7635-4c66-bb94-fb52ebc9ab40",
+      "file": "G60_OptionList.PDF",
+      "type": "internal_pdf",
+      "vehicle_line": "G60",
+      "market": null,
+      "title": "BMW 5er Limousine Katalog Juli 2026",
+      "retrieved_at": "2026-10-10 15:01:09.196167+00:00",
+      "counts": {
+        "feedback": 0,
+        "pdf_chunks": 58,
+        "options": 62,
+        "study_cells": 0,
+        "sales_rows": 0
+      },
+      "family": "Product catalog"
+    },
+    {
+      "id": "e7f52f60-31b7-4bba-8374-19169f684b89",
+      "file": "G70_feedback_hackathon.xlsx",
+      "type": "internal_xlsx",
+      "vehicle_line": "G70",
+      "market": null,
+      "title": "G70_feedback_hackathon.xlsx",
+      "retrieved_at": "2026-10-10 15:10:53.556844+00:00",
+      "counts": {
+        "feedback": 4690,
+        "pdf_chunks": 0,
+        "options": 0,
+        "study_cells": 0,
+        "sales_rows": 0
+      },
+      "family": "Customer feedback"
+    },
+    {
+      "id": "8f668318-7b5f-47ea-8f68-7c5dc230bdec",
+      "file": "G70_OptionList.PDF",
+      "type": "internal_pdf",
+      "vehicle_line": "G70",
+      "market": null,
+      "title": "BMW 7er Katalog Juli 2026",
+      "retrieved_at": "2026-10-10 15:01:13.277530+00:00",
+      "counts": {
+        "feedback": 0,
+        "pdf_chunks": 52,
+        "options": 83,
+        "study_cells": 0,
+        "sales_rows": 0
+      },
+      "family": "Product catalog"
+    },
+    {
+      "id": "563a9a3c-f3ac-467d-bb01-6b664bc6422d",
+      "file": "https://www.caranddriver.com/genesis/g70-2025",
+      "type": "web",
+      "vehicle_line": "G70",
+      "market": null,
+      "title": "2025 Genesis G70 Review, Pricing, and Specs",
+      "retrieved_at": "2026-10-10 20:35:28.695223+00:00",
+      "counts": {
+        "feedback": 0,
+        "pdf_chunks": 37,
+        "options": 0,
+        "study_cells": 0,
+        "sales_rows": 0
+      },
+      "family": "Product catalog"
+    },
+    {
+      "id": "1270cb6d-8749-4e14-87aa-bcb13f71a92c",
+      "file": "https://www.motor.com/2026/01/auto-aftermarket-trends-2026/",
+      "type": "web",
+      "vehicle_line": null,
+      "market": null,
+      "title": "Auto Aftermarket Trends Shaping 2026 | MOTOR",
+      "retrieved_at": "2026-10-10 20:35:33.215356+00:00",
+      "counts": {
+        "feedback": 0,
+        "pdf_chunks": 6,
+        "options": 0,
+        "study_cells": 0,
+        "sales_rows": 0
+      },
+      "family": "Product catalog"
+    },
+    {
+      "id": "bc70427b-9bfd-4064-aaa9-15c7c1908d93",
+      "file": "https://www.techradar.com/vehicle-tech/hybrid-electric-vehicles/tesla-model-y-tops-global-ev-sales-figures-again-but-new-report-reveals-byd-is-closing-fast-with-4-of-the-top-10-models",
+      "type": "web",
+      "vehicle_line": null,
+      "market": null,
+      "title": "Tesla Model Y tops global EV sales figures again \u2014 but new report reveals BYD is closing fast with 4 of the top 10 models | TechRadar",
+      "retrieved_at": "2026-10-10 20:11:51.262727+00:00",
+      "counts": {
+        "feedback": 0,
+        "pdf_chunks": 6,
+        "options": 0,
+        "study_cells": 0,
+        "sales_rows": 0
+      },
+      "family": "Product catalog"
+    },
+    {
+      "id": "e76c07ca-d80e-4269-9f35-61f5d700c374",
+      "file": "sales_volumes.xlsx",
+      "type": "internal_xlsx",
+      "vehicle_line": null,
+      "market": null,
+      "title": "sales_volumes.xlsx",
+      "retrieved_at": "2026-10-10 15:09:03.765887+00:00",
+      "counts": {
+        "feedback": 0,
+        "pdf_chunks": 0,
+        "options": 0,
+        "study_cells": 0,
+        "sales_rows": 36
+      },
+      "family": "Sales volumes"
+    }
+  ],
+  "coverage": {
+    "cells": [
+      {
+        "line": "F70",
+        "market": "CN",
+        "feedback": 0,
+        "study_cells": 0,
+        "sales_2025": 0
+      },
+      {
+        "line": "F70",
+        "market": "EU",
+        "feedback": 3010,
+        "study_cells": 37,
+        "sales_2025": 85000
+      },
+      {
+        "line": "F70",
+        "market": "RoW",
+        "feedback": 1066,
+        "study_cells": 0,
+        "sales_2025": 28000
+      },
+      {
+        "line": "F70",
+        "market": "US",
+        "feedback": 0,
+        "study_cells": 0,
+        "sales_2025": 0
+      },
+      {
+        "line": "G60",
+        "market": "CN",
+        "feedback": 0,
+        "study_cells": 0,
+        "sales_2025": null
+      },
+      {
+        "line": "G60",
+        "market": "EU",
+        "feedback": 238,
+        "study_cells": 37,
+        "sales_2025": 115000
+      },
+      {
+        "line": "G60",
+        "market": "RoW",
+        "feedback": 402,
+        "study_cells": 0,
+        "sales_2025": 28000
+      },
+      {
+        "line": "G60",
+        "market": "US",
+        "feedback": 4365,
+        "study_cells": 721,
+        "sales_2025": 78000
+      },
+      {
+        "line": "G68",
+        "market": "CN",
+        "feedback": 0,
+        "study_cells": 37,
+        "sales_2025": 75000
+      },
+      {
+        "line": "G68",
+        "market": "EU",
+        "feedback": 0,
+        "study_cells": 0,
+        "sales_2025": null
+      },
+      {
+        "line": "G68",
+        "market": "RoW",
+        "feedback": 0,
+        "study_cells": 0,
+        "sales_2025": null
+      },
+      {
+        "line": "G68",
+        "market": "US",
+        "feedback": 0,
+        "study_cells": 0,
+        "sales_2025": null
+      },
+      {
+        "line": "G70",
+        "market": "CN",
+        "feedback": 0,
+        "study_cells": 37,
+        "sales_2025": 10000
+      },
+      {
+        "line": "G70",
+        "market": "EU",
+        "feedback": 44,
+        "study_cells": 37,
+        "sales_2025": 13000
+      },
+      {
+        "line": "G70",
+        "market": "RoW",
+        "feedback": 228,
+        "study_cells": 0,
+        "sales_2025": 7000
+      },
+      {
+        "line": "G70",
+        "market": "US",
+        "feedback": 4418,
+        "study_cells": 721,
+        "sales_2025": 12000
+      }
+    ],
+    "options_by_line": {
+      "G60": 62,
+      "G70": 83,
+      "F70": 53
+    },
+    "total_feedback": 13771
+  },
+  "filters": {
+    "lines": [
+      "F70",
+      "G60",
+      "G68",
+      "G70"
+    ],
+    "markets": [
+      {
+        "key": "CN",
+        "label": "China"
+      },
+      {
+        "key": "EU",
+        "label": "Europe"
+      },
+      {
+        "key": "RoW",
+        "label": "Rest of World"
+      },
+      {
+        "key": "US",
+        "label": "USA"
+      }
+    ],
+    "domains": [
+      {
+        "key": "comfort_space",
+        "label": "Comfort & Space"
+      },
+      {
+        "key": "driver_assistance",
+        "label": "Driver Assistance"
+      },
+      {
+        "key": "exterior",
+        "label": "Exterior"
+      },
+      {
+        "key": "infotainment",
+        "label": "Infotainment"
+      },
+      {
+        "key": "interior",
+        "label": "Interior"
+      },
+      {
+        "key": "powertrain",
+        "label": "Powertrain"
+      },
+      {
+        "key": "range_charging",
+        "label": "Range & Charging"
+      },
+      {
+        "key": "safety",
+        "label": "Safety (out of scope: regulatory/homologation)"
+      },
+      {
+        "key": "usability",
+        "label": "Usability"
+      },
+      {
+        "key": "variant_package",
+        "label": "Variant & Package"
+      }
+    ],
+    "polarities": [
+      "positive",
+      "negative",
+      "request"
+    ],
+    "powertrains": [
+      "ICE",
+      "PHEV",
+      "BEV"
+    ]
+  },
+  "feedback_by_market": [
+    {
+      "key": "US",
+      "n": 8783
+    },
+    {
+      "key": "EU",
+      "n": 3292
+    },
+    {
+      "key": "RoW",
+      "n": 1696
+    }
+  ],
+  "feedback_by_line": [
+    {
+      "key": "G60",
+      "n": 5005
+    },
+    {
+      "key": "G70",
+      "n": 4690
+    },
+    {
+      "key": "F70",
+      "n": 4076
+    }
+  ],
+  "g60_us_by_domain": [
+    {
+      "key": "Powertrain",
+      "n": 856
+    },
+    {
+      "key": "Exterior",
+      "n": 645
+    },
+    {
+      "key": "Infotainment",
+      "n": 579
+    },
+    {
+      "key": "unmapped",
+      "n": 569
+    },
+    {
+      "key": "Interior",
+      "n": 400
+    },
+    {
+      "key": "Comfort & Space",
+      "n": 396
+    },
+    {
+      "key": "Driver Assistance",
+      "n": 361
+    },
+    {
+      "key": "Usability",
+      "n": 267
+    },
+    {
+      "key": "Range & Charging",
+      "n": 207
+    },
+    {
+      "key": "Safety (out of scope: regulatory/homologation)",
+      "n": 77
+    },
+    {
+      "key": "Variant & Package",
+      "n": 8
+    }
+  ],
+  "g60_us_by_polarity": [
+    {
+      "key": "positive",
+      "n": 1694
+    },
+    {
+      "key": "negative",
+      "n": 1594
+    },
+    {
+      "key": null,
+      "n": 545
+    },
+    {
+      "key": "request",
+      "n": 532
+    }
+  ],
+  "agents": [
+    {
+      "name": "Baseline Agent",
+      "stage": 1,
+      "description": "Previous-generation feedback, portfolio documents and sales trend: what must carry over.",
+      "available": true
+    },
+    {
+      "name": "Customer Feedback Agent",
+      "stage": 1,
+      "description": "What customers say: complaints, unmet needs and praise from the feedback and customer studies, with counts and sample sizes.",
+      "available": true
+    },
+    {
+      "name": "Sales & Portfolio Agent",
+      "stage": 1,
+      "description": "Revealed preference: which options are standard or optional per variant, option uptake and sales volumes by market.",
+      "available": true
+    },
+    {
+      "name": "Competitor Agent",
+      "stage": 1,
+      "description": "Rival vehicles: specs, reviews and teardown data from the web, to find competitor advantages.",
+      "available": true
+    },
+    {
+      "name": "Market & Trend Agent",
+      "stage": 1,
+      "description": "Where the market is heading: cited web trend research. Findings are assumptions, not facts.",
+      "available": true
+    },
+    {
+      "name": "Clustering Agent",
+      "stage": 2,
+      "description": "Groups findings into themes and maps them onto the domain taxonomy, removing duplicates.",
+      "available": true
+    },
+    {
+      "name": "Requirements Drafting Agent",
+      "stage": 3,
+      "description": "Turns clusters into draft requirements with a metric and acceptance criteria.",
+      "available": true
+    },
+    {
+      "name": "Prioritization Agent",
+      "stage": 4,
+      "description": "Scores each draft requirement with an explainable breakdown.",
+      "available": true
+    },
+    {
+      "name": "Documentation Agent",
+      "stage": 5,
+      "description": "Compiles the accepted steps into a dossier with the audit trail.",
+      "available": true
+    }
+  ],
+  "example_scope": {
+    "line": "G60",
+    "market": "US",
+    "domain": "comfort_space",
+    "polarity": "negative"
+  },
+  "example_counts": [
+    {
+      "key": "US",
+      "n": 139
+    }
+  ],
+  "example_feedback": [
+    {
+      "citation": {
+        "kind": "feedback",
+        "id": "22183775-31eb-4965-86b9-10eba0325154",
+        "file": "G60_feedback_hackathon.xlsx",
+        "locator": "sheet Feedback_Explorer, row 131 (G60-0107)",
+        "quote": "I had a serious problem with Seat materials scuff/soil easily: \"The seats seem to stain kind of easily and I'm not really sure how I'm supposed to clean them. If something wet is on the seat, it leaves residue that builds up there. I don't even have kids anymore to worry about messes, it's just from"
+      },
+      "text": "I had a serious problem with Seat materials scuff/soil easily: \"The seats seem to stain kind of easily and I'm not really sure how I'm supposed to clean them. If something wet is on the seat, it leaves residue that builds up there. I don't even have kids anymore to worry about messes, it's just from sitting and any wetness on the seats.\"",
+      "meta": {
+        "vehicle_line": "G60",
+        "market_code": "US",
+        "polarity": "negative",
+        "powertrain": "ICE"
+      },
+      "score": null
+    },
+    {
+      "citation": {
+        "kind": "feedback",
+        "id": "c9734348-f188-4618-aa67-321c94d86bc6",
+        "file": "G60_feedback_hackathon.xlsx",
+        "locator": "sheet Feedback_Explorer, row 136 (G60-0112)",
+        "quote": "Customer stated he was unsure how to switch on the heated steering wheel. Writer advised that pressing the temperature control located between the plus and minus icons would open a box on the screen that can be tapped to turn it on."
+      },
+      "text": "Customer stated he was unsure how to switch on the heated steering wheel. Writer advised that pressing the temperature control located between the plus and minus icons would open a box on the screen that can be tapped to turn it on.",
+      "meta": {
+        "vehicle_line": "G60",
+        "market_code": "US",
+        "polarity": "negative",
+        "powertrain": "ICE"
+      },
+      "score": null
+    },
+    {
+      "citation": {
+        "kind": "feedback",
+        "id": "faf36e9b-9c35-4cd8-93c6-da1428c1a8f3",
+        "file": "G60_feedback_hackathon.xlsx",
+        "locator": "sheet Feedback_Explorer, row 246 (G60-0200)",
+        "quote": "I had a serious problem with Rear cargo/luggage cover - DTU: \"The trunk looks big at first but actually feels cramped. It doesn't hold larger items well because the spare tire takes up so much space, so there isn't enough depth for big stuff.\""
+      },
+      "text": "I had a serious problem with Rear cargo/luggage cover - DTU: \"The trunk looks big at first but actually feels cramped. It doesn't hold larger items well because the spare tire takes up so much space, so there isn't enough depth for big stuff.\"",
+      "meta": {
+        "vehicle_line": "G60",
+        "market_code": "US",
+        "polarity": "negative",
+        "powertrain": "ICE"
+      },
+      "score": null
+    },
+    {
+      "citation": {
+        "kind": "feedback",
+        "id": "b6aa5f17-2fab-4a68-be88-c64bc38b99d3",
+        "file": "G60_feedback_hackathon.xlsx",
+        "locator": "sheet Feedback_Explorer, row 290 (G60-0236)",
+        "quote": "the interior feels like a step down from the previous model in both materials and equipment. no full leather on the dash, no stitched leather on the center of the steering wheel, and there are a lot of hard plastics. the door cards look low quality, with the lower section being hard plastic. there i"
+      },
+      "text": "the interior feels like a step down from the previous model in both materials and equipment.\n\nno full leather on the dash, no stitched leather on the center of the steering wheel, and there are a lot of hard plastics. the door cards look low quality, with the lower section being hard plastic.\nthere is no climate control for rear passengers and no led screen back there.\nthe sides where your knees rest should be soft leather like before.\n\nfront seats no longer have back pockets,\nthe door sill is missing and there is no soft close door.\n\noverall the cabin comes across as cheap and not fitting for a car priced above about 90k.",
+      "meta": {
+        "vehicle_line": "G60",
+        "market_code": "US",
+        "polarity": "negative",
+        "powertrain": "BEV"
+      },
+      "score": null
+    },
+    {
+      "citation": {
+        "kind": "feedback",
+        "id": "62bedcf9-5efa-48cb-ae51-f733bfaadd8d",
+        "file": "G60_feedback_hackathon.xlsx",
+        "locator": "sheet Feedback_Explorer, row 361 (G60-0287)",
+        "quote": "Customer stated that having to reach the heated steering wheel through the climate options feels cumbersome and they miss having a dedicated button. Writer stated they can press the IPA mic button on the steering wheel and simply tell the car to switch it on. Customer acknowledged this."
+      },
+      "text": "Customer stated that having to reach the heated steering wheel through the climate options feels cumbersome and they miss having a dedicated button. Writer stated they can press the IPA mic button on the steering wheel and simply tell the car to switch it on. Customer acknowledged this.",
+      "meta": {
+        "vehicle_line": "G60",
+        "market_code": "US",
+        "polarity": "negative",
+        "powertrain": "ICE"
+      },
+      "score": null
+    }
+  ],
+  "sales_2030": [
+    {
+      "citation": {
+        "kind": "sales",
+        "id": "dea6c601-4156-4d3d-b9df-48ab3473a786",
+        "file": "sales_volumes.xlsx",
+        "locator": "sheet G60_G68, row 4",
+        "quote": "G60 USA 2030: 80000 units (forecast)"
+      },
+      "text": "80000",
+      "meta": {
+        "vehicle_line": "G60",
+        "market_code": "US",
+        "year": 2030,
+        "volume": 80000,
+        "is_forecast": true
+      },
+      "score": null
+    }
+  ],
+  "table_counts": {
+    "source": 11,
+    "feedback_raw": 13771,
+    "chunk": 198,
+    "option": 198,
+    "option_availability": 1352,
+    "study_response": 1627,
+    "sales_volume": 36,
+    "pipeline_run": 6,
+    "step": 16,
+    "conversation": 5,
+    "message": 42,
+    "finding": 0,
+    "cluster": 0,
+    "requirement": 0,
+    "score": 0,
+    "audit_event": 41
+  },
+  "existing_runs": [
+    {
+      "id": "dbfda12a-2f23-4747-8fca-0716eacd2df7",
+      "conversation_id": "43bbe222-8d3d-43bb-9de0-93e36c9a03cf",
+      "status": "completed",
+      "vehicle_line": "G70",
+      "market": "ALL",
+      "steps": [
+        {
+          "agent": "Customer Feedback Agent",
+          "status": "accepted"
+        },
+        {
+          "agent": "Sales & Portfolio Agent",
+          "status": "accepted"
+        },
+        {
+          "agent": "Competitor Agent",
+          "status": "accepted"
+        },
+        {
+          "agent": "Market & Trend Agent",
+          "status": "accepted"
+        },
+        {
+          "agent": "Baseline Agent",
+          "status": "accepted"
+        }
+      ]
+    },
+    {
+      "id": "aaacc4c1-fc39-42ec-98f7-82a8ec23d4f0",
+      "conversation_id": "9e108b44-87c6-4233-9852-9cad7cfa3e0d",
+      "status": "completed",
+      "vehicle_line": "G60",
+      "market": "US",
+      "steps": [
+        {
+          "agent": "Customer Feedback Agent",
+          "status": "accepted"
+        }
+      ]
+    },
+    {
+      "id": "0a0986f7-446d-47e4-b699-81aa06c7c028",
+      "conversation_id": "bc53a35b-3146-4a78-b5d5-f14502032b4a",
+      "status": "completed",
+      "vehicle_line": "ALL",
+      "market": "ALL",
+      "steps": [
+        {
+          "agent": "Customer Feedback Agent",
+          "status": "accepted"
+        },
+        {
+          "agent": "Sales & Portfolio Agent",
+          "status": "accepted"
+        },
+        {
+          "agent": "Baseline Agent",
+          "status": "accepted"
+        }
+      ]
+    },
+    {
+      "id": "55731233-608e-435d-8d6a-5d3652e37a1f",
+      "conversation_id": "bc53a35b-3146-4a78-b5d5-f14502032b4a",
+      "status": "completed",
+      "vehicle_line": "ALL",
+      "market": "ALL",
+      "steps": [
+        {
+          "agent": "Customer Feedback Agent",
+          "status": "accepted"
+        },
+        {
+          "agent": "Sales & Portfolio Agent",
+          "status": "accepted"
+        },
+        {
+          "agent": "Competitor Agent",
+          "status": "accepted"
+        },
+        {
+          "agent": "Market & Trend Agent",
+          "status": "accepted"
+        },
+        {
+          "agent": "Baseline Agent",
+          "status": "accepted"
+        }
+      ]
+    },
+    {
+      "id": "7bb2025f-0b53-4988-ad9c-86863883a338",
+      "conversation_id": "709f102a-107c-492b-9029-f496b6546571",
+      "status": "completed",
+      "vehicle_line": "ALL",
+      "market": "US",
+      "steps": [
+        {
+          "agent": "Customer Feedback Agent",
+          "status": "accepted"
+        }
+      ]
+    },
+    {
+      "id": "69192ec3-0909-418e-9fd3-58dd510ea57e",
+      "conversation_id": "14280cb4-333d-4355-b4ef-c153b60d4451",
+      "status": "in_progress",
+      "vehicle_line": "ALL",
+      "market": "US",
+      "steps": [
+        {
+          "agent": "Customer Feedback Agent",
+          "status": "planned"
+        }
+      ]
+    }
+  ],
+  "mirrored_architecture": [
+    {
+      "path": "docs/architecture/00-overview.md",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44",
+      "updated_at": "2026-10-10 19:51:02.362632+00:00"
+    },
+    {
+      "path": "docs/architecture/01-agents.md",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44",
+      "updated_at": "2026-10-10 19:51:02.362632+00:00"
+    },
+    {
+      "path": "docs/architecture/02-orchestration-and-human-in-the-loop.md",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44",
+      "updated_at": "2026-10-10 19:51:02.362632+00:00"
+    },
+    {
+      "path": "docs/architecture/03-ingestion.md",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44",
+      "updated_at": "2026-10-10 19:51:02.362632+00:00"
+    },
+    {
+      "path": "docs/architecture/04-data-model.md",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44",
+      "updated_at": "2026-10-10 19:51:02.362632+00:00"
+    },
+    {
+      "path": "docs/architecture/05-requirement-lifecycle.md",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44",
+      "updated_at": "2026-10-10 19:51:02.362632+00:00"
+    },
+    {
+      "path": "docs/architecture/06-prioritization.md",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44",
+      "updated_at": "2026-10-10 19:51:02.362632+00:00"
+    },
+    {
+      "path": "docs/architecture/07-audit-trail.md",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44",
+      "updated_at": "2026-10-10 19:51:02.362632+00:00"
+    },
+    {
+      "path": "docs/architecture/08-scaling-and-config.md",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44",
+      "updated_at": "2026-10-10 19:51:02.362632+00:00"
+    },
+    {
+      "path": "docs/architecture/09-tech-stack.md",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44",
+      "updated_at": "2026-10-10 19:51:02.362632+00:00"
+    },
+    {
+      "path": "docs/architecture/10-competitor-benchmarking.md",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44",
+      "updated_at": "2026-10-10 19:51:02.362632+00:00"
+    },
+    {
+      "path": "docs/architecture/11-knowledge-layer.md",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44",
+      "updated_at": "2026-10-10 19:51:02.362632+00:00"
+    },
+    {
+      "path": "docs/architecture/12-repo-structure.md",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44",
+      "updated_at": "2026-10-10 19:51:02.362632+00:00"
+    }
+  ],
+  "mirrored_decisions": [
+    {
+      "id": "0001",
+      "title": "0001 \u2014 Two-tier PDF ingestion instead of naive text extraction",
+      "status": "accepted",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0002",
+      "title": "0002 \u2014 Gate every agent step, not just the drafted requirement and its score",
+      "status": "superseded",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0003",
+      "title": "0003 \u2014 Add a Critic Agent; split Competitor from Market/Trend",
+      "status": "accepted",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0004",
+      "title": "0004 \u2014 Supabase Postgres + pgvector for storage; OpenAI embeddings",
+      "status": "accepted",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0005",
+      "title": "0005 \u2014 Chat entry point; orchestrator plans the agents; accept starts the next one",
+      "status": "superseded",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0006",
+      "title": "0006 \u2014 Load Excel as raw relational tables; chunk PDFs per page with real citations",
+      "status": "accepted",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0007",
+      "title": "0007 \u2014 Parse equipment tables by position; seed the ontology from the feedback labels",
+      "status": "accepted",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0008",
+      "title": "0008 \u2014 Normalize all evidence to one vocabulary; one retrieval interface that returns citations",
+      "status": "accepted",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0009",
+      "title": "0009 \u2014 Web search runs through the LLM's built-in search tool for now",
+      "status": "accepted",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0010",
+      "title": "0010 \u2014 Split the repository into a FastAPI backend and a React frontend",
+      "status": "accepted",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0011",
+      "title": "0011 \u2014 Local demo PM workspace and static Vercel deployment",
+      "status": "superseded",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0012",
+      "title": "0012 \u2014 The planner model proposes agents; code validates, orders and completes the plan",
+      "status": "superseded",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0013",
+      "title": "0013 \u2014 The frontend reaches data only through the backend API; live mode sits beside the demo",
+      "status": "accepted",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0014",
+      "title": "0014 \u2014 All roster agents exist as modules; the interpretations they needed",
+      "status": "accepted",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0015",
+      "title": "0015 \u2014 The step runner: agents run in the background, output is kept on the step",
+      "status": "accepted",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0016",
+      "title": "0016 \u2014 Backend-owned users and server-side sessions protect the whole API",
+      "status": "accepted",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0017",
+      "title": "0017 \u2014 Minimal, live-only frontend: the demo workspace and its fixtures are removed",
+      "status": "accepted",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0018",
+      "title": "0018 \u2014 The orchestrator chooses agents in a loop; nobody approves a step",
+      "status": "accepted",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0019",
+      "title": "0019 \u2014 The orchestration loop runs as a LangGraph graph with a Postgres checkpointer",
+      "status": "accepted",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0020",
+      "title": "0020 \u2014 Citations open a source viewer: the passage in context and the original file",
+      "status": "accepted",
+      "commit_sha": "4c8619388bfdef9ce477524a967bc251bdd90d44"
+    },
+    {
+      "id": "0021",
+      "title": "0021 \u2014 Chat-first frontend with rounded components and soft elevation",
+      "status": "accepted",
+      "commit_sha": "ad2be66084913478546a1f1f404df4d47003bbaa"
+    },
+    {
+      "id": "0022",
+      "title": "0022 \u2014 Review reasons, safe failure handling and live frontend step controls",
+      "status": "accepted",
+      "commit_sha": "2a9081bbab65e1ad1e80da03d99010c1a3a53839"
+    },
+    {
+      "id": "0023",
+      "title": "0023 - Use database evidence throughout the PM workspace",
+      "status": "accepted",
+      "commit_sha": "2a9081bbab65e1ad1e80da03d99010c1a3a53839"
+    }
+  ]
+}

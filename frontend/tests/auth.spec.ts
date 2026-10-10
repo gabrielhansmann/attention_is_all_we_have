@@ -5,9 +5,11 @@ import { PASSWORD, TOKEN, NOW, authed, closeMenu, json, noViolations, openMenu, 
 interface Log { sourcesAuth: (string | undefined)[]; logins: { email: string; password: string }[]; loggedOut: boolean; meCalls: number }
 
 async function mockBackend(page: Page, opts: { sessionExpired?: () => boolean } = {}): Promise<Log> {
+  await page.route('**/api/**', (r) => json(r, { detail: 'API response not provided by this test' }, 404))
   const log: Log = { sourcesAuth: [], logins: [], loggedOut: false, meCalls: 0 }
   const guarded = (body: unknown) => (route: Route) =>
     authed(route) && !opts.sessionExpired?.() ? json(route, body) : json(route, { detail: 'not authenticated' }, 401)
+  await page.route('**/api/conversations', guarded([]))
   await page.route('**/api/health', (r) => json(r, { status: 'ok', db: 'ok', openai_key: true, version: 'test' }))
   await page.route('**/api/evidence/coverage', guarded({ total_feedback: 1, options_by_line: { G60: 1 }, cells: [{ line: 'G60', market: 'US', feedback: 500, study_cells: 3, sales_2025: 10 }] }))
   await page.route('**/api/sources', (r) => {

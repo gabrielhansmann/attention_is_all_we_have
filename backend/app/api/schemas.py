@@ -105,6 +105,9 @@ class ConversationOut(BaseModel):
     status: Literal["active", "archived"]
     created_at: datetime
     updated_at: datetime
+    comparison_model_id: UUID | None = None
+    comparison_variant: str | None = None
+    comparison_market: str | None = None
 
 
 class MessageOut(BaseModel):
@@ -159,6 +162,9 @@ class PostResult(BaseModel):
 class CreateConversation(BaseModel):
     title: str | None = Field(default=None, max_length=120)
     request: str | None = Field(default=None, min_length=3, max_length=4000)
+    comparison_model_id: UUID | None = None
+    comparison_variant: str = Field(default='', max_length=120)
+    comparison_market: Market = 'EU'
 
 
 class PostMessage(BaseModel):

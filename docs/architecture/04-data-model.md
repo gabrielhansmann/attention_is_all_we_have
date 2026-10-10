@@ -1,6 +1,6 @@
 # Data model
 
-> Status: `draft` · Last updated: 2026-10-14 (orchestrated steps, checkpoint tables)
+> Status: `draft` · Last updated: 2026-10-11 (orchestrated steps, checkpoint tables)
 
 Everything is traceable because everything points backward. A PM looking at a requirement can walk
 back to the exact cell or paragraph that produced it; a PM looking at the audit log can tell who or
@@ -165,3 +165,15 @@ failed_attempts, locked_until, last_login_at, created_at`.
 revoked_at`. The token itself is never stored. The signed-in user's email is written to `conversation.created_by`,
 `pipeline_run.created_by`, `message.payload.author` (PM messages) and `audit_event.actor` (plan edits and every step action); the planner's
 `plan_created` event records `requested_by`.
+
+## Model comparison evidence (decision 0025)
+
+The protected model-overview API uses `comparison_model` (dataset/manual/rival identities),
+`comparison_research` (bounded collection and validation runs), `comparison_observation`
+(variant/market facts, numeric intervals or qualitative claims, units, basis, standard, period,
+powertrain, immutable passage reference, quotes and evaluation time), and `comparison_rival`
+(explicit per-anchor/variant/market cohort with selection rationale). All four tables enable RLS
+without public policies. `source.retrieved_at` records a web snapshot's crawl time. Recrawls append
+source/passages rather than replace cited evidence. `conversation` binds model ID/variant/market;
+`pipeline_run.comparison_context` freezes the server comparison packet for reproducible chat answers.
+See [competitor benchmarking](10-competitor-benchmarking.md) for median/mean and interval rules.

@@ -1,6 +1,6 @@
 # Orchestration: an orchestrator that decides which agents to call, in a loop
 
-> Status: `building` · Last updated: 2026-10-11 (the orchestrator writes the final answer, [decision 0023](../decisions/0023-orchestrator-writes-the-final-answer.md); LangGraph graph with a Postgres checkpointer; see [decisions 0018](../decisions/0018-orchestrator-decides-in-an-agentic-loop.md) and [0019](../decisions/0019-orchestration-loop-runs-on-langgraph.md))
+> Status: `building` · Last updated: 2026-10-11 (the orchestrator writes the final answer, [decision 0026](../decisions/0026-orchestrator-writes-the-final-answer.md); LangGraph graph with a Postgres checkpointer; see [decisions 0018](../decisions/0018-orchestrator-decides-in-an-agentic-loop.md) and [0019](../decisions/0019-orchestration-loop-runs-on-langgraph.md))
 
 This is the central mechanic of the whole system. The PM starts a **chat** with a research request.
 An **orchestrator** works on it alone: it chooses an agent, reads that agent's answer, and decides
@@ -151,3 +151,16 @@ are `system_note` messages carrying `payload.decision`, and agent results are `s
 `frontend/` shows the thread read-only: the request, the orchestrator's decisions with reasons, each agent's cited
 result, and the final result. It shows who is working while a run is in progress and refreshes until it ends. There
 are no plan, start or review controls. See the [frontend guide](../../frontend/README.md).
+
+
+## Model-overview conversations (decision 0025)
+
+`POST /api/conversations` can bind a chat to a comparison registry model, registered variant and
+market. The server validates this binding and stores a frozen comparison packet on every run.
+The first agent is the Competitor Agent, which receives the already collected BMW and rival
+evidence, citations, selected-cohort median and mean, and explicit gaps. Subsequent orchestration
+receives the same fixed context, including the orchestrator's final answer introduced by decision
+0026. Free-text follow-ups do not silently replace the model scope.
+Manually added models use `EXTERNAL`, preventing an unfiltered internal BMW lookup.
+See [competitor benchmarking](10-competitor-benchmarking.md) and
+[decision 0025](../decisions/0025-server-owned-model-comparisons.md).

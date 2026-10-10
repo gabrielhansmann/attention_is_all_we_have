@@ -29,3 +29,6 @@ changes — note the supersession in the new file and update the old one's statu
 | [0022](0022-requirement-register-and-process-views.md) | Requirement register, PM decisions, tracking checks and the requirements, tracking and dossier views | accepted |
 | [0023](0023-file-upload-reuses-the-loaders.md) | Files are uploaded from the Sources view and stored by the existing loaders, which now normalize what they load | accepted |
 | [0024](0024-websites-as-sources-and-tabbed-sources-view.md) | A PM adds a website as a source, stored as cited passages; the Sources view gets a graph and tabs | accepted |
+| [0025](0025-server-owned-model-comparisons.md) | Server-owned model overviews, cited competitor median/mean, immutable recrawls and model-bound chat | accepted |
+| [0026](0026-orchestrator-writes-the-final-answer.md) | The orchestrator writes a cited final answer from accepted findings, with summaries as a fallback | accepted |
+| [0027](0027-git-backed-full-stack-vercel-deployment.md) | Git-backed Vercel deployment builds the frontend and serves the protected FastAPI backend from one origin | accepted |
