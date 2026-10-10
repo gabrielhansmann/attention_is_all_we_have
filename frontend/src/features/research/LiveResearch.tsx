@@ -3,13 +3,14 @@ import { ArrowUp, CheckCircle2, Globe2, Route, Sparkles, Loader2 } from 'lucide-
 import { Skeleton } from '@/components/ui/skeleton'
 import { api, ApiError } from '@/lib/api'
 import { cn } from '@/lib/utils'
-import type { ChatMessage, ConversationDetail } from '@/types/api'
+import type { ChatMessage, ConversationDetail, ResearchReview as Review } from '@/types/api'
 import { useChats } from './chat-store'
 import { Prose } from '@/features/sources/Prose'
 import { findingIndex, type Finding } from '@/features/sources/citations'
 import { SourceViewerProvider } from '@/features/sources/SourceViewer'
 import { StepCard } from './StepCard'
 import type { ModelScope } from '@/features/models/types'
+import { ResearchReview } from './ResearchReview'
 
 const POLL_MS = 2500
 const errorText = (e: unknown) => (e instanceof ApiError ? e.message : 'Something went wrong.')
@@ -48,6 +49,7 @@ function Message({ message, findings }: { message: ChatMessage; findings: Map<st
     const reqs = Number(message.payload.requirements) || 0
     const hasDossier = message.payload.dossier === true || message.content.startsWith('# Research dossier')
     const written = message.payload.written_by === 'orchestrator'
+    const review = message.payload.research_review as Review | undefined
     return (
       <div className="rise flex gap-3">
         <Avatar />
@@ -60,6 +62,7 @@ function Message({ message, findings }: { message: ChatMessage; findings: Map<st
               {hasDossier && <a href="#dossiers" className="inline-flex h-10 items-center rounded-xl border border-border bg-background px-4 text-sm font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">Open dossier</a>}
             </div>
           )}
+          {review && <ResearchReview review={review} findings={findings} />}
         </div>
       </div>
     )

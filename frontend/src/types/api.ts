@@ -98,6 +98,18 @@ export interface ChatMessage {
   created_at: string
 }
 
+export interface ResearchReview {
+  scope_note: string
+  requirements: {
+    requirement_id: string
+    title: string
+    support: { finding_id: string; text: string; source: string; locator: string; market: string; evidence_level: string }[]
+    counter: { finding_id: string; text: string; source: string; locator: string; market: string; evidence_level: string }[]
+    markets: { market: string; status: string; finding_ids: string[] }[]
+    actions: { priority: 'high' | 'medium'; action: string; reason: string }[]
+  }[]
+}
+
 export interface RunStep {
   id: string
   position: number

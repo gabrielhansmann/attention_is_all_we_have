@@ -76,6 +76,47 @@ test.describe('research', () => {
     await live.getByRole('button', { name: 'Send', exact: true }).click()
     await expect(live.getByText('orchestrator unavailable: OPENAI_API_KEY is not set', { exact: true })).toBeVisible()
   })
+
+  test('a drafted requirement shows challenge signals, market gaps and cited research actions', async ({ page }) => {
+    const review = {
+      scope_note: 'Only accepted, citable findings linked to this draft or its clusters are assessed. Missing coverage does not mean no evidence exists.',
+      requirements: [{
+        requirement_id: 'r1', title: 'Improve seat comfort',
+        support: [{ finding_id: 'f1', text: 'Ventilation is too weak.', source: 'owners.xlsx', locator: 'row 12', market: 'US', evidence_level: 'Verified' }],
+        counter: [{ finding_id: 'f2', text: 'Some owners praise the seats.', source: 'study.xlsx', locator: 'cell B5', market: 'EU', evidence_level: 'Interpreted' }],
+        markets: [
+          { market: 'EU', status: 'positive signal', finding_ids: ['f2'] },
+          { market: 'CN', status: 'not assessed', finding_ids: [] },
+          { market: 'US', status: 'need signal', finding_ids: ['f1'] },
+          { market: 'RoW', status: 'not assessed', finding_ids: [] },
+        ],
+        actions: [{ priority: 'medium', action: 'Collect market-specific evidence', reason: 'No related finding from this run is assigned to CN, RoW.' }],
+      }],
+    }
+    const evidenceCard = msg(2, 'agent', 'step_card', 'Seat comfort findings.', { agent: 'Customer Feedback Agent', output: {
+      findings: [
+        { id: 'f1', text: 'Ventilation is too weak.', source_file: 'owners.xlsx', locator: 'row 12' },
+        { id: 'f2', text: 'Some owners praise the seats.', source_file: 'study.xlsx', locator: 'cell B5' },
+      ],
+    } }, 's1')
+    await page.route('**/api/conversations', r => json(r, [conversation]))
+    await page.route('**/api/conversations/c1', r => json(r, {
+      conversation, messages: [request, evidenceCard, msg(3, 'orchestrator', 'final_result', 'Draft result.', { research_review: review })],
+      runs: [run('completed', [step(1, 'Customer Feedback Agent', 'accepted')])],
+    }))
+    await page.goto('/')
+    await openMenu(page)
+    await page.locator('[data-testid=sidebar]:visible').getByRole('button', { name: conversation.title }).click()
+    const checks = page.getByRole('region', { name: 'Research checks' })
+    await expect(checks.getByText('Improve seat comfort')).toBeVisible()
+    await expect(checks.getByText('Ventilation is too weak.')).toBeVisible()
+    await expect(checks.getByText('Some owners praise the seats.')).toBeVisible()
+    await expect(checks.getByText('not assessed')).toHaveCount(2)
+    await expect(checks.getByText('Collect market-specific evidence.')).toBeVisible()
+    await expect(checks.getByRole('button', { name: /Source f1: owners.xlsx, row 12/ })).toBeVisible()
+    await noOverflow(page)
+    await noViolations(page)
+  })
 })
 
 const counts = (c: Partial<Record<'feedback' | 'pdf_chunks' | 'options' | 'study_cells' | 'sales_rows', number>>) => ({ feedback: 0, pdf_chunks: 0, options: 0, study_cells: 0, sales_rows: 0, ...c })
