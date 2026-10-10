@@ -1,66 +1,62 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { HealthBadge } from '@/components/layout/HealthBadge'
+import { Menu } from 'lucide-react'
+import { NAV, Sidebar } from '@/components/layout/Sidebar'
 import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
-import { AuthGate, signOut } from '@/features/auth/AuthGate'
-import { useAuth } from '@/lib/auth'
-import { cn } from '@/lib/utils'
+import { AuthGate } from '@/features/auth/AuthGate'
+import { ChatProvider } from '@/features/research/chat-store'
 
 const LiveResearch = lazy(() => import('@/features/research/LiveResearch').then((m) => ({ default: m.LiveResearch })))
 const EvidencePage = lazy(() => import('@/features/evidence/EvidencePage').then((m) => ({ default: m.EvidencePage })))
 const LiveLibrary = lazy(() => import('@/features/library/LiveLibrary').then((m) => ({ default: m.LiveLibrary })))
 
-const PAGES = [
-  { id: 'research', label: 'Research', View: LiveResearch },
-  { id: 'evidence', label: 'Evidence', View: EvidencePage },
-  { id: 'sources', label: 'Sources', View: LiveLibrary },
-] as const
-type PageId = (typeof PAGES)[number]['id']
+const VIEWS = { research: LiveResearch, evidence: EvidencePage, sources: LiveLibrary }
+type PageId = keyof typeof VIEWS
 
-const fromHash = (): PageId => PAGES.find((p) => `#${p.id}` === window.location.hash)?.id ?? 'research'
+const fromHash = (): PageId => NAV.find((p) => `#${p.id}` === window.location.hash)?.id ?? 'research'
 
 function Shell() {
-  const { user } = useAuth()
   const [page, setPage] = useState<PageId>(fromHash)
-  const current = PAGES.find((p) => p.id === page) ?? PAGES[0]
+  const [menu, setMenu] = useState(false)
+  const label = NAV.find((p) => p.id === page)!.label
+  const View = VIEWS[page]
 
   useEffect(() => {
     const onHash = () => setPage(fromHash())
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
-  useEffect(() => { document.title = `${current.label} | BMW Product Intelligence` }, [current.label])
+  useEffect(() => { document.title = `${label} | BMW Product Intelligence` }, [label])
+
+  const navigate = (p: PageId) => { window.location.hash = p; setPage(p) }
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:p-3">Skip to main content</a>
-      <header className="border-b border-border">
-        <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:gap-6 sm:px-6">
-          <span className="font-bold tracking-wide">BMW<span className="hidden font-light sm:inline"> Product Intelligence</span></span>
-          <nav aria-label="Main" className="flex h-full flex-1 gap-4 sm:gap-6">
-            {PAGES.map((p) => (
-              <a key={p.id} href={`#${p.id}`} aria-current={p.id === page ? 'page' : undefined}
-                className={cn('flex h-full items-center border-b-2 text-sm focus-visible:outline-2 focus-visible:outline-ring',
-                  p.id === page ? 'border-primary font-bold' : 'border-transparent text-muted-foreground hover:text-foreground')}>
-                {p.label}
-              </a>
-            ))}
-          </nav>
-          <div className="flex items-center gap-3 text-sm">
-            {user && <span className="hidden sm:inline">{user.display_name}</span>}
-            <Button variant="outline" onClick={signOut}>Sign out</Button>
+    <ChatProvider>
+      <div className="flex h-dvh bg-background">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:p-3">Skip to main content</a>
+        <aside className="hidden w-72 shrink-0 border-r border-sidebar-border md:block"><Sidebar page={page} onNavigate={navigate} /></aside>
+        <Sheet open={menu} onOpenChange={setMenu}>
+          <SheetContent side="left" className="w-[19rem] max-w-[85vw] gap-0 p-0" showCloseButton={false}>
+            <SheetTitle className="sr-only">Menu</SheetTitle>
+            <SheetDescription className="sr-only">Navigation and chat history</SheetDescription>
+            <Sidebar page={page} onNavigate={navigate} onDone={() => setMenu(false)} />
+          </SheetContent>
+        </Sheet>
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex h-12 items-center gap-2 border-b border-border px-3 md:hidden">
+            <Button variant="ghost" size="icon" aria-label="Open menu" onClick={() => setMenu(true)}><Menu /></Button>
+            <span className="text-sm font-semibold">{label}</span>
           </div>
+          <main id="main-content" tabIndex={-1} className="flex min-h-0 flex-1 flex-col outline-none">
+            <Suspense fallback={<div className="p-8"><Skeleton className="h-48 w-full rounded-2xl" aria-label="Loading" /></div>}>
+              <View />
+            </Suspense>
+          </main>
         </div>
-      </header>
-      <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10 outline-none">
-        <Suspense fallback={<Skeleton className="h-48 w-full" aria-label="Loading" />}>
-          <current.View />
-        </Suspense>
-      </main>
-      <footer className="border-t border-border">
-        <div className="mx-auto flex max-w-6xl justify-end px-6 py-4"><HealthBadge /></div>
-      </footer>
-    </div>
+      </div>
+    </ChatProvider>
   )
 }
 

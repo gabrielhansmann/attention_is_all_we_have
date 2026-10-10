@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { Search as SearchIcon, SlidersHorizontal, BarChart3, FileSearch } from 'lucide-react'
+import { PageShell } from '@/components/layout/PageShell'
 import { HitCard } from '@/components/evidence/HitCard'
 import { FilterSelect } from '@/components/evidence/FilterSelect'
 import { Button } from '@/components/ui/button'
@@ -86,15 +88,8 @@ export function EvidencePage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-2xl">Evidence</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Search customer feedback and catalog text. Every result cites its file, location and quote.
-        </p>
-      </div>
-
-      <form onSubmit={onSearch} className="flex flex-col gap-4">
+    <PageShell title="Evidence" Icon={SearchIcon} description="Search customer feedback and catalog text. Every result cites its file, location and quote.">
+      <form onSubmit={onSearch} className="flex flex-col gap-4 rounded-2xl border border-border bg-background p-5 shadow-xs">
         <div className="grid gap-4 md:grid-cols-[1fr_220px]">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="live-q">Search</Label>
@@ -119,6 +114,7 @@ export function EvidencePage() {
         {optionsError && (
           <p role="alert" className="text-sm text-destructive">{`Filters unavailable: ${optionsError}`}</p>
         )}
+        <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><SlidersHorizontal className="size-3.5" /> Filters</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <FilterSelect id="live-line" label="Vehicle line" value={filters.line}
             options={(options?.lines ?? []).map((v) => ({ value: v, label: v }))}
@@ -142,37 +138,37 @@ export function EvidencePage() {
           </p>
         )}
         <div>
-          <Button type="submit" disabled={q.trim().length < 2 || results.kind === 'loading'}>
-            Search
+          <Button type="submit" size="lg" disabled={q.trim().length < 2 || results.kind === 'loading'}>
+            <SearchIcon /> Search
           </Button>
         </div>
       </form>
 
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
         <section aria-labelledby="results-h" aria-live="polite" className="flex flex-col gap-4">
-          <h2 id="results-h" className="text-lg">Results</h2>
+          <h2 id="results-h" className="flex items-center gap-2 text-lg"><FileSearch className="size-5 text-primary" /> Results</h2>
           {results.kind === 'idle' && (
-            <p className="text-muted-foreground">Enter a question above to see cited evidence.</p>
+            <p className="rounded-2xl border border-dashed border-input p-8 text-center text-muted-foreground">Enter a question above to see cited evidence.</p>
           )}
           {results.kind === 'loading' && (
             <div className="flex flex-col gap-4" aria-label="Loading results">
-              {[0, 1, 2].map((i) => <Skeleton key={i} className="h-36 w-full" />)}
+              {[0, 1, 2].map((i) => <Skeleton key={i} className="h-36 w-full rounded-2xl" />)}
             </div>
           )}
           {results.kind === 'error' && (
-            <p role="alert" className="border border-destructive p-4 text-destructive">{results.message}</p>
+            <p role="alert" className="rounded-2xl border border-destructive p-4 text-destructive">{results.message}</p>
           )}
           {results.kind === 'ok' && results.data.hits.length === 0 && (
-            <p className="text-muted-foreground">No matching evidence. Try fewer filters or different words.</p>
+            <p className="rounded-2xl border border-dashed border-input p-8 text-center text-muted-foreground">No matching evidence. Try fewer filters or different words.</p>
           )}
           {results.kind === 'ok' && results.data.hits.map((h) => <HitCard key={h.citation.id} hit={h} />)}
         </section>
 
-        <aside aria-labelledby="counts-h" className="flex flex-col gap-4 self-start border-t border-border pt-6 lg:border-t-0 lg:border-l lg:pl-8 lg:pt-0">
-          <h2 id="counts-h" className="text-lg">Counts</h2>
+        <aside aria-labelledby="counts-h" className="flex flex-col gap-4 self-start rounded-2xl border border-border bg-background p-5 shadow-xs">
+          <h2 id="counts-h" className="flex items-center gap-2 text-lg"><BarChart3 className="size-5 text-primary" /> Counts</h2>
           <FilterSelect id="live-group" label="Group by" value={groupBy} options={GROUPS}
             onChange={(v) => setGroupBy((v as GroupBy) ?? 'market_code')} allLabel="Market" />
-          {stats.kind === 'loading' && <Skeleton className="h-32 w-full" aria-label="Loading counts" />}
+          {stats.kind === 'loading' && <Skeleton className="h-32 w-full rounded-xl" aria-label="Loading counts" />}
           {stats.kind === 'error' && <p role="alert" className="text-sm text-destructive">{stats.message}</p>}
           {stats.kind === 'ok' && (
             <table className="w-full text-sm">
@@ -199,6 +195,6 @@ export function EvidencePage() {
           )}
         </aside>
       </div>
-    </div>
+    </PageShell>
   )
 }
