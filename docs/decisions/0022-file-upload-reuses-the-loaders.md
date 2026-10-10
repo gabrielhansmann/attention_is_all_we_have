@@ -1,4 +1,4 @@
-# 0021 — Files are uploaded from the Sources view and stored by the existing loaders
+# 0022 — Files are uploaded from the Sources view and stored by the existing loaders
 
 > Date: 2026-10-10 · Status: accepted · Builds on [0006](0006-raw-tables-and-cited-pdf-chunks.md), [0007](0007-option-availability-and-ontology-seed.md), [0008](0008-knowledge-layer-normalization-and-retrieval.md), [0016](0016-backend-owned-authentication.md)
 

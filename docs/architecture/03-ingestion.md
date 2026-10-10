@@ -1,6 +1,6 @@
 # Ingestion: turning a PDF or spreadsheet into a cited Finding
 
-> Status: `draft` · Last updated: 2026-10-10 (websites as sources, see [decision 0022](../decisions/0022-websites-as-sources-and-tabbed-sources-view.md))
+> Status: `draft` · Last updated: 2026-10-10 (websites as sources, see [decision 0023](../decisions/0023-websites-as-sources-and-tabbed-sources-view.md))
 
 The provided PDFs (`F70_OptionList.PDF`, `G60_OptionList.PDF`, `G70_OptionList.PDF`) are
 structured option/equipment listings, not prose. Treating them as plain text to embed would throw
@@ -107,7 +107,7 @@ filters. Counts, sample sizes and uptake come from SQL on these tables; only com
 are searched by meaning. `finding` rows are **not yet derived** from `feedback_raw` (that is the
 Customer Feedback Agent's job).
 
-### Uploads (`app/ingest/upload.py`, `POST /api/sources`, decision 0021)
+### Uploads (`app/ingest/upload.py`, `POST /api/sources`, decision 0022)
 
 A signed-in PM adds a file in the Sources view. The file goes to `POST /api/sources` as the raw request body and is
 stored by the loaders above, so an uploaded file and a provided file end up in the same tables with the same
@@ -130,7 +130,7 @@ citations.
   (scanned), files over 25 MB. Not built: column mapping for unknown spreadsheets (`FR-IN-09`), Word and pasted
   text (`FR-IN-10`), and recording who uploaded a file (`FR-IN-02`).
 
-### Websites (`app/ingest/load_web.py`, `POST /api/sources/web`, decision 0022)
+### Websites (`app/ingest/load_web.py`, `POST /api/sources/web`, decision 0023)
 
 A signed-in PM adds a web address in the Sources view, or stores a page a web agent has read. The backend fetches
 that one page and stores it the way a PDF is stored.

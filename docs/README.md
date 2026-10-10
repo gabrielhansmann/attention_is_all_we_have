@@ -40,6 +40,7 @@ Each doc opens with a status line:
 | [`architecture/10-competitor-benchmarking.md`](architecture/10-competitor-benchmarking.md) | How one BMW becomes a comparable rival set, and how rival evidence is compared fairly |
 | [`architecture/11-knowledge-layer.md`](architecture/11-knowledge-layer.md) | How the evidence is normalized, stored with citations, and queried by the agents |
 | [`architecture/12-repo-structure.md`](architecture/12-repo-structure.md) | How the repo is split into backend and frontend, the API, and the rules between them |
+| [`frontend-style-guide.md`](frontend-style-guide.md) | How the UI is built: tokens, layout patterns, shadcn MCP and design-skill workflow, Playwright review loop, pitfalls |
 
 ## Functional requirements
 

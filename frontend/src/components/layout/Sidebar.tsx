@@ -2,7 +2,7 @@ import { Database, LogOut, MessageSquare, Plus, Search, type LucideIcon } from '
 import { HealthBadge } from '@/components/layout/HealthBadge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import { signOut } from '@/features/auth/AuthGate'
@@ -106,14 +106,16 @@ export function Sidebar({ page, onNavigate, onDone }: Props) {
       <div className="flex items-center gap-1 border-t border-sidebar-border pt-3">
         <DropdownMenu>
           <DropdownMenuTrigger className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl p-1.5 text-left outline-none hover:bg-sidebar-accent/60 focus-visible:ring-2 focus-visible:ring-ring">
-            <Avatar className="size-8"><AvatarFallback className="bg-primary/10 text-xs font-medium text-accent-foreground">{initials(user?.display_name ?? '')}</AvatarFallback></Avatar>
+            <Avatar className="size-8"><AvatarFallback className="bg-accent text-xs font-medium text-accent-foreground">{initials(user?.display_name ?? '')}</AvatarFallback></Avatar>
             <span className="min-w-0 leading-tight">
               <span className="block truncate text-sm font-medium">{user?.display_name ?? 'Account'}</span>
               <span className="block truncate text-xs text-muted-foreground">{user?.email}</span>
             </span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" side="top" className="w-60 rounded-xl">
-            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{user?.email}</DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">{user?.email}</DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut}><LogOut /> Sign out</DropdownMenuItem>
           </DropdownMenuContent>

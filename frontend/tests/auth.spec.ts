@@ -1,5 +1,5 @@
 import { test, expect, type Page, type Route } from '@playwright/test'
-import { PASSWORD, TOKEN, NOW, authed, json, noViolations, user } from './helpers'
+import { PASSWORD, TOKEN, NOW, authed, closeMenu, json, noViolations, openMenu, user } from './helpers'
 
 // The backend is fully mocked and enforces the token, so these tests check what the browser really sends.
 interface Log { sourcesAuth: (string | undefined)[]; logins: { email: string; password: string }[]; loggedOut: boolean; meCalls: number }
@@ -45,7 +45,9 @@ test('nothing is shown before signing in, and the token is sent afterwards', asy
 
   await signIn(page)
   await expect(page.getByTestId('source-graph')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible()
+  await openMenu(page)
+  await expect(page.getByRole('button', { name: /Pat Manager/ })).toBeVisible()
+  await closeMenu(page)
   expect(log.logins.at(-1)).toEqual({ email: 'Pat.Manager@example.com', password: PASSWORD })
   expect(log.sourcesAuth.at(-1)).toBe(`Bearer ${TOKEN}`)
   expect(await page.evaluate(() => window.sessionStorage.getItem('bmw-api-token'))).toBe(TOKEN)
@@ -56,13 +58,17 @@ test('a reload keeps the session, and signing out revokes it', async ({ page }) 
   const log = await mockBackend(page)
   await page.goto('/#sources')
   await signIn(page)
-  await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible()
+  await openMenu(page)
+  await expect(page.getByRole('button', { name: /Pat Manager/ })).toBeVisible()
+  await closeMenu(page)
 
   await page.reload()
   await expect(page.getByTestId('source-graph')).toBeVisible()   // no second sign-in
   expect(log.meCalls).toBeGreaterThan(0)
 
-  await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+  await openMenu(page)
+  await page.getByRole('button', { name: /Pat Manager/ }).click()
+  await page.getByRole('menuitem', { name: 'Sign out' }).click()
   await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible()
   expect(log.loggedOut).toBe(true)
   expect(await page.evaluate(() => window.sessionStorage.getItem('bmw-api-token'))).toBeNull()
@@ -75,7 +81,9 @@ test('a session that expires while the page is open sends the user back to sign 
   await signIn(page)
   await expect(page.getByTestId('source-graph')).toBeVisible()
   expired = true
+  await openMenu(page)
   await page.getByRole('link', { name: 'Research', exact: true }).click()
+  await openMenu(page)
   await page.getByRole('link', { name: 'Sources', exact: true }).click()          // remount: requests now return 401
   await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible()
   expect(await page.evaluate(() => window.sessionStorage.getItem('bmw-api-token'))).toBeNull()

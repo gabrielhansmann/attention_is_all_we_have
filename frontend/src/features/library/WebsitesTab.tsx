@@ -159,11 +159,11 @@ export function WebsitesTab({ websites, found, lines, markets, onChanged }: Prop
                     <td className="p-3 text-right">
                       {removing === s.id ? (
                         <span className="inline-flex flex-wrap justify-end gap-2">
-                          <Button variant="destructive" size="sm" onClick={() => remove(s.id)}>Remove page</Button>
-                          <Button variant="ghost" size="sm" onClick={() => { setRemoving(null); setRemoveError(null) }}>Keep</Button>
+                          <Button variant="destructive" onClick={() => remove(s.id)}>Remove page</Button>
+                          <Button variant="ghost" onClick={() => { setRemoving(null); setRemoveError(null) }}>Keep</Button>
                         </span>
                       ) : (
-                        <Button variant="ghost" size="sm" aria-label={`Remove ${domainOf(s.file)}`} onClick={() => { setRemoving(s.id); setRemoveError(null) }}>Remove</Button>
+                        <Button variant="ghost" aria-label={`Remove ${domainOf(s.file)}`} onClick={() => { setRemoving(s.id); setRemoveError(null) }}>Remove</Button>
                       )}
                     </td>
                   </tr>
@@ -224,7 +224,7 @@ export function WebsitesTab({ websites, found, lines, markets, onChanged }: Prop
                     </td>
                     <td className="p-3 text-right">
                       {w.source_id ? <Badge variant="outline">Stored</Badge> : (
-                        <Button variant="outline" size="sm" disabled={busy} aria-label={`Store ${w.domain}`}
+                        <Button variant="outline" disabled={busy} aria-label={`Store ${w.domain}`}
                           onClick={() => store({ url: w.url, line: w.vehicle_line ?? undefined, market: w.market ?? undefined, trust_tier: w.trust_tier ?? undefined }, true)}>
                           Store page
                         </Button>

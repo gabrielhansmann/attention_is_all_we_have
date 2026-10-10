@@ -281,7 +281,7 @@ function Details({ node, graph, byId, pinned, lines, markets, onShow }: {
         <Breakdown title={node.kind === 'line' ? 'By market' : 'By vehicle line'}
           rows={other.map((key) => ({ key, rows: sum(mine.filter((t) => (node.kind === 'line' ? t.market : t.line) === key)) }))} />
         <Breakdown title="Largest sources" rows={feeding} />
-        <div><Button variant="outline" size="sm" onClick={() => onShow('coverage')}>Open coverage table</Button></div>
+        <div><Button variant="outline" onClick={() => onShow('coverage')}>Open coverage table</Button></div>
       </>
     )
   } else if (node.source) {
@@ -298,7 +298,7 @@ function Details({ node, graph, byId, pinned, lines, markets, onShow }: {
           {isWeb(s) && <Fact label="Fetched">{fmtDate(s.retrieved_at)}</Fact>}
         </dl>
         <Breakdown title="Rows by vehicle line and market" rows={rows} />
-        <div><Button variant="outline" size="sm" onClick={() => onShow(isWeb(s) ? 'websites' : 'files')}>{isWeb(s) ? 'Open Websites tab' : 'Open Files tab'}</Button></div>
+        <div><Button variant="outline" onClick={() => onShow(isWeb(s) ? 'websites' : 'files')}>{isWeb(s) ? 'Open Websites tab' : 'Open Files tab'}</Button></div>
       </>
     )
   } else if (node.find) {
@@ -312,7 +312,7 @@ function Details({ node, graph, byId, pinned, lines, markets, onShow }: {
           {w.request && <Fact label="Request">{clip(w.request, 140)}</Fact>}
         </dl>
         <p className="text-sm text-muted-foreground">Only a short snapshot is kept. Store the page to make its full text searchable.</p>
-        <div><Button variant="outline" size="sm" onClick={() => onShow('websites')}>Open Websites tab</Button></div>
+        <div><Button variant="outline" onClick={() => onShow('websites')}>Open Websites tab</Button></div>
       </>
     )
   }

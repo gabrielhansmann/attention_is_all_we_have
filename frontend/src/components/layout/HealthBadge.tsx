@@ -38,7 +38,7 @@ export function HealthBadge() {
     }
   }
   return (
-    <p role="status" className={cn('flex items-center gap-2 text-xs', bad ? 'font-medium text-destructive' : 'text-muted-foreground')}>
+    <p className={cn('flex items-center gap-2 text-xs', bad ? 'font-medium text-destructive' : 'text-muted-foreground')}>
       <span className={cn('size-2 rounded-full', tone)} aria-hidden /> {text}
     </p>
   )

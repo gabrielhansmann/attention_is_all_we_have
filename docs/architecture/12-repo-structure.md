@@ -1,6 +1,6 @@
 # Repository structure: frontend and backend
 
-> Status: `building` · Last updated: 2026-10-14 (website sources and the tabbed Sources view; see [decision 0022](../decisions/0022-websites-as-sources-and-tabbed-sources-view.md))
+> Status: `building` · Last updated: 2026-10-14 (website sources and the tabbed Sources view; see [decision 0023](../decisions/0023-websites-as-sources-and-tabbed-sources-view.md))
 
 ```mermaid
 flowchart LR
@@ -76,8 +76,8 @@ Makefile  .env.example    common tasks and the environment template (one .env at
 | `GET /api/evidence/filters` | the values the UI offers as filters |
 | `GET /api/evidence/{kind}/{id}` | the citation for one stored row |
 | `GET /api/sources` | every loaded source file with what was extracted from it (comments, passages, options, study cells, sales rows) |
-| `POST /api/sources?filename=&line=&replace=` | upload one PDF or Excel file as the raw request body; it is stored by the loaders in `app/ingest` and the answer reports what was stored and skipped ([decision 0021](../decisions/0021-file-upload-reuses-the-loaders.md)) |
-| `POST /api/sources/web` | fetch one public web page (`url`, optional `line`, `market`, `trust_tier`, `replace`) and store its text as cited passages ([decision 0022](../decisions/0022-websites-as-sources-and-tabbed-sources-view.md)) |
+| `POST /api/sources?filename=&line=&replace=` | upload one PDF or Excel file as the raw request body; it is stored by the loaders in `app/ingest` and the answer reports what was stored and skipped ([decision 0022](../decisions/0022-file-upload-reuses-the-loaders.md)) |
+| `POST /api/sources/web` | fetch one public web page (`url`, optional `line`, `market`, `trust_tier`, `replace`) and store its text as cited passages ([decision 0023](../decisions/0023-websites-as-sources-and-tabbed-sources-view.md)) |
 | `DELETE /api/sources/{id}` | remove a stored website and its passages; files are refused |
 | `GET /api/sources/graph` | rows each source holds per vehicle line and market, for the graph view |
 | `GET /api/sources/web-research` | websites the web agents read during runs, from the stored step outputs |

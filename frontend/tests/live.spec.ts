@@ -1,5 +1,5 @@
 import { test, expect, type Page, type Route } from '@playwright/test'
-import { NOW, json, noOverflow, noViolations, withSession } from './helpers'
+import { NOW, closeMenu, json, noOverflow, noViolations, openMenu, withSession } from './helpers'
 
 // Every backend call is mocked: nothing reaches a real backend or database.
 const conversation = { id: 'c1', title: 'US G60 infotainment dislikes', vehicle_line: 'G60', market_code: 'US', status: 'active', created_at: NOW, updated_at: NOW }
@@ -10,7 +10,7 @@ const run = (status: string, steps: ReturnType<typeof step>[]) => ({ id: 'r1', c
 
 const request = msg(1, 'pm', 'request', 'What do US G60 owners dislike most about the infotainment?')
 const call1 = msg(2, 'orchestrator', 'system_note', 'Calling Customer Feedback Agent: asks what owners say.', { decision: { agent: 'Customer Feedback Agent' } }, 's1')
-const card1 = msg(3, 'agent', 'step_card', 'Owners find the voice assistant unreliable (G60_feedback.xlsx, row 12).', { agent: 'Customer Feedback Agent', failed: false, output: { findings: [{}, {}] } }, 's1')
+const card1 = msg(3, 'agent', 'step_card', 'Owners find the voice assistant unreliable (G60_feedback.xlsx, row 12).', { agent: 'Customer Feedback Agent', failed: false, output: { findings: [{ id: 'f1', text: 'Voice assistant unreliable.' }, { id: 'f2', text: 'Menu depth.' }] } }, 's1')
 const call2 = msg(4, 'orchestrator', 'system_note', 'Calling Competitor Agent: the findings point at a rival feature.', { decision: { agent: 'Competitor Agent' } }, 's2')
 const final = msg(5, 'orchestrator', 'final_result', 'Research result: voice assistant complaints.')
 
@@ -39,7 +39,9 @@ test.describe('research', () => {
     await mockBackend(page, calls)
     await page.goto('/')
     const live = page.getByTestId('live-research')
-    await expect(live.getByText('No conversations yet.')).toBeVisible()
+    await openMenu(page)
+    await expect(page.locator('[data-testid=sidebar]:visible').getByText('No conversations yet.')).toBeVisible()
+    await closeMenu(page)
 
     await live.getByLabel('Research request', { exact: true }).fill('What do US G60 owners dislike most about the infotainment?')
     await live.getByRole('button', { name: 'Send', exact: true }).click()
@@ -67,7 +69,9 @@ test.describe('research', () => {
     await page.route('**/api/**', r => r.request().url().endsWith('/api/health') || r.request().url().endsWith('/api/auth/me') ? r.fallback() : json(r, { detail: 'orchestrator unavailable: OPENAI_API_KEY is not set' }, 503))
     await page.goto('/')
     const live = page.getByTestId('live-research')
-    await expect(live.getByText('Conversations unavailable:', { exact: false })).toBeVisible()
+    await openMenu(page)
+    await expect(page.locator('[data-testid=sidebar]:visible').getByText('Chats unavailable:', { exact: false })).toBeVisible()
+    await closeMenu(page)
     await live.getByLabel('Research request', { exact: true }).fill('Which trends matter?')
     await live.getByRole('button', { name: 'Send', exact: true }).click()
     await expect(live.getByText('orchestrator unavailable: OPENAI_API_KEY is not set', { exact: true })).toBeVisible()
@@ -286,5 +290,49 @@ test.describe('evidence', () => {
     await expect(page.getByText('G60_feedback_hackathon.xlsx')).toBeVisible()
     await noOverflow(page)
     await noViolations(page)
+  })
+})
+
+test.describe('source viewer', () => {
+  const ref = { kind: 'feedback', id: 'e1', file: 'G60_feedback_hackathon.xlsx', locator: 'sheet Feedback_Explorer, row 12 (G60-0012)', quote: 'The voice assistant never understands me.' }
+  const finding = { id: 'F-1', text: 'Owners find the voice assistant unreliable.', locator: ref.locator, citations: [ref] }
+  const card = msg(2, 'agent', 'step_card', 'Owners find the voice assistant unreliable.', { agent: 'Customer Feedback Agent', failed: false, output: { findings: [finding] } }, 's1')
+  const result = msg(3, 'orchestrator', 'final_result', '# Research dossier: voice\n\n## Customer signals\n\n- Voice control is unreliable. [F-1]\n')
+  const context = {
+    kind: 'feedback', id: 'e1', file: ref.file, locator: ref.locator, title: null, page: null, vehicle_line: 'G60', market_code: 'US',
+    passages: [
+      { id: 'e0', label: 'row 11 (G60-0011)', text: 'Nice seats.', cited: false },
+      { id: 'e1', label: 'row 12 (G60-0012)', text: ref.quote, cited: true },
+    ],
+    document: { source_id: 'src1', type: 'internal_xlsx', openable: true },
+  }
+
+  test('a claim has a numbered source that opens the cited passage in context', async ({ page }) => {
+    await withSession(page)
+    await page.route('**/api/conversations', r => json(r, [conversation]))
+    await page.route('**/api/conversations/c1', r => json(r, { conversation, messages: [msg(1, 'pm', 'request', 'voice?'), card, result], runs: [run('completed', [step(1, 'Customer Feedback Agent', 'accepted')])] }))
+    await page.route('**/api/evidence/feedback/e1/context', r => json(r, context))
+    await page.goto('/')
+    await openMenu(page)
+    await page.locator('[data-testid=sidebar]:visible').getByText(conversation.title).click()
+    await closeMenu(page)
+
+    const live = page.getByTestId('live-research')
+    await live.getByText('Findings and sources (1)').click()
+    const chip = live.getByRole('article').getByRole('button', { name: /Source 1: G60_feedback_hackathon.xlsx/ })
+    await chip.focus()          // focus shows the same preview as hover, and works on touch devices
+    await expect(live.getByRole('tooltip').first()).toContainText('The voice assistant never understands me.')
+    await noOverflow(page)
+
+    // the [F-1] marker in the final result is resolved to the same source
+    await live.getByText('Voice control is unreliable.').locator('..').getByRole('button', { name: /Source 1/ }).click()
+    const panel = page.getByTestId('source-panel')
+    await expect(panel).toContainText('G60_feedback_hackathon.xlsx')
+    await expect(panel.locator('[aria-current="true"]')).toContainText('The voice assistant never understands me.')
+    await expect(panel.getByText('Nice seats.')).toBeVisible()
+    await expect(panel.getByRole('button', { name: 'Open original file' })).toBeEnabled()
+    await noViolations(page)
+    await page.keyboard.press('Escape')
+    await expect(panel).toHaveCount(0)
   })
 })

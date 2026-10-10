@@ -16,11 +16,13 @@ Project: BMW hackathon requirement-evidence engine. Architecture docs live in `d
 
 ## UI design
 
-- Before generating or changing UI, read `design.md` and `docs/ui-design-guidelines.md`.
+- Before generating or changing UI, read `design.md`, `docs/ui-design-guidelines.md` and `docs/frontend-style-guide.md`.
+  Find and add components with the shadcn MCP (or `npx shadcn@latest`), use the `frontend-design` skill, and review the
+  result in screenshots with Playwright at desktop and mobile sizes before delivering.
 - Use the BMW tokens and component rules in `design.md` for all UI.
 - Apply the anti-slop workflow in `docs/ui-design-guidelines.md`. BMW's explicit brand rules
-  take precedence over generic aesthetic defaults, including white surfaces, Inter fallback,
-  rectangular components, and dark hero bands.
+  take precedence over generic aesthetic defaults, including white surfaces and the Inter fallback.
+  Shape and elevation follow decision 0021 (rounded components, soft shadows), not the rectangular default.
 
 ## Database
 

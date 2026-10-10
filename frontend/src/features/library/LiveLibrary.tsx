@@ -68,10 +68,10 @@ export function LiveLibrary() {
   return (
     <PageShell testId="live-library" title="Sources" Icon={Database} description="Everything the agents can cite: files, websites, and what they cover per vehicle line and market.">
       <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border shadow-xs lg:grid-cols-4" aria-label="Summary">
-        <Stat label="Files" value={all ? fmt(files.length) : '–'} />
-        <Stat label="Websites" value={all ? fmt(websites.length) : '–'} note={read ? `${fmt(read)} more read by agents` : undefined} />
-        <Stat label="Customer comments" value={coverage.kind === 'ok' ? fmt(coverage.data.total_feedback) : '–'} />
-        <Stat label="Gaps" value={cells ? fmt(gaps) : '–'} note={cells ? `of ${cells.length} line and market pairs have no customer feedback` : undefined} />
+        <Stat label="Files" value={all ? fmt(files.length) : '-'} />
+        <Stat label="Websites" value={all ? fmt(websites.length) : '-'} note={read ? `${fmt(read)} more read by agents` : undefined} />
+        <Stat label="Customer comments" value={coverage.kind === 'ok' ? fmt(coverage.data.total_feedback) : '-'} />
+        <Stat label="Gaps" value={cells ? fmt(gaps) : '-'} note={cells ? `of ${cells.length} line and market pairs have no customer feedback` : undefined} />
       </dl>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
