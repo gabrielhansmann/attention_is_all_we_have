@@ -109,7 +109,7 @@ Differences and additions relative to the sketch above:
 - **Search functions:** `match_chunks()` (PDF text) and `match_feedback()` (customer comments),
   both cosine distance over the HNSW indexes.
 - **Ontology seeded:** 10 domains, 4 vehicle lines (F70, G60, G68, G70), 4 markets, and 222 customer-feedback
-  category labels as children of the domains (`ingest/seed_ontology.py`; labels classified by an
+  category labels as children of the domains (`backend/app/ingest/seed_ontology.py`; labels classified by an
   OpenAI model plus hand overrides, 3 non-product labels left unmapped).
 - **Knowledge layer (decision 0008):** `feedback_raw`, `study_response`, `sales_volume` and `finding`
   carry normalized `vehicle_line`, `market_code`, `domain_id`, `polarity`, `powertrain` where they apply;

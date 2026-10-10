@@ -4,25 +4,55 @@ BMW "AI for Product Decision Making" hackathon — a multi-agent system that tur
 feedback, product data, sales data, and web research into cited, PM-approved vehicle requirements.
 
 Software idea: [`docs/idea.md`](docs/idea.md). Architecture docs: [`docs/README.md`](docs/README.md).
-Agent/push rules: [`AGENTS.md`](AGENTS.md).
+Agent/push rules: [`AGENTS.md`](AGENTS.md). Repo layout: [`docs/architecture/12-repo-structure.md`](docs/architecture/12-repo-structure.md).
+
+## Layout
+
+```
+backend/     FastAPI app, agents, knowledge layer, ingestion, orchestration (Python package `app`)
+frontend/    Vite + React + TypeScript + Tailwind + shadcn/ui (BMW design tokens)
+supabase/    SQL migrations
+docs/        architecture, decisions, requirements
+skills/      agent skills (database setup)
+data/        provided BMW files (gitignored)
+```
 
 ## Setup
 
-- Put the provided BMW files in `data/` (gitignored).
-- `.env` (gitignored): `OPENAI_API_KEY`, `SUPABASE_DB_URL` (direct connection string).
-- `pip install -r ingest/requirements.txt`; PDFs also need `pdftotext`/`pdfinfo` (poppler).
-- Schema: `supabase/migrations/` (applied to the Supabase project).
+1. Put the provided BMW files in `data/` (gitignored) if you want to re-run the loaders. The data is already loaded in Supabase.
+2. `cp .env.example .env` and fill in `OPENAI_API_KEY` and `SUPABASE_DB_URL`
+   (see [`skills/database-setup/SKILL.md`](skills/database-setup/SKILL.md)).
+3. `make install` (Python 3.11+, Node 20+, pnpm). PDF loaders also need `pdftotext`/`pdfinfo` (poppler).
+4. `make check-db` to verify the database connection and the OpenAI key.
 
-## Load and query
+## Run
 
 ```
-python ingest/load_pdfs.py                  # chunk + embed the catalog PDFs
-python ingest/load_excel.py                 # feedback, sales, customer studies
-python ingest/load_options.py               # equipment options with per-variant availability
-python ingest/seed_ontology.py              # domains, vehicle lines, markets, category labels
-python -m knowledge.tools                   # demo of the agent retrieval tools (search, lookups, counts, cite)
-python ingest/ask_pdf.py "Welche Felgen gibt es für den 5er?" --line G60
+make dev          # backend on :8000 and frontend on :5173 (BACKEND_PORT=8001 make dev if 8000 is taken)
+make backend      # API only: http://localhost:8000/api/health, interactive docs at /docs
+make frontend     # UI only: http://localhost:5173 (proxies /api to the backend)
+make test         # backend tests, no database or OpenAI key needed
+make build        # type-check and build the frontend
 ```
+
+The UI has two screens: **Chat** (the research workspace; the orchestrator is not connected yet) and
+**Evidence** (search the stored feedback and catalog text, with exact counts; every result shows its
+file, location and verbatim quote).
+
+## Load and query data
+
+Run from any directory after `make install` (the scripts find the root `.env` and `data/` themselves):
+
+```
+python -m app.ingest.load_pdfs               # chunk + embed the catalog PDFs
+python -m app.ingest.load_excel              # feedback, sales, customer studies
+python -m app.ingest.load_options            # equipment options with per-variant availability
+python -m app.ingest.seed_ontology           # domains, vehicle lines, markets, category labels
+python -m app.knowledge.tools                # demo of the agent retrieval tools (search, lookups, counts, cite)
+python -m app.ingest.ask_pdf "Welche Felgen gibt es für den 5er?" --line G60
+```
+
+Use the repo's virtualenv (`.venv/bin/python`) or activate it first.
 
 ## Market & Trend Agent
 
@@ -31,8 +61,8 @@ The first agent implementation is the Market & Trend Agent. It turns cited web r
 leaves the step in `awaiting_review` for PM acceptance.
 
 ```
-python agents/market_trend_agent.py "What comfort trends matter for premium sedans?" --vehicle-line G60 --market US --dry-run
-python agents/market_trend_agent.py "What comfort trends matter for premium sedans?" --vehicle-line G60 --market US --run-id <uuid>
+python -m app.agents.market_trend_agent "What comfort trends matter for premium sedans?" --vehicle-line G60 --market US --dry-run
+python -m app.agents.market_trend_agent "What comfort trends matter for premium sedans?" --vehicle-line G60 --market US --run-id <uuid>
 ```
 
 For deterministic demos or tests, pass `--seed-sources path/to/sources.json` with a JSON list of
@@ -40,14 +70,8 @@ For deterministic demos or tests, pass `--seed-sources path/to/sources.json` wit
 `--draft-json`:
 
 ```
-python agents/market_trend_agent.py "comfort trends" --vehicle-line G60 --market US \
-  --seed-sources tests/fixtures/market_trend_sources.json \
-  --draft-json tests/fixtures/market_trend_draft.json \
+python -m app.agents.market_trend_agent "comfort trends" --vehicle-line G60 --market US \
+  --seed-sources backend/tests/fixtures/market_trend_sources.json \
+  --draft-json backend/tests/fixtures/market_trend_draft.json \
   --dry-run
-```
-
-Run the local tests without external services:
-
-```
-python3 -m unittest discover -s tests
 ```
