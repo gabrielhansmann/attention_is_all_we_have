@@ -158,7 +158,12 @@ ANSWER_SYSTEM = (
     "- Open with the direct answer to the question in one or two sentences.\n"
     "- Then the three to five points that matter most, most important first, each one short, with how strongly the "
     "evidence backs it (for example how many comments) when the results say so.\n"
-    "- Say plainly what is uncertain, thin or missing, and which agent failed if one did.\n"
+    "- If the question names a model or line that the results do not cover (for example it asks about the X3 but the "
+    "results are for G60 and G70), say that first and what the answer is based on instead.\n"
+    "- If requirement drafting or prioritization ran, name the requirements that were drafted and how they rank.\n"
+    "- Say plainly what is uncertain, thin or missing. Call an agent failed only if it is marked FAILED. Do not "
+    "mention agents by name unless it helps the PM.\n"
+    "- Finish with complete sentences.\n"
     "- If it would help, end with one concrete next step the PM can ask for, such as deriving requirements.\n"
     "- Use only what the results say. Never invent numbers. No file names, sheet names or row numbers.\n"
     "- Cite a finding by putting its id in square brackets right after the claim, for example [abc123]. Use only ids "
@@ -167,6 +172,7 @@ ANSWER_SYSTEM = (
     'Reply with JSON only: {"answer": "<markdown>"}.'
 )
 
+ANSWER_SUMMARY_CHARS = 3000   # the answer needs more of each step than a routing decision does
 EVIDENCE_PER_STEP = 12
 EVIDENCE_CHARS = 400
 
@@ -216,7 +222,7 @@ def answer_prompt(request: str, scope: Scope, history: list[Outcome], notes: lis
             blocks.append(f"{o.agent}: FAILED. {o.summary.splitlines()[0] if o.summary else ''}".strip())
             continue
         lines = "\n".join(f"[{fid}] {text[:EVIDENCE_CHARS]}" for fid, text in o.evidence[:EVIDENCE_PER_STEP])
-        blocks.append(f"{o.agent}: {o.findings} findings\n{o.summary[:SUMMARY_CHARS]}" + (f"\nFindings you may cite:\n{lines}" if lines else ""))
+        blocks.append(f"{o.agent}: {o.findings} findings\n{o.summary[:ANSWER_SUMMARY_CHARS]}" + (f"\nFindings you may cite:\n{lines}" if lines else ""))
     extra = "".join(f"\nNote: {n}" for n in notes)
     return (f"Request: {request}\nScope: vehicle line {scope.vehicle_line or 'all'}, market {scope.market or 'all'}\n\n"
             + "\n\n".join(blocks) + extra)
