@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUpRight, DownloadSimple, MagnifyingGlass, SlidersHorizontal } from '@phosphor-icons/react'
+import { ArrowDown, ArrowUpRight, DownloadSimple, Flask, MagnifyingGlass, SlidersHorizontal } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { useWorkspace } from '../context'
 import { composite, downloadFile, portfolioCsv, statusNames, tier } from '../data'
@@ -6,7 +6,7 @@ import type { Status } from '../data'
 import { Badge, Button, Empty } from './ui'
 
 export function Requirements() {
-  const { workspace, line, market, requirements, openRequirement, openWeights, notify } = useWorkspace()
+  const { workspace, line, market, requirements, openRequirement, openWeights, notify, navigate } = useWorkspace()
   const [query, setQuery] = useState(''), [status, setStatus] = useState('all'), [domain, setDomain] = useState('all'), [sort, setSort] = useState('score')
   const [tierFilter, setTierFilter] = useState('all')
   const domains = [...new Set(requirements.map(r => r.domain))].sort()
@@ -25,5 +25,6 @@ export function Requirements() {
       return <tr key={r.id}><td><span className="cell-caption">{r.id}</span><button className="table-title" onClick={() => openRequirement(r)}>{r.title}<ArrowUpRight size={15} /></button><span className="cell-caption">{r.metric}</span></td><td>{r.domain}</td><td><Badge tone={r.status === 'tracked' ? 'success' : r.status === 'challenged' ? 'warning' : r.status === 'pm_review' ? 'blue' : 'neutral'}>{statusNames[r.status]}</Badge></td><td><div className="score-cell"><strong>{score.toFixed(2)}</strong><span className={t === 'Must-have' ? 'blue-text' : 'muted'}>{t}</span></div></td><td><div className="confidence-cell"><span>{r.confidence}%</span><div className="confidence-track"><span style={{ width: `${r.confidence}%` }} /></div>{r.confidence < 60 && <span className="cell-caption">Thin evidence</span>}</div></td><td><button className="source-count" onClick={() => openRequirement(r)} aria-label={`View ${r.sourceIds.length} sources for ${r.title}`}>{r.sourceIds.length}<ArrowUpRight size={13} /></button></td></tr>
     })}</tbody></table></div> : <Empty title="No requirements match these filters">Try another search, status, or domain.</Empty>}
     <p className="data-note">Priority and confidence are separate. A high score does not mean the evidence is complete. All programme values are sample data.</p>
+    <div className="notice"><Flask size={24} /><div><h3>See what changes before you decide.</h3><p>Try alternative priorities and compare the shortlist in the Decision Lab.</p></div><Button variant="secondary" onClick={() => navigate('decision-lab')}>Open Decision Lab</Button></div>
   </>
 }

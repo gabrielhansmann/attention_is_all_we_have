@@ -1,4 +1,4 @@
-export type Page = 'overview' | 'requirements' | 'research' | 'evidence' | 'reports'
+export type Page = 'overview' | 'requirements' | 'research' | 'evidence' | 'reports' | 'decision-lab'
 export type Line = 'G60' | 'F70' | 'G70'
 export type Market = 'EU' | 'US' | 'CN'
 export type Status = 'draft' | 'pm_review' | 'tracked' | 'challenged' | 'rejected'

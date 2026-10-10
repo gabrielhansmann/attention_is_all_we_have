@@ -1,6 +1,6 @@
 # Repository structure: frontend and backend
 
-> Status: `building` · Last updated: 2026-10-10 (PM workspace and demo/live evidence boundary; see [decision 0011](../decisions/0011-local-demo-frontend-and-vercel.md))
+> Status: `building` · Last updated: 2026-10-10 (PM workspace, demo/live evidence boundary, and Decision Lab; see [decision 0020](../decisions/0020-decision-lab-scenario-previews.md))
 
 ```mermaid
 flowchart LR
@@ -33,7 +33,8 @@ backend/
     ingest/               loaders and parsers for the provided PDFs and Excel files
   tests/                  pytest; no database or OpenAI key needed
 frontend/                 Gabriel's PM workspace (npm, Vite + React + TypeScript), see frontend/README.md
-  src/App.tsx, components/   the five views over local demo data (fixtures, browser storage)
+  src/App.tsx, components/   PM views over local demo data (fixtures, browser storage)
+  src/features/decision-lab/ scenario previews, shortlist comparison, and cited Markdown briefs
   src/features/research/     live research: conversations, the planner's real plan, plan editing (calls /api)
   src/features/library/      live evidence library: loaded sources and coverage matrix (calls /api)
   src/features/evidence/     live evidence search with exact counts (calls /api)
@@ -98,9 +99,10 @@ message. Interactive docs are served at `/docs`.
 
 ## Frontend delivery
 
-The active UI is the five-view PM workspace documented in [the frontend guide](../../frontend/README.md).
+The active UI is the six-view PM workspace documented in [the frontend guide](../../frontend/README.md).
 Its portfolio, research, targets, and reports use explicitly illustrative fixtures and browser
-local storage. The retained API Evidence browser is available from Evidence library during
+local storage. Decision Lab compares alternative weights without saving until the PM applies
+a scenario with a reason; its weights remain workspace-wide. The retained API Evidence browser is available from Evidence library during
 local development, or with `VITE_LIVE_EVIDENCE=true` when the deployed origin serves `/api`.
 The static Vercel demo keeps live access disabled. Vite retains the backend proxy and `@` alias.
 Dependencies use the npm lockfile; the Makefile and Vercel install with `npm ci`.

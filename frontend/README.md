@@ -29,6 +29,9 @@ npm run preview
   targets and priorities, illustrative trend charts, and decision history.
 - Requirement portfolio with search, filters, explainable weighted scores, editing,
   reason-required approval/challenge/rejection, and filtered CSV exports with citations.
+- Decision Lab with four strategy lenses, weights that automatically total 100%, saved/scenario
+  rankings, shortlist entries and exits, visible confidence, score calculations and source
+  links, cited Markdown briefs, and reason-required application of workspace-wide weights.
 - Guided research with sequential Accept/Edit/Retry/Reject gates. Rejections require a
   continue-with-gap or abort decision. Drafts appear only after the final review.
 - Evidence library with source locators, linked requirements, coverage gaps, and local
@@ -41,6 +44,14 @@ All seed values, excerpts, grades, and trends are **illustrative demo fixtures**
 BMW specifications or findings. Research does not call an AI provider, query Supabase, or
 search the web. Retry records steering against the same fixtures. Plans use three fixed
 steps, rather than the proposed live orchestrator. No automated report scheduling runs.
+
+**Decision Lab** is available from navigation or the Requirements view. Pick a strategy or
+adjust a slider to preview the top 1–5 requirements in the selected scope. Rejected requirements
+are excluded; challenged ones stay visible. Confidence does not affect rank. Shortlist membership
+across the four example strategies measures sensitivity to weights, not probability or evidence
+quality. A scenario changes saved priorities only after **Apply scenario weights** and a reason.
+Saved weights apply across the demo workspace. Previews reset when you change scope or leave the
+view. Export a scenario brief before saving to retain its before/after comparison.
 
 In local development, **Evidence library → Browse backend evidence** opens the retained live
 Evidence browser. Run `make backend` at the repo root to serve its `/api` requests; Vite
@@ -79,14 +90,16 @@ npm test
 
 Playwright exercises desktop and mobile workflows, persistence, exports, review gates,
 keyboard dialog focus, PDF generation, overflow, and automated axe WCAG checks on all five
-views. Tests require a browser environment that permits Chromium to launch.
+original views and Decision Lab. Calculation checks cover rounding budgets, ties, negative
+scores, and shortlist changes. Tests require a browser environment that permits Chromium to launch.
 
 ## Structure
 
 - `src/App.tsx`: navigation, scope, dialogs, and persisted workspace state.
 - `src/data.ts`: typed demo fixtures, scoring, citations, CSV, and export utilities.
 - `src/context.tsx`: shared workspace actions.
-- `src/components/`: the five views, forms, and Radix-based dialog/button primitives.
+- `src/components/`: the original five views, forms, and Radix-based dialog/button primitives.
+- `src/features/decision-lab/`: scenario scoring, comparison, briefs, and the Decision Lab view.
 - `src/styles.css`: brand tokens, responsive layouts, print, and reduced-motion styles.
 - `src/features/evidence/`, `src/lib/api.ts`: retained backend Evidence browser and API client.
 - `src/index.css`, `src/shadcn-variants.css`: retained Tailwind/Base UI styling.

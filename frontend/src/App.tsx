@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ArrowLeft, ArrowRight, ArrowUpRight, ChartBar, CheckCircle, FileText, GearSix, House, List, MagnifyingGlass, WarningCircle, X } from '@phosphor-icons/react'
+import { ArrowLeft, ArrowRight, ArrowUpRight, ChartBar, CheckCircle, FileText, Flask, GearSix, House, List, MagnifyingGlass, WarningCircle, X } from '@phosphor-icons/react'
 import { createWorkspace, lineNames, marketNames, scopeKey, storageKey, uid } from './data'
 import type { Line, Market, Metric, Page, Requirement, Source, Workspace } from './data'
 import { WorkspaceContext } from './context'
@@ -9,11 +9,12 @@ import { Requirements } from './components/Requirements'
 import { Research } from './components/Research'
 import { Evidence } from './components/Evidence'
 import { Reports } from './components/Reports'
+import { DecisionLab } from './features/decision-lab/DecisionLab'
 import { ImportDialog, RequirementDialog, SettingsDialog, SourceDialog, TargetDialog, WeightsDialog } from './components/WorkspaceDialogs'
 
 const navigation: { id: Page; label: string; icon: typeof House }[] = [
   { id: 'overview', label: 'Overview', icon: House }, { id: 'requirements', label: 'Requirements', icon: List },
-  { id: 'research', label: 'Research', icon: MagnifyingGlass }, { id: 'evidence', label: 'Evidence library', icon: FileText }, { id: 'reports', label: 'Reports', icon: ChartBar },
+  { id: 'decision-lab', label: 'Decision Lab', icon: Flask }, { id: 'research', label: 'Research', icon: MagnifyingGlass }, { id: 'evidence', label: 'Evidence library', icon: FileText }, { id: 'reports', label: 'Reports', icon: ChartBar },
 ]
 const currentPage = (): Page => navigation.find(n => `#${n.id}` === window.location.hash)?.id || 'overview'
 function loadWorkspace(): { workspace: Workspace; error: string } {
@@ -65,7 +66,7 @@ export function App() {
     <a className="skip-link" href="#main-content">Skip to main content</a>
     <div className="app-layout"><aside className="sidebar">{sidebar}</aside><div className="workspace-main"><header className="topbar"><div className="topbar-location"><Button variant="ghost" size="icon" className="mobile-menu-button" aria-label="Open navigation" onClick={() => setMobileOpen(true)}><List size={24} /></Button><span>Product development</span><ArrowRight size={14} /><strong>{navigation.find(n => n.id === page)?.label}</strong></div><div className="scope-controls"><div><label htmlFor="vehicle-line">Vehicle line</label><select id="vehicle-line" value={line} onChange={e => { setLine(e.target.value as Line); setTarget(null); setRequirementId(null); setSource(null) }}>{(Object.keys(lineNames) as Line[]).map(l => <option key={l} value={l}>{lineNames[l]} / {l}</option>)}</select></div><div><label htmlFor="market">Market</label><select id="market" value={market} onChange={e => { setMarket(e.target.value as Market); setTarget(null); setRequirementId(null); setSource(null) }}>{(Object.keys(marketNames) as Market[]).map(m => <option key={m} value={m}>{marketNames[m]}</option>)}</select></div></div></header>
       <main id="main-content" className="main-content" tabIndex={-1}>{storageError && <div className="notice storage-notice" role="alert"><WarningCircle size={20} /><p>{storageError}</p><Button variant="ghost" size="small" onClick={() => setModal('settings')}>Export backup</Button></div>}
-        {page === 'overview' ? <Overview /> : page === 'requirements' ? <Requirements key={scopeKey(line, market)} /> : page === 'research' ? <Research key={scopeKey(line, market)} /> : page === 'evidence' ? <Evidence key={scopeKey(line, market)} /> : <Reports />}
+        {page === 'overview' ? <Overview /> : page === 'requirements' ? <Requirements key={scopeKey(line, market)} /> : page === 'decision-lab' ? <DecisionLab key={scopeKey(line, market)} /> : page === 'research' ? <Research key={scopeKey(line, market)} /> : page === 'evidence' ? <Evidence key={scopeKey(line, market)} /> : <Reports />}
         <footer className="workspace-footer"><span>BMW Product Intelligence</span><span>Evidence informs. You decide.</span><button onClick={() => setModal('settings')}>Local demo workspace <ArrowUpRight size={12} /></button></footer>
       </main></div></div>
     <Dialog open={mobileOpen} onOpenChange={setMobileOpen} title="Workspace navigation" description="Choose a workspace view."><div className="mobile-navigation">{sidebar}</div></Dialog>

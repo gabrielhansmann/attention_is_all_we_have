@@ -1,6 +1,6 @@
 # Prioritization
 
-> Status: `building` · Last updated: 2026-10-10 (implemented, see [decision 0014](../decisions/0014-all-roster-agents-implemented.md))
+> Status: `building` · Last updated: 2026-10-10 (scoring implementation and local Decision Lab; see [decision 0020](../decisions/0020-decision-lab-scenario-previews.md))
 
 A composite score the PM can see decomposed, re-weight, and override — never a black-box rank. It
 balances what BMW's own slide calls "Customer" against "Business," plus the brief's allowance for
@@ -34,6 +34,34 @@ of the module and are a starting point like the weights above. Effort maps to lo
 A missing input counts as zero, lowers confidence by 0.10 and is listed on the score. The provided data has no
 option take rate, so `business_signal` uses the share of variants where the option is standard, flagged as a
 proxy. The tier is proposed on the score and never written to the requirement.
+
+## Decision Lab (local demo)
+
+The frontend's **Decision Lab** lets the PM preview alternative priorities before saving them.
+Four illustrative lenses (Customer first, Growth focused, Strategic fit, Delivery first) and
+four sliders use the same signed composite formula as the local requirement portfolio. Local
+component scores and weights use 0–100 values, so the sum is divided by 10000. Effort is
+subtracted; negative scores are preserved. Confidence is always separate.
+
+Moving a slider redistributes the other weights proportionally and assigns rounding residue
+deterministically, keeping integer weights at 100%. The ranked comparison shows saved and
+scenario scores, rank movement, shortlist entries and exits, confidence, source links, and
+the component calculation. The shortlist includes the selected scope's top 1–5 non-rejected
+requirements. Challenged requirements remain visible for review; ties use requirement ID.
+Membership across the four example lenses describes sensitivity to weights, never evidence
+quality, a probability, or an engineering feasibility result.
+
+Exploration changes no persisted weights or requirement evidence. **Apply scenario weights**
+requires a reason, records the old and new vectors and shortlist changes in browser decision
+history, and recalculates all local demo requirements. Weights remain workspace-wide, while
+the ranking preview is scoped by vehicle line and market. Changing scope resets the preview
+to saved weights. A Markdown brief exports the comparison, cited source locators, source
+excerpts, acceptance criteria, and assumptions for shortlisted and departing requirements.
+
+This is explicitly illustrative browser data, not the backend's versioned `Score` records.
+The lab makes no API calls, launches no agents, and does not save server decisions. A live
+version requires backend requirements, scoring, and audit endpoints before it can make
+programme commitments.
 
 ## Worked example
 
