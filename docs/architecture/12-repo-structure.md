@@ -28,7 +28,7 @@ backend/
     api/                  HTTP layer: health, evidence search / counts / cite / filters, response schemas
     knowledge/            retrieval tools every agent uses; each hit carries a citation
     agents/               LLM-backed agents (Market & Trend today)
-    orchestration/        step state machine (planned, running, awaiting_review, accepted, rejected)
+    orchestration/        agent catalog, planner, chat and plan persistence, step state machine
     ingest/               loaders and parsers for the provided PDFs and Excel files
   tests/                  pytest; no database or OpenAI key needed
 frontend/
@@ -74,14 +74,20 @@ Makefile  .env.example    common tasks and the environment template (one .env at
 | `GET /api/evidence/stats?group_by=&line=&market=...` | exact counts and their total |
 | `GET /api/evidence/filters` | the values the UI offers as filters |
 | `GET /api/evidence/{kind}/{id}` | the citation for one stored row |
+| `GET /api/agents` | the agent catalog in pipeline order and which agents exist yet |
+| `GET, POST /api/conversations` | list, or create (optionally with a first request) |
+| `GET, PATCH /api/conversations/{id}` | the thread (messages and runs with steps), or rename / archive |
+| `POST /api/conversations/{id}/messages` | a PM request: the orchestrator plans and stores `planned` steps |
+| `PUT /api/runs/{id}/plan` | the PM edits the plan before any agent starts |
 
 Bad parameters give 422, unknown rows 404, and an unreachable database 503 with no internals in the
 message. Interactive docs are served at `/docs`.
 
 ## Not built yet
 
-- Chat endpoints and the orchestrator that plans and runs agents. The `conversation` and `message` tables and
-  the new step states are in the database; the endpoints and the planner are next.
+- Starting the plan: accepting the plan, running the first step, and the PM actions on a step card (accept,
+  edit, retry, reject). The chat API and the planner exist; the agents behind the steps and the runner do not.
+- Chat in the frontend: the Chat screen still shows its empty state.
 - Authentication: the API is open, which is fine for a local demo and must change before it is exposed.
 - A Docker setup and CI.
 

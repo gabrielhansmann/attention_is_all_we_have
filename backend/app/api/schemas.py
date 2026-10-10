@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 Line = Literal["F70", "G60", "G68", "G70"]
 Market = Literal["EU", "CN", "US", "RoW"]
@@ -51,3 +51,95 @@ class HealthResponse(BaseModel):
     db: Literal["ok", "unavailable", "not_configured"]
     openai_key: bool
     version: str
+
+
+# ---------------------------------------------------------------- chat
+
+from datetime import datetime  # noqa: E402
+from uuid import UUID  # noqa: E402
+
+MessageRole = Literal["pm", "orchestrator", "agent", "system"]
+MessageKind = Literal["request", "plan", "plan_change", "step_card", "pushback", "final_result", "system_note"]
+StepStatusLit = Literal["planned", "running", "awaiting_review", "accepted", "rejected"]
+
+
+class AgentOut(BaseModel):
+    name: str
+    stage: int
+    description: str
+    available: bool
+
+
+class ConversationOut(BaseModel):
+    id: UUID
+    title: str
+    vehicle_line: str | None
+    market_code: str | None
+    status: Literal["active", "archived"]
+    created_at: datetime
+    updated_at: datetime
+
+
+class MessageOut(BaseModel):
+    id: UUID
+    seq: int
+    conversation_id: UUID
+    role: MessageRole
+    kind: MessageKind
+    run_id: UUID | None
+    step_id: UUID | None
+    content: str
+    payload: dict[str, Any]
+    created_at: datetime
+
+
+class StepOut(BaseModel):
+    id: UUID
+    position: int
+    agent_name: str
+    stage: int
+    status: StepStatusLit
+    plan_reason: str | None
+    planned_by: Literal["orchestrator", "pm"]
+    attempt: int
+    available: bool
+
+
+class RunOut(BaseModel):
+    id: UUID
+    conversation_id: UUID | None
+    vehicle_line: str
+    market: str
+    query_text: str | None
+    status: Literal["in_progress", "completed", "aborted"]
+    created_at: datetime
+    steps: list[StepOut]
+
+
+class ConversationDetail(BaseModel):
+    conversation: ConversationOut
+    messages: list[MessageOut]
+    runs: list[RunOut]
+
+
+class PostResult(BaseModel):
+    messages: list[MessageOut]
+    run: RunOut | None
+
+
+class CreateConversation(BaseModel):
+    title: str | None = Field(default=None, max_length=120)
+    request: str | None = Field(default=None, min_length=3, max_length=4000)
+
+
+class PostMessage(BaseModel):
+    content: str = Field(min_length=3, max_length=4000)
+
+
+class UpdateConversation(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=120)
+    status: Literal["active", "archived"] | None = None
+
+
+class EditPlan(BaseModel):
+    agents: list[str] = Field(min_length=1, max_length=12)
