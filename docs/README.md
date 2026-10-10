@@ -1,5 +1,9 @@
 # Requirement Evidence Engine — living architecture docs
 
+Start with the [software idea](idea.md) for the original model-specific product concept:
+vehicle specifications, PM priorities and successor targets, competitor comparisons by market,
+historical trends, weekly reports, and AI suggestions grounded in cited evidence.
+
 Technical architecture for the BMW "AI for Product Decision Making" hackathon challenge: a
 multi-agent system that turns customer feedback, product data, sales data and web research into
 cited, PM-approved customer requirements for a successor vehicle.
@@ -21,6 +25,7 @@ Each doc opens with a status line:
 
 | Doc | What it answers |
 |---|---|
+| [`idea.md`](idea.md) | The original software concept and the PM's model-specific decision loop |
 | [`architecture/00-overview.md`](architecture/00-overview.md) | What is this, in scope / out of scope, the five-stage pipeline at a glance |
 | [`architecture/01-agents.md`](architecture/01-agents.md) | Every agent: what it reads, what it produces, how autonomous it is |
 | [`architecture/02-orchestration-and-human-in-the-loop.md`](architecture/02-orchestration-and-human-in-the-loop.md) | **How the PM actually stays in control** — the chat → orchestrator plan → review-and-accept-each-agent model |

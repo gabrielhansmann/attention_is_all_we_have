@@ -3,7 +3,8 @@
 BMW "AI for Product Decision Making" hackathon — a multi-agent system that turns customer
 feedback, product data, sales data, and web research into cited, PM-approved vehicle requirements.
 
-Architecture docs: [`docs/README.md`](docs/README.md). Agent/push rules: [`AGENTS.md`](AGENTS.md).
+Software idea: [`docs/idea.md`](docs/idea.md). Architecture docs: [`docs/README.md`](docs/README.md).
+Agent/push rules: [`AGENTS.md`](AGENTS.md).
 
 ## Setup
 
