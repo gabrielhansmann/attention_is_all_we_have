@@ -9,11 +9,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 
-from app.ingest import upload
+from app.ingest import load_web, upload
 from app.knowledge import library
 
 from .deps import get_ingest_conn
-from .schemas import CoverageOut, SourceOut, UploadOut
+from .schemas import CoverageOut, SourceGraphOut, SourceOut, UploadOut, WebFindOut, WebSourceIn
 
 router = APIRouter(tags=["library"])
 
@@ -57,6 +57,49 @@ async def upload_source(request: Request, conn: Annotated[psycopg.Connection, De
     data = await _body(request)
     try:
         return await run_in_threadpool(upload.ingest_upload, conn, filename, data, line=line or None, replace=replace)
+    except upload.UploadError as e:
+        raise HTTPException(status_code=e.status, detail=str(e))
+    except Exception as e:
+        raise _unavailable(e)
+
+
+@router.post("/sources/web", response_model=UploadOut, status_code=201)
+async def add_website(body: WebSourceIn, conn: Annotated[psycopg.Connection, Depends(get_ingest_conn)]):
+    """Fetch one public web page and store its text as cited passages. Only that page is read: no crawling."""
+    try:
+        return await run_in_threadpool(load_web.ingest_website, conn, body.url, line=body.line, market=body.market,
+                                       trust_tier=body.trust_tier, replace=body.replace)
+    except upload.UploadError as e:
+        raise HTTPException(status_code=e.status, detail=str(e))
+    except Exception as e:
+        raise _unavailable(e)
+
+
+@router.get("/sources/graph", response_model=SourceGraphOut)
+def source_graph():
+    """Which vehicle lines and markets each source covers, with the number of rows behind each link."""
+    try:
+        return library.source_graph()
+    except Exception as e:
+        raise _unavailable(e)
+
+
+@router.get("/sources/web-research", response_model=list[WebFindOut])
+def web_research():
+    """Websites the Market & Trend and Competitor agents read during runs, newest first."""
+    try:
+        return library.web_research()
+    except Exception as e:
+        raise _unavailable(e)
+
+
+@router.delete("/sources/{source_id}", status_code=204)
+def remove_website(source_id: UUID, conn: Annotated[psycopg.Connection, Depends(get_ingest_conn)]):
+    """Remove a stored web page and its passages. Files cannot be removed here."""
+    try:
+        load_web.remove_website(conn, str(source_id))
+    except LookupError:
+        raise HTTPException(status_code=404, detail="website not found")
     except upload.UploadError as e:
         raise HTTPException(status_code=e.status, detail=str(e))
     except Exception as e:

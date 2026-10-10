@@ -13,9 +13,12 @@ import type {
   PostResult,
   SearchResponse,
   SearchSource,
+  SourceGraph,
   SourceInfo,
   StatsResponse,
   UploadResult,
+  WebFind,
+  WebSourceRequest,
 } from '@/types/api'
 
 export class ApiError extends Error {
@@ -89,6 +92,10 @@ export const api = {
   coverage: (signal?: AbortSignal) => get<Coverage>('/evidence/coverage', signal),
   uploadSource: (file: File, line: string | undefined, replace: boolean) =>
     request<UploadResult>('POST', `/sources?${query({ filename: file.name, line, replace: replace ? 'true' : undefined })}`, file),
+  sourceGraph: (signal?: AbortSignal) => get<SourceGraph>('/sources/graph', signal),
+  webResearch: (signal?: AbortSignal) => get<WebFind[]>('/sources/web-research', signal),
+  addWebsite: (body: WebSourceRequest) => request<UploadResult>('POST', '/sources/web', body),
+  removeWebsite: (id: string) => request<void>('DELETE', `/sources/${id}`),
   conversations: (signal?: AbortSignal) => get<Conversation[]>('/conversations', signal),
   conversation: (id: string, signal?: AbortSignal) => get<ConversationDetail>(`/conversations/${id}`, signal),
   createConversation: (requestText: string) =>

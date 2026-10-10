@@ -1,6 +1,6 @@
 # Ingestion: turning a PDF or spreadsheet into a cited Finding
 
-> Status: `draft` · Last updated: 2026-10-10 (file upload, see [decision 0021](../decisions/0021-file-upload-reuses-the-loaders.md))
+> Status: `draft` · Last updated: 2026-10-10 (websites as sources, see [decision 0022](../decisions/0022-websites-as-sources-and-tabbed-sources-view.md))
 
 The provided PDFs (`F70_OptionList.PDF`, `G60_OptionList.PDF`, `G70_OptionList.PDF`) are
 structured option/equipment listings, not prose. Treating them as plain text to embed would throw
@@ -129,3 +129,24 @@ citations.
 - Refused with a reason: other file types, a spreadsheet in an unknown layout, a PDF without selectable text
   (scanned), files over 25 MB. Not built: column mapping for unknown spreadsheets (`FR-IN-09`), Word and pasted
   text (`FR-IN-10`), and recording who uploaded a file (`FR-IN-02`).
+
+### Websites (`app/ingest/load_web.py`, `POST /api/sources/web`, decision 0022)
+
+A signed-in PM adds a web address in the Sources view, or stores a page a web agent has read. The backend fetches
+that one page and stores it the way a PDF is stored.
+
+| Step | What happens |
+|---|---|
+| Address | http(s) only, no credentials, at most 2,000 characters. The fragment is dropped; the rest is the source's identity (`source.uri`). |
+| Fetch | Each address, redirects included, must resolve to a public IP. At most 5 redirects, 15 seconds, 3 MB. HTML and plain text only. |
+| Text | Scripts, styles, navigation, headers, footers, asides and forms are left out. `h1` to `h3` become the passage heading. |
+| Passages | Blocks under one heading are joined up to 1,800 characters; a long block is cut at a sentence end. At most 150 per page. |
+| Store | `source` (type `web`, trust tier, optional vehicle line and market) and one embedded `chunk` per passage, `page` = its position. |
+
+- A passage is cited as `page N` and found by Evidence search and the agents through `evidence_item`, as kind
+  `pdf_text`. The source viewer shows it with the passage before and after, and links to the page.
+- The trust tier is the PM's choice, or the one the web agents would infer from the domain.
+- An address that is already stored is refused unless sent as a replacement, which fetches the page again.
+  `DELETE /api/sources/{id}` removes a stored website; files and pages that findings cite are refused.
+- Refused with a reason: non-public addresses, pages that answer 401 or 403, other content types, pages with no
+  text in their HTML (client-side rendering). Not built: crawling, social media (`FR-IN-08`), pasted text (`FR-IN-07`).

@@ -102,7 +102,9 @@ reason that shows up in the audit log.
 
 - [ ] Delta / Tracking trigger: a re-check button that runs it against new evidence and shows the
   flags.
-- [ ] A PM-supplied URL or pasted comments as an input (`FR-IN-06`, `FR-IN-07`).
+- [x] A PM-supplied URL as an input (`FR-IN-06`): stored as cited passages, see
+  [decision 0022](decisions/0022-websites-as-sources-and-tabbed-sources-view.md).
+- [ ] Pasted comments as an input (`FR-IN-07`).
 - [ ] Competitor benchmarking as three steps with the tables from
   [doc 10](architecture/10-competitor-benchmarking.md).
 - [ ] LangGraph with a checkpointer in place of the in-process background task.

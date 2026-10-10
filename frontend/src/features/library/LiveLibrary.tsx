@@ -1,50 +1,51 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Database, Grid3x3, FileText } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Database, FileText, Globe, Grid3x3, Waypoints } from 'lucide-react'
 import { PageShell } from '@/components/layout/PageShell'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { api, ApiError } from '@/lib/api'
-import type { Coverage, CoverageCell, SourceInfo } from '@/types/api'
-import { contents, fmt } from './format'
-import { UploadForm } from './UploadForm'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { api } from '@/lib/api'
+import type { Coverage, SourceGraph as GraphData, SourceInfo, WebFind } from '@/types/api'
+import { CoverageTab } from './CoverageTab'
+import { FilesTab } from './FilesTab'
+import { errorText, fmt, isWeb, type Load } from './format'
+import { SourceGraph } from './SourceGraph'
+import { WebsitesTab } from './WebsitesTab'
 
-type Load<T> = { kind: 'loading' } | { kind: 'error'; message: string } | { kind: 'ok'; data: T }
-const THIN = 100 // fewer customer comments than this is shown as thin evidence
-
+type Tab = 'graph' | 'files' | 'websites' | 'coverage'
 const aborted = (e: unknown) => e instanceof DOMException && e.name === 'AbortError'
-const message = (e: unknown) => (e instanceof ApiError ? e.message : 'Something went wrong.')
 
-function CoverageCellView({ cell }: { cell?: CoverageCell }) {
-  if (!cell) return <span className="text-muted-foreground">No data</span>
+function Stat({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
-    <div className="flex flex-col gap-1">
-      {cell.feedback === 0 ? (
-        <Badge variant="destructive">No customer feedback</Badge>
-      ) : cell.feedback < THIN ? (
-        <Badge variant="outline">{`Thin: ${fmt(cell.feedback)} comments`}</Badge>
-      ) : (
-        <span>{`${fmt(cell.feedback)} comments`}</span>
-      )}
-      <span className="text-muted-foreground">
-        {cell.study_cells > 0 ? `${fmt(cell.study_cells)} study cells` : 'No study data'}
-      </span>
-      <span className="text-muted-foreground">
-        {cell.sales_2025 === null ? 'No 2025 sales row' : `2025 sales ${fmt(cell.sales_2025)}`}
-      </span>
+    <div className="flex flex-col gap-0.5 bg-background px-5 py-4">
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="text-2xl font-semibold tabular-nums">{value}</dd>
+      {note && <dd className="text-xs text-muted-foreground">{note}</dd>}
     </div>
   )
 }
 
+const Unavailable = ({ what, message }: { what: string; message: string }) => (
+  <p role="alert" className="rounded-2xl border border-destructive bg-background p-4 text-sm text-destructive">{`${what} unavailable: ${message}`}</p>
+)
+
 export function LiveLibrary() {
+  const [tab, setTab] = useState<Tab>('graph')
   const [sources, setSources] = useState<Load<SourceInfo[]>>({ kind: 'loading' })
   const [coverage, setCoverage] = useState<Load<Coverage>>({ kind: 'loading' })
+  const [graph, setGraph] = useState<Load<GraphData>>({ kind: 'loading' })
+  const [found, setFound] = useState<Load<WebFind[]>>({ kind: 'loading' })
 
-  // Also called after an upload: the tables then change in place, without going back to the loading state.
+  // Also called after a file or website is added or removed: the views then change in place, without going
+  // back to the loading state.
   const load = useCallback((signal?: AbortSignal) => {
-    api.sources(signal).then((data) => setSources({ kind: 'ok', data }))
-      .catch((e) => !aborted(e) && setSources({ kind: 'error', message: message(e) }))
-    api.coverage(signal).then((data) => setCoverage({ kind: 'ok', data }))
-      .catch((e) => !aborted(e) && setCoverage({ kind: 'error', message: message(e) }))
+    const into = <T,>(set: (l: Load<T>) => void) => [
+      (data: T) => set({ kind: 'ok', data }),
+      (e: unknown) => { if (!aborted(e)) set({ kind: 'error', message: errorText(e) }) },
+    ] as const
+    api.sources(signal).then(...into(setSources))
+    api.coverage(signal).then(...into(setCoverage))
+    api.sourceGraph(signal).then(...into(setGraph))
+    api.webResearch(signal).then(...into(setFound))
   }, [])
 
   useEffect(() => {
@@ -53,86 +54,63 @@ export function LiveLibrary() {
     return () => ctrl.abort()
   }, [load])
 
-  const lines = coverage.kind === 'ok' ? [...new Set(coverage.data.cells.map((c) => c.line))] : []
-  const loaded = sources.kind === 'ok' ? sources.data.map((s) => s.file) : []
+  const cells = coverage.kind === 'ok' ? coverage.data.cells : null
+  const lines = useMemo(() => [...new Set((cells ?? []).map((c) => c.line))], [cells])
+  const markets = useMemo(() => [...new Set((cells ?? []).map((c) => c.market))], [cells])
+  const all = sources.kind === 'ok' ? sources.data : null
+  const files = useMemo(() => (all ?? []).filter((s) => !isWeb(s)), [all])
+  const websites = useMemo(() => (all ?? []).filter(isWeb), [all])
+  const noFinds = useMemo<WebFind[]>(() => [], [])
+  const gaps = (cells ?? []).filter((c) => c.feedback === 0).length
+  const read = found.kind === 'ok' ? found.data.filter((w) => !w.source_id).length : 0
+  const loading = <Skeleton className="h-64 w-full rounded-2xl" aria-label="Loading sources" />
 
   return (
-    <PageShell testId="live-library" title="Sources" Icon={Database} description="What is stored per vehicle line and market. Gaps are shown as gaps.">
-      <section aria-labelledby="coverage-h" className="flex flex-col gap-3">
-        <h2 id="coverage-h" className="flex items-center gap-2 text-lg"><Grid3x3 className="size-5 text-primary" /> Coverage</h2>
-        {coverage.kind === 'loading' && <Skeleton className="h-48 w-full rounded-2xl" aria-label="Loading coverage" />}
-        {coverage.kind === 'error' && (
-          <p role="alert" className="rounded-2xl border border-destructive p-4 text-destructive">{`Coverage unavailable: ${coverage.message}`}</p>
-        )}
-        {coverage.kind === 'ok' && (() => {
-          const lines = [...new Set(coverage.data.cells.map((c) => c.line))]
-          const markets = [...new Set(coverage.data.cells.map((c) => c.market))]
-          const cell = (l: string, m: string) => coverage.data.cells.find((c) => c.line === l && c.market === m)
-          return (
-            <div className="overflow-x-auto rounded-2xl border border-border bg-background shadow-xs" tabIndex={0} role="region" aria-label="Coverage table, scrolls sideways on small screens">
-              <table className="w-full min-w-[720px] border-collapse text-sm">
-                <caption className="sr-only">Stored evidence by vehicle line and market</caption>
-                <thead>
-                  <tr className="border-b border-border bg-canvas-tint text-left">
-                    <th scope="col" className="p-3 font-semibold">Vehicle line</th>
-                    {markets.map((m) => <th key={m} scope="col" className="p-3 font-semibold">{m}</th>)}
-                  </tr>
-                </thead>
-                <tbody>
-                  {lines.map((l) => (
-                    <tr key={l} className="border-b border-border align-top">
-                      <th scope="row" className="p-3 text-left font-semibold">
-                        {l}
-                        <span className="block text-xs font-normal text-muted-foreground">
-                          {`${fmt(coverage.data.options_by_line[l] ?? 0)} catalog options`}
-                        </span>
-                      </th>
-                      {markets.map((m) => <td key={m} className="p-3"><CoverageCellView cell={cell(l, m)} /></td>)}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )
-        })()}
-      </section>
+    <PageShell testId="live-library" title="Sources" Icon={Database} description="Everything the agents can cite: files, websites, and what they cover per vehicle line and market.">
+      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-border bg-border shadow-xs lg:grid-cols-4" aria-label="Summary">
+        <Stat label="Files" value={all ? fmt(files.length) : '–'} />
+        <Stat label="Websites" value={all ? fmt(websites.length) : '–'} note={read ? `${fmt(read)} more read by agents` : undefined} />
+        <Stat label="Customer comments" value={coverage.kind === 'ok' ? fmt(coverage.data.total_feedback) : '–'} />
+        <Stat label="Gaps" value={cells ? fmt(gaps) : '–'} note={cells ? `of ${cells.length} line and market pairs have no customer feedback` : undefined} />
+      </dl>
 
-      <section aria-labelledby="sources-h" className="flex flex-col gap-3">
-        <h2 id="sources-h" className="flex items-center gap-2 text-lg"><FileText className="size-5 text-primary" /> Files</h2>
-        <UploadForm lines={lines} loaded={loaded} onStored={load} />
-        {sources.kind === 'loading' && <Skeleton className="h-40 w-full rounded-2xl" aria-label="Loading sources" />}
-        {sources.kind === 'error' && (
-          <p role="alert" className="rounded-2xl border border-destructive p-4 text-destructive">{`Sources unavailable: ${sources.message}`}</p>
-        )}
-        {sources.kind === 'ok' && sources.data.length === 0 && (
-          <p className="text-muted-foreground">No source files are loaded yet.</p>
-        )}
-        {sources.kind === 'ok' && sources.data.length > 0 && (
-          <div className="overflow-x-auto rounded-2xl border border-border bg-background shadow-xs" tabIndex={0} role="region" aria-label="Sources table, scrolls sideways on small screens">
-            <table className="w-full min-w-[640px] border-collapse text-sm">
-              <caption className="sr-only">Source files loaded into the evidence store</caption>
-              <thead>
-                <tr className="border-b border-border bg-canvas-tint text-left">
-                  <th scope="col" className="p-3 font-semibold">File</th>
-                  <th scope="col" className="p-3 font-semibold">Kind</th>
-                  <th scope="col" className="p-3 font-semibold">Line</th>
-                  <th scope="col" className="p-3 font-semibold">Contents</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sources.data.map((s) => (
-                  <tr key={s.id} className="border-b border-border align-top">
-                    <th scope="row" className="p-3 text-left font-semibold">{s.file}</th>
-                    <td className="p-3">{s.family}</td>
-                    <td className="p-3">{s.vehicle_line ?? 'Several'}</td>
-                    <td className="p-3">{contents(s.counts)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
+        <TabsList aria-label="Sources views">
+          <TabsTrigger value="graph"><Waypoints aria-hidden /> Graph</TabsTrigger>
+          <TabsTrigger value="files"><FileText aria-hidden /> Files</TabsTrigger>
+          <TabsTrigger value="websites"><Globe aria-hidden /> Websites</TabsTrigger>
+          <TabsTrigger value="coverage"><Grid3x3 aria-hidden /> Coverage</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="graph">
+          {(sources.kind === 'loading' || graph.kind === 'loading' || coverage.kind === 'loading') && loading}
+          {sources.kind === 'error' && <Unavailable what="Sources" message={sources.message} />}
+          {graph.kind === 'error' && sources.kind !== 'error' && <Unavailable what="Graph" message={graph.message} />}
+          {coverage.kind === 'error' && sources.kind !== 'error' && <Unavailable what="Coverage" message={coverage.message} />}
+          {sources.kind === 'ok' && graph.kind === 'ok' && coverage.kind === 'ok' && (
+            <SourceGraph sources={sources.data} links={graph.data.links} found={found.kind === 'ok' ? found.data : noFinds}
+              lines={lines} markets={markets} onShow={setTab} />
+          )}
+        </TabsContent>
+
+        <TabsContent value="files">
+          {sources.kind === 'loading' && loading}
+          {sources.kind === 'error' && <Unavailable what="Sources" message={sources.message} />}
+          {sources.kind === 'ok' && <FilesTab files={files} lines={lines} onStored={load} />}
+        </TabsContent>
+
+        <TabsContent value="websites">
+          {sources.kind === 'loading' && loading}
+          {sources.kind === 'error' && <Unavailable what="Sources" message={sources.message} />}
+          {sources.kind === 'ok' && <WebsitesTab websites={websites} found={found} lines={lines} markets={markets} onChanged={load} />}
+        </TabsContent>
+
+        <TabsContent value="coverage">
+          {coverage.kind === 'loading' && loading}
+          {coverage.kind === 'error' && <Unavailable what="Coverage" message={coverage.message} />}
+          {coverage.kind === 'ok' && <CoverageTab coverage={coverage.data} />}
+        </TabsContent>
+      </Tabs>
     </PageShell>
   )
 }

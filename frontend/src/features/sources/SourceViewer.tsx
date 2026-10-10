@@ -74,7 +74,14 @@ function Panel({ sourceRef, onClose }: { sourceRef: SourceRef; onClose: () => vo
         )}
       </div>
 
-      {ctx?.document && (
+      {ctx?.document?.url && (
+        <footer className="border-t border-border p-4">
+          <a href={ctx.document.url} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-2 text-sm font-medium text-primary underline-offset-4 hover:underline">
+            <ExternalLink className="size-4" aria-hidden /> Open website <span className="sr-only">(opens in a new tab)</span>
+          </a>
+        </footer>
+      )}
+      {ctx?.document && !ctx.document.url && (
         <footer className="flex flex-col gap-2 border-t border-border p-4">
           <Button variant="outline" disabled={!ctx.document.openable}
             onClick={() => openOriginal(ctx).catch((e) => setOpenError(e instanceof ApiError ? e.message : 'Could not open the file.'))}>

@@ -106,7 +106,7 @@ export function Sidebar({ page, onNavigate, onDone }: Props) {
       <div className="flex items-center gap-1 border-t border-sidebar-border pt-3">
         <DropdownMenu>
           <DropdownMenuTrigger className="flex min-w-0 flex-1 items-center gap-2.5 rounded-xl p-1.5 text-left outline-none hover:bg-sidebar-accent/60 focus-visible:ring-2 focus-visible:ring-ring">
-            <Avatar className="size-8"><AvatarFallback className="bg-primary/10 text-xs font-medium text-primary">{initials(user?.display_name ?? '')}</AvatarFallback></Avatar>
+            <Avatar className="size-8"><AvatarFallback className="bg-primary/10 text-xs font-medium text-accent-foreground">{initials(user?.display_name ?? '')}</AvatarFallback></Avatar>
             <span className="min-w-0 leading-tight">
               <span className="block truncate text-sm font-medium">{user?.display_name ?? 'Account'}</span>
               <span className="block truncate text-xs text-muted-foreground">{user?.email}</span>

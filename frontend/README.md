@@ -25,7 +25,7 @@ npm test         # Playwright, desktop and mobile, with axe checks; every API ca
   The thread shows each decision with its reason, each agent's cited result and the final result. Nothing to approve.
   It refreshes while a run is in progress; one request runs at a time.
 - **Evidence**: search customer feedback and catalog text with filters; every hit shows its citation. Exact counts by group.
-- **Sources**: coverage per vehicle line and market with gaps marked, and the loaded source files.
+- **Sources**: a graph of what each source covers, the loaded files with upload, websites (added by address or read by agents), and coverage per vehicle line and market with gaps marked.
   A PDF or Excel file can be added here; the backend stores it and reports what it read.
 
 ## Structure

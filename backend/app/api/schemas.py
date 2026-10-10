@@ -33,6 +33,7 @@ class DocumentOut(BaseModel):
     source_id: str
     type: str
     openable: bool
+    url: str | None = None      # set for a stored web page: the viewer links to it
 
 
 class EvidenceContextOut(BaseModel):
@@ -188,15 +189,52 @@ class SourceOut(BaseModel):
     market: str | None
     title: str | None
     retrieved_at: datetime
+    trust_tier: str | None = None
     counts: SourceCounts
 
 
 class UploadOut(BaseModel):
     file: str
-    kind: Literal["pdf", "feedback", "sales", "studies"]
+    kind: Literal["pdf", "feedback", "sales", "studies", "web"]
     replaced: bool
     counts: SourceCounts
     notes: list[str]
+
+
+class WebSourceIn(BaseModel):
+    url: str = Field(min_length=8, max_length=2000)
+    line: Line | None = None
+    market: Market | None = None
+    trust_tier: Literal["oem", "trade_press", "forum_social"] | None = None
+    replace: bool = False
+
+
+class SourceLink(BaseModel):
+    source_id: str
+    line: str | None
+    market: str | None
+    rows: int
+
+
+class SourceGraphOut(BaseModel):
+    links: list[SourceLink]
+
+
+class WebFindOut(BaseModel):
+    url: str
+    domain: str
+    title: str | None
+    trust_tier: str | None
+    findings: int
+    skipped_reason: str | None
+    agent: str
+    retrieved_at: datetime | None
+    vehicle_line: str | None
+    market: str | None
+    request: str | None
+    conversation_id: str | None
+    conversation: str | None
+    source_id: str | None
 
 
 class CoverageCell(BaseModel):

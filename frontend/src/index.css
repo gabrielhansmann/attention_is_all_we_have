@@ -55,6 +55,8 @@
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
     --color-canvas-tint: var(--canvas-tint);
+    --color-source-file: var(--source-file);
+    --color-source-web: var(--source-web);
     --color-success: var(--success);
     --color-warning: var(--warning);
     --color-primary-active: var(--primary-active);
@@ -94,6 +96,9 @@
     --surface-dark: #1a2129;
     --on-dark: #ffffff;
     --on-dark-soft: #bbbbbb;
+    /* Graph view: files and websites. Checked with the dataviz palette validator on white (all pairs). */
+    --source-file: #1c69d4;
+    --source-web: #d95926;
     --chart-1: #1c69d4;
     --chart-2: #6b6b6b;
     --chart-3: #9a9a9a;

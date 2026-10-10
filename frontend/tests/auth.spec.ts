@@ -12,8 +12,10 @@ async function mockBackend(page: Page, opts: { sessionExpired?: () => boolean } 
   await page.route('**/api/evidence/coverage', guarded({ total_feedback: 1, options_by_line: { G60: 1 }, cells: [{ line: 'G60', market: 'US', feedback: 500, study_cells: 3, sales_2025: 10 }] }))
   await page.route('**/api/sources', (r) => {
     log.sourcesAuth.push(r.request().headers().authorization)
-    return guarded([{ id: 'a', file: 'G60_feedback_hackathon.xlsx', type: 'internal_xlsx', family: 'Customer feedback', vehicle_line: 'G60', market: null, title: null, retrieved_at: NOW, counts: { feedback: 5005, pdf_chunks: 0, options: 0, study_cells: 0, sales_rows: 0 } }])(r)
+    return guarded([{ id: 'a', file: 'G60_feedback_hackathon.xlsx', type: 'internal_xlsx', family: 'Customer feedback', vehicle_line: 'G60', market: null, title: null, retrieved_at: NOW, trust_tier: null, counts: { feedback: 5005, pdf_chunks: 0, options: 0, study_cells: 0, sales_rows: 0 } }])(r)
   })
+  await page.route('**/api/sources/graph', guarded({ links: [{ source_id: 'a', line: 'G60', market: 'US', rows: 5005 }] }))
+  await page.route('**/api/sources/web-research', guarded([]))
   await page.route('**/api/auth/login', (r) => {
     const body = r.request().postDataJSON()
     log.logins.push(body)
@@ -42,7 +44,7 @@ test('nothing is shown before signing in, and the token is sent afterwards', asy
   await expect(page.getByLabel('Password', { exact: true })).toHaveValue('wrong password')   // kept so it can be fixed
 
   await signIn(page)
-  await expect(page.getByRole('table', { name: 'Source files loaded into the evidence store' })).toBeVisible()
+  await expect(page.getByTestId('source-graph')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible()
   expect(log.logins.at(-1)).toEqual({ email: 'Pat.Manager@example.com', password: PASSWORD })
   expect(log.sourcesAuth.at(-1)).toBe(`Bearer ${TOKEN}`)
@@ -57,7 +59,7 @@ test('a reload keeps the session, and signing out revokes it', async ({ page }) 
   await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible()
 
   await page.reload()
-  await expect(page.getByRole('table', { name: 'Source files loaded into the evidence store' })).toBeVisible()   // no second sign-in
+  await expect(page.getByTestId('source-graph')).toBeVisible()   // no second sign-in
   expect(log.meCalls).toBeGreaterThan(0)
 
   await page.getByRole('button', { name: 'Sign out', exact: true }).click()
@@ -71,7 +73,7 @@ test('a session that expires while the page is open sends the user back to sign 
   await mockBackend(page, { sessionExpired: () => expired })
   await page.goto('/#sources')
   await signIn(page)
-  await expect(page.getByRole('table', { name: 'Source files loaded into the evidence store' })).toBeVisible()
+  await expect(page.getByTestId('source-graph')).toBeVisible()
   expired = true
   await page.getByRole('link', { name: 'Research', exact: true }).click()
   await page.getByRole('link', { name: 'Sources', exact: true }).click()          // remount: requests now return 401

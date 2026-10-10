@@ -1,6 +1,6 @@
 # Repository structure: frontend and backend
 
-> Status: `building` · Last updated: 2026-10-14 (file upload endpoint; see [decision 0021](../decisions/0021-file-upload-reuses-the-loaders.md))
+> Status: `building` · Last updated: 2026-10-14 (website sources and the tabbed Sources view; see [decision 0022](../decisions/0022-websites-as-sources-and-tabbed-sources-view.md))
 
 ```mermaid
 flowchart LR
@@ -35,7 +35,7 @@ backend/
 frontend/                 Gabriel's PM workspace (npm, Vite + React + TypeScript), see frontend/README.md
   src/App.tsx                shell: sign-in gate, top bar, hash navigation between the three views
   src/features/research/     live research: conversations and the orchestrator's decisions, agent results and final result, read-only (calls /api)
-  src/features/library/      live sources view: coverage matrix, loaded sources, file upload (calls /api)
+  src/features/library/      live sources view in tabs: source graph, files and upload, websites, coverage matrix (calls /api)
   src/features/evidence/     live evidence search with exact counts (calls /api)
   src/components/ui/         shadcn/ui components used by the live views, restyled with BMW tokens
   src/lib/api.ts             the only place the frontend talks to the backend; src/types/api.ts mirrors the schemas
@@ -77,6 +77,10 @@ Makefile  .env.example    common tasks and the environment template (one .env at
 | `GET /api/evidence/{kind}/{id}` | the citation for one stored row |
 | `GET /api/sources` | every loaded source file with what was extracted from it (comments, passages, options, study cells, sales rows) |
 | `POST /api/sources?filename=&line=&replace=` | upload one PDF or Excel file as the raw request body; it is stored by the loaders in `app/ingest` and the answer reports what was stored and skipped ([decision 0021](../decisions/0021-file-upload-reuses-the-loaders.md)) |
+| `POST /api/sources/web` | fetch one public web page (`url`, optional `line`, `market`, `trust_tier`, `replace`) and store its text as cited passages ([decision 0022](../decisions/0022-websites-as-sources-and-tabbed-sources-view.md)) |
+| `DELETE /api/sources/{id}` | remove a stored website and its passages; files are refused |
+| `GET /api/sources/graph` | rows each source holds per vehicle line and market, for the graph view |
+| `GET /api/sources/web-research` | websites the web agents read during runs, from the stored step outputs |
 | `GET /api/evidence/coverage` | comments, study cells and 2025 sales per vehicle line and market, so gaps are visible |
 | `GET /api/agents` | the agent catalog in pipeline order and which agents exist yet |
 | `GET, POST /api/conversations` | list, or create (optionally with a first request) |

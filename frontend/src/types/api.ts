@@ -143,15 +143,56 @@ export interface SourceInfo {
   market: string | null
   title: string | null
   retrieved_at: string
+  trust_tier: TrustTier | null
   counts: { feedback: number; pdf_chunks: number; options: number; study_cells: number; sales_rows: number }
 }
 
+export type TrustTier = 'oem' | 'trade_press' | 'forum_social'
+
 export interface UploadResult {
   file: string
-  kind: 'pdf' | 'feedback' | 'sales' | 'studies'
+  kind: 'pdf' | 'feedback' | 'sales' | 'studies' | 'web'
   replaced: boolean
   counts: SourceInfo['counts']
   notes: string[]
+}
+
+export interface WebSourceRequest {
+  url: string
+  line?: string
+  market?: string
+  trust_tier?: TrustTier
+  replace?: boolean
+}
+
+/** Rows one source holds for one vehicle line and market; null means not tied to a line or market. */
+export interface SourceLink {
+  source_id: string
+  line: string | null
+  market: string | null
+  rows: number
+}
+
+export interface SourceGraph {
+  links: SourceLink[]
+}
+
+/** A website a web agent read during a run. `source_id` is set once the page is stored as a source. */
+export interface WebFind {
+  url: string
+  domain: string
+  title: string | null
+  trust_tier: TrustTier | null
+  findings: number
+  skipped_reason: string | null
+  agent: string
+  retrieved_at: string | null
+  vehicle_line: string | null
+  market: string | null
+  request: string | null
+  conversation_id: string | null
+  conversation: string | null
+  source_id: string | null
 }
 
 export interface CoverageCell {
@@ -202,5 +243,5 @@ export interface EvidenceContext {
   passages: EvidencePassage[]
   vehicle_line: string | null
   market_code: string | null
-  document: { source_id: string; type: string; openable: boolean } | null
+  document: { source_id: string; type: string; openable: boolean; url?: string | null } | null
 }
