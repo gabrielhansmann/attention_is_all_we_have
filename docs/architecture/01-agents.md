@@ -1,6 +1,6 @@
 # Agents
 
-> Status: `draft` · Last updated: 2026-10-10
+> Status: `draft` · Last updated: 2026-10-10 (orchestrator plans agents)
 
 Every agent reads some slice of evidence and produces either new evidence (`Finding`s) or a
 synthesis of existing evidence (`Cluster`, `Requirement`, `Score`, dossier). None of them change a
@@ -53,6 +53,15 @@ next doc.
 
 ## Orchestrator
 
-Not an agent that produces findings — the thing that holds the `PipelineRun`/`Step` state machine
-(see next doc), decides which steps are unlocked, and routes a PM's "run this agent" click to the
-right agent with the right scope and the right accumulated context from prior accepted steps.
+Not an agent that produces findings. It does three things:
+
+1. **Plans.** Reads the PM's chat request and chooses which agents are needed, with a one-line
+   reason each. The plan is shown in the chat and the PM can edit it.
+2. **Sequences.** Holds the `PipelineRun`/`Step` state machine (see next doc) and starts the next
+   planned agent when the PM accepts the current one, passing along the accepted output as context.
+3. **Adapts.** May propose adding or dropping agents as results come in; the PM can veto, and a
+   step already accepted is never silently re-run.
+
+Not every request uses every agent. See
+[`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and-human-in-the-loop.md) and
+[decision 0005](../decisions/0005-chat-entry-and-orchestrator-planned-steps.md).

@@ -1,9 +1,10 @@
 # Audit trail
 
-> Status: `draft` · Last updated: 2026-10-10
+> Status: `draft` · Last updated: 2026-10-10 (plan events)
 
-One append-only `AuditEvent` log underlies everything: every `Step` launch/accept/edit/retry/reject
-inside a run, and every requirement-level approve/edit/reject/challenge afterward. Nothing updates
+One append-only `AuditEvent` log underlies everything: every orchestrator plan and plan change, every `Step` start/accept/edit/retry/reject
+inside a run (a step "starts" automatically when the previous one is accepted, so the start event
+records which acceptance triggered it), and every requirement-level approve/edit/reject/challenge afterward. Nothing updates
 a record in place without also writing one of these.
 
 ## Schema

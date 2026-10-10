@@ -1,6 +1,6 @@
 # Data model
 
-> Status: `draft` · Last updated: 2026-10-10
+> Status: `draft` · Last updated: 2026-10-10 (raw Excel tables and PDF citation columns added)
 
 Everything is traceable because everything points backward. A PM looking at a requirement can walk
 back to the exact cell or paragraph that produced it; a PM looking at the audit log can tell who or
@@ -80,9 +80,47 @@ Introduced in [`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and
 **PipelineRun:** `id, trigger (scheduled | pm_query), vehicle_line, market, query_text (nullable),
 status (in_progress | completed | aborted), created_by, created_at`
 
-**Step:** `id, run_id, agent_name, stage, depends_on_step_ids[], status (queued | awaiting_launch |
-running | awaiting_review | accepted | rejected), human_readable_summary, structured_output_refs[],
+**Step:** `id, run_id, agent_name, stage, depends_on_step_ids[], status (planned | running |
+awaiting_review | accepted | rejected), plan_reason, planned_by (orchestrator | pm), human_readable_summary, structured_output_refs[],
 launched_by, launched_at, resolved_by, resolved_at, pm_note`
 
 Every launch, accept, edit, retry, and reject on a `Step` is also an `AuditEvent` — the run itself
 is fully reconstructable from the audit log alone.
+
+## As implemented (Supabase, `supabase/migrations/20261010_init_schema.sql`)
+
+Differences and additions relative to the sketch above:
+
+- **Extra tables:** `chunk` (Tier 2 heading-aware text chunks with their own locator, `page`,
+  `chunk_index` and embedding), `option` (Tier 1 deterministic option-list rows, **empty so far**),
+  raw-data tables `feedback_raw`, `sales_volume`, `study_response` (see
+  [`03-ingestion.md`](03-ingestion.md#as-implemented-decision-0006)), and join tables `cluster_finding`,
+  `requirement_finding`, `requirement_cluster` in place of the `member_finding_ids[]` /
+  `linked_*_ids[]` arrays.
+- **Embeddings:** `finding.embedding`, `chunk.embedding` and `feedback_raw.embedding`, `vector(1536)`, HNSW cosine indexes.
+- **Enum additions:** `finding.signal_type` also allows `business_signal` and
+  `strategic_continuity`; `evidence_level` also allows `Unverified`.
+- **Extra columns:** `requirement.code` (human id such as `R-2031`, next to the UUID key),
+  `finding.out_of_scope_reason` (set when routed to the regulatory/pricing bin),
+  `source.trust_tier`, `finding.vehicle_line`.
+- **Audit log is append-only in the database**, not just by convention: triggers block update,
+  delete, and truncate on `audit_event`.
+- **Search functions:** `match_chunks()` (PDF text) and `match_feedback()` (customer comments),
+  both cosine distance over the HNSW indexes.
+- **Row counts today:** `chunk` 277, `feedback_raw` 13,771, `sales_volume` 36, `study_response`
+  1,627. `finding`, `cluster`, `requirement`, `score` are still empty.
+- **Docs mirror:** `design_decisions` and `architecture_docs` hold a copy of these docs after each
+  push (see `CLAUDE.md`). Git stays the source of truth.
+- **Access:** RLS enabled on all tables, no policies yet (backend-only access).
+
+## Conversation & Message (chat entry point, not yet in the database)
+
+Added by [decision 0005](../decisions/0005-chat-entry-and-orchestrator-planned-steps.md).
+
+**Conversation:** `id, title, created_by, vehicle_line, market, created_at`
+
+**Message:** `id, conversation_id, role (pm | orchestrator | agent | system), kind (request | plan |
+step_card | pushback | final_result), step_id (nullable), run_id (nullable), content, created_at`
+
+`PipelineRun` gains `conversation_id`. The Supabase tables currently still have the old `step.status`
+values (`queued`, `awaiting_launch`) and no chat tables; a migration is pending.
