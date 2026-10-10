@@ -54,24 +54,21 @@
     --radius-2xl: calc(var(--radius) * 1.8);
     --radius-3xl: calc(var(--radius) * 2.2);
     --radius-4xl: calc(var(--radius) * 2.6);
+    --color-canvas-tint: var(--canvas-tint);
     --color-success: var(--success);
     --color-warning: var(--warning);
     --color-primary-active: var(--primary-active);
     --color-surface-dark: var(--surface-dark);
     --color-on-dark: var(--on-dark);
     --color-on-dark-soft: var(--on-dark-soft);
-    /* BMW: no drop shadows anywhere */
-    --shadow-2xs: none;
-    --shadow-xs: none;
-    --shadow-sm: none;
-    --shadow-md: none;
-    --shadow-lg: none;
-    --shadow-xl: none;
-    --shadow-2xl: none;
+    --shadow-xs: 0 1px 2px rgb(16 24 40 / 0.05);
+    --shadow-sm: 0 1px 3px rgb(16 24 40 / 0.07), 0 1px 2px rgb(16 24 40 / 0.04);
+    --shadow-md: 0 8px 24px -6px rgb(16 24 40 / 0.12), 0 2px 6px rgb(16 24 40 / 0.05);
 }
 
 :root {
     --background: #ffffff;
+    --canvas-tint: #f6f7f9;
     --foreground: #262626;
     --card: #ffffff;
     --card-foreground: #262626;
@@ -84,15 +81,15 @@
     --secondary-foreground: #262626;
     /* Named --ui-muted on purpose: styles.css defines --muted as a TEXT colour (#6b6b6b), and its later load
        order made every bg-muted dark grey (contrast 2.83:1). Do not rename this back. */
-    --ui-muted: #f7f7f7;
+    --ui-muted: #f3f4f6;
     --muted-foreground: #6b6b6b;
-    --accent: #f7f7f7;
-    --accent-foreground: #262626;
+    --accent: #eef3fb;
+    --accent-foreground: #0d4a9e;
     --destructive: #dc2626;
     --success: #22c55e;
     --warning: #f59e0b;
-    --border: #e6e6e6;
-    --input: #cccccc;
+    --border: #e8eaee;
+    --input: #d9dce2;
     --ring: #1c69d4;
     --surface-dark: #1a2129;
     --on-dark: #ffffff;
@@ -102,14 +99,14 @@
     --chart-3: #9a9a9a;
     --chart-4: #cccccc;
     --chart-5: #1a2129;
-    --radius: 0px;          /* rectangular components by default */
-    --sidebar: #f7f7f7;
+    --radius: 0.75rem;      /* rounded components, see decision 0020 */
+    --sidebar: #f6f7f9;
     --sidebar-foreground: #262626;
     --sidebar-primary: #1c69d4;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #ebebeb;
+    --sidebar-accent: #e9edf4;
     --sidebar-accent-foreground: #262626;
-    --sidebar-border: #e6e6e6;
+    --sidebar-border: #e8eaee;
     --sidebar-ring: #1c69d4;
 }
 
@@ -122,11 +119,17 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-weight: 300;       /* body copy is Light 300; headings and buttons are 700 */
+    font-weight: 400;
     line-height: 1.55;
   }
   h1, h2, h3, h4 {
-    font-weight: 700;
-    letter-spacing: 0;
+    font-weight: 600;
+    letter-spacing: -0.01em;
   }
 }
+
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.rise { animation: rise 0.28s ease-out both; }
+@keyframes dot { 0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
+.typing-dot { animation: dot 1.2s infinite ease-in-out; }
+@media (prefers-reduced-motion: reduce) { .rise, .typing-dot { animation: none; } }
