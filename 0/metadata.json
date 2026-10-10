@@ -1,0 +1,135 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4K10R5FXJSJ2AFP25HTYVPD",
+  "session_id": "ef9057db-0b5d-41c2-9bfa-f981c3ab8cdc",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-10T13:46:19.186613Z",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "save_step_count": 1,
+  "files_touched": [
+    "README.md",
+    "docs/README.md",
+    "docs/architecture/00-overview.md",
+    "docs/architecture/01-agents.md",
+    "docs/architecture/02-orchestration-and-human-in-the-loop.md",
+    "docs/architecture/03-ingestion.md",
+    "docs/architecture/04-data-model.md",
+    "docs/architecture/05-requirement-lifecycle.md",
+    "docs/architecture/06-prioritization.md",
+    "docs/architecture/07-audit-trail.md",
+    "docs/architecture/08-scaling-and-config.md",
+    "docs/architecture/09-tech-stack.md",
+    "docs/decisions/0001-two-tier-pdf-ingestion.md",
+    "docs/decisions/0002-stepwise-agent-approval-chain.md",
+    "docs/decisions/0003-critic-agent-and-agent-split.md",
+    "docs/decisions/README.md"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-sonnet-5",
+  "turn_id": "4e17ba9b80cf",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 30,
+    "cache_creation_tokens": 175120,
+    "cache_read_tokens": 1957538,
+    "output_tokens": 96399,
+    "api_call_count": 15
+  },
+  "skill_events_version": 1,
+  "skill_events": [
+    {
+      "id": "claude-skill-toolu_013emHsqbnWpU6VGmWEY2Ute",
+      "event_type": "tool_invocation",
+      "skill": {
+        "name": "artifact-design"
+      },
+      "source": {
+        "agent": "claude-code",
+        "signal": "skill_tool_use",
+        "confidence": "explicit"
+      },
+      "turn_id": "4e17ba9b80cf",
+      "transcript_anchor": {
+        "unit": "line",
+        "start": 36,
+        "end": 37,
+        "entry_ids": [
+          "3746e046-a9ba-4db1-8493-9f84864fc4ac"
+        ],
+        "tool_use_id": "toolu_013emHsqbnWpU6VGmWEY2Ute"
+      },
+      "native": {
+        "tool_name": "Skill",
+        "tool_use_id": "toolu_013emHsqbnWpU6VGmWEY2Ute"
+      },
+      "collapse": {
+        "target": "tool_pair",
+        "label": "Skill: artifact-design",
+        "default_collapsed": true
+      }
+    },
+    {
+      "id": "claude-skill-toolu_011x5y3V7TbDe8fR8At5JxYz",
+      "event_type": "tool_invocation",
+      "skill": {
+        "name": "artifact-diagramming"
+      },
+      "source": {
+        "agent": "claude-code",
+        "signal": "skill_tool_use",
+        "confidence": "explicit"
+      },
+      "turn_id": "4e17ba9b80cf",
+      "transcript_anchor": {
+        "unit": "line",
+        "start": 40,
+        "end": 41,
+        "entry_ids": [
+          "552f82e3-b6d1-4261-84c0-7d6e1545597f"
+        ],
+        "tool_use_id": "toolu_011x5y3V7TbDe8fR8At5JxYz"
+      },
+      "native": {
+        "tool_name": "Skill",
+        "tool_use_id": "toolu_011x5y3V7TbDe8fR8At5JxYz"
+      },
+      "collapse": {
+        "target": "tool_pair",
+        "label": "Skill: artifact-diagramming",
+        "default_collapsed": true
+      }
+    }
+  ],
+  "session_metrics": {
+    "turn_count": 4
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-10T13:46:18.864122Z",
+    "agent_lines": 732,
+    "agent_removed": 1,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 732,
+    "total_lines_changed": 733,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 732,
+      "agent_lines_removed": 1
+    }
+  ]
+}
