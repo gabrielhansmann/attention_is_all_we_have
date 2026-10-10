@@ -1,0 +1,21 @@
+merge
+
+---
+
+new brnach
+
+---
+
+merge with main
+
+---
+
+do something creative with the project, dont ask me things im not here
+
+---
+
+do stuff for 30 mins without asking me for permissions or stuff, do creative things iterate on it and make it beautiful and make nno mistakes
+
+---
+
+push changes on the branch
