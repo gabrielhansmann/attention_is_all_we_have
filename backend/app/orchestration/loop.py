@@ -49,9 +49,14 @@ NO_AGENT_NOTE = ("I could not tell which agents are needed for that. Ask about a
 
 def _history(conn: psycopg.Connection, run_id: UUID) -> list[Outcome]:
     steps = conn.execute("select * from public.step where run_id = %s order by position", (run_id,)).fetchall()
-    return [Outcome(agent=s["agent_name"], stage=s["stage"], accepted=s["status"] == "accepted",
-                    summary=s["human_readable_summary"] or "",
-                    findings=len((runner._output_of(s) or {}).get("findings") or [])) for s in steps]
+    out = []
+    for s in steps:
+        findings = (runner._output_of(s) or {}).get("findings") or []
+        out.append(Outcome(agent=s["agent_name"], stage=s["stage"], accepted=s["status"] == "accepted",
+                           summary=s["human_readable_summary"] or "", findings=len(findings),
+                           evidence=tuple((str(f["id"]), str(f["text"])) for f in findings
+                                          if isinstance(f, dict) and f.get("id") and f.get("text"))))
+    return out
 
 
 def _begin_step(conn: psycopg.Connection, run: dict, agent: str, reason: str, history: list[Outcome]) -> UUID:
@@ -81,14 +86,29 @@ def _abort(conn: psycopg.Connection, run: dict, text: str) -> None:
     runner._audit(conn, "pipeline_run", run["id"], "orchestrator", "run_aborted", rationale=text)
 
 
-def _finish(conn: psycopg.Connection, run: dict, stop_note: str | None) -> None:
+def _finish(conn: psycopg.Connection, run: dict, stop_note: str | None, answer: str | None = None) -> None:
     steps = service.list_steps(conn, run["id"])
     if not steps:
         _abort(conn, run, NO_AGENT_NOTE)
         return
     if stop_note:
         _note(conn, run, stop_note)
-    runner._complete(conn, run, steps, [])
+    runner._complete(conn, run, steps, [], answer)
+
+
+def _answer(conn: psycopg.Connection, run: dict, orchestrator: Orchestrator, note: str | None) -> str | None:
+    """The orchestrator's own reply to the PM, written from what the agents found. A model failure must never lose
+    the research, so it falls back to None and the thread shows the agents' summaries instead."""
+    ask = getattr(orchestrator, "answer", None)
+    if ask is None:
+        return None
+    scope = Scope("", None if run["vehicle_line"] == "ALL" else run["vehicle_line"],
+                  None if run["market"] == "ALL" else run["market"])
+    try:
+        return ask(run["query_text"] or "", scope, _history(conn, run["id"]), [note] if note else [])
+    except Exception:
+        log.exception("could not write the answer of run %s", run["id"])
+        return None
 
 
 class LoopState(TypedDict, total=False):
@@ -173,7 +193,7 @@ def build_graph(connect: Connect, orchestrator: Orchestrator, runners: dict[str,
                     else:
                         _abort(conn, run, reason)
                 else:
-                    _finish(conn, run, state.get("note"))
+                    _finish(conn, run, state.get("note"), _answer(conn, run, orchestrator, state.get("note")))
                 conn.commit()
         return {"next": "end"}
 

@@ -117,7 +117,7 @@ export function RequirementsPage() {
   return (
     <SourceViewerProvider>
       <PageShell testId="requirements" Icon={ClipboardCheck} title="Requirements"
-        description="Draft requirements from your research, each with a target, acceptance criteria and sources. Approve the ones worth tracking.">
+        description="Decide which drafted requirements are worth tracking.">
         <ProcessStrip current={tab === 'priorities' ? 'priorities' : 'requirements'} counts={{ review }} />
         {state.kind === 'loading' && <div className="flex flex-col gap-4"><Skeleton className="h-56 w-full rounded-2xl" aria-label="Loading requirements" /><Skeleton className="h-56 w-full rounded-2xl" /></div>}
         {state.kind === 'error' && <p role="alert" className="rounded-2xl border border-destructive p-4 text-destructive">{`Requirements unavailable: ${state.message}`}</p>}

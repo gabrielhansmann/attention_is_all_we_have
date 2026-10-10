@@ -1,8 +1,8 @@
 import pytest
 
 from app.orchestration.catalog import CATALOG, get
-from app.orchestration.orchestrator import (DECIDE_SYSTEM, Decision, LLMOrchestrator, OrchestratorError, Outcome,
-                                            RuleOrchestrator, Scope, check_call, decide_prompt, parse_decision, parse_scope)
+from app.orchestration.orchestrator import (ANSWER_SYSTEM, DECIDE_SYSTEM, Decision, LLMOrchestrator, OrchestratorError, Outcome,
+                                            RuleOrchestrator, Scope, answer_prompt, check_call, decide_prompt, parse_answer, parse_decision, parse_scope)
 
 
 def done(agent, accepted=True, summary="s", findings=1):
@@ -114,3 +114,24 @@ def test_llm_failures_are_errors_not_silent_fallbacks():
     with pytest.raises(OrchestratorError) as e:
         LLMOrchestrator(client=Boom(""), model="m").scope("x")
     assert "secret-key" not in str(e.value)
+
+
+def test_the_answer_is_written_by_the_model_from_findings_and_drops_invented_citations():
+    history = [Outcome("Customer Feedback Agent", 1, True, "looked at 24 rows\nFindings: ...", 2,
+                       (("f1", "Menus are too deep."), ("f2", "Voice assistant starts unprompted."))),
+               Outcome("Competitor Agent", 1, False, "Competitor Agent could not finish: no key")]
+    prompt = answer_prompt("What do owners dislike?", Scope("T", "G60", "US"), history, ["stopped early"])
+    assert "[f1] Menus are too deep." in prompt and "FAILED" in prompt and "stopped early" in prompt
+    reply = '{"answer": "Owners mostly dislike deep menus [f1], and the assistant misfires [zzz] [f2]."}'
+    client = FakeClient(reply)
+    text = LLMOrchestrator(client=client, model="m").answer("q", Scope("T", None, None), history, [])
+    assert text == "Owners mostly dislike deep menus [f1], and the assistant misfires [f2]."
+    assert client.calls[0]["messages"][0]["content"] == ANSWER_SYSTEM
+
+
+def test_no_answer_is_written_when_no_agent_succeeded_or_the_reply_is_unusable():
+    failed = [Outcome("Competitor Agent", 1, False, "failed")]
+    assert LLMOrchestrator(client=FakeClient('{"answer": "x"}'), model="m").answer("q", Scope("", None, None), failed, []) is None
+    ok = [Outcome("Customer Feedback Agent", 1, True, "s", 1, (("f1", "t"),))]
+    assert parse_answer({"answer": "ok"}, ok) is None
+    assert RuleOrchestrator().answer("q", Scope("", None, None), ok, []) is None

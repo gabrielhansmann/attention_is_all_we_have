@@ -112,14 +112,16 @@ def _final_text(run: dict, steps: list[dict]) -> str:
     return "\n\n".join(parts)
 
 
-def _complete(conn, run: dict, steps: list[dict], messages: list[dict]) -> None:
+def _complete(conn, run: dict, steps: list[dict], messages: list[dict], answer: str | None = None) -> None:
     conn.execute("update public.pipeline_run set status = 'completed' where id = %s", (run["id"],))
     accepted = [str(s["id"]) for s in steps if s["status"] == "accepted"]
     rejected = [s["agent_name"] for s in steps if s["status"] == "rejected"]
     filed = _register_requirements(conn, run["id"])
     messages.append(service.add_message(
-        conn, run["conversation_id"], "orchestrator", "final_result", _final_text(run, steps), run_id=run["id"],
-        payload={"accepted_step_ids": accepted, "coverage_gaps": rejected, "requirements": filed}))
+        conn, run["conversation_id"], "orchestrator", "final_result", answer or _final_text(run, steps), run_id=run["id"],
+        payload={"accepted_step_ids": accepted, "coverage_gaps": rejected, "requirements": filed,
+                 "dossier": any(s["agent_name"] == DOCUMENTATION_AGENT and s["status"] == "accepted" for s in steps),
+                 "written_by": "orchestrator" if answer else "summaries"}))
     _audit(conn, "pipeline_run", run["id"], "orchestrator", "run_completed",
            after={"accepted_steps": len(accepted), "coverage_gaps": rejected, "requirements": filed})
 

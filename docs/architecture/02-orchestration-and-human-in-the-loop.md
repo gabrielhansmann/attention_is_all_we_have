@@ -1,6 +1,6 @@
 # Orchestration: an orchestrator that decides which agents to call, in a loop
 
-> Status: `building` · Last updated: 2026-10-14 (LangGraph graph with a Postgres checkpointer; see [decisions 0018](../decisions/0018-orchestrator-decides-in-an-agentic-loop.md) and [0019](../decisions/0019-orchestration-loop-runs-on-langgraph.md))
+> Status: `building` · Last updated: 2026-10-11 (the orchestrator writes the final answer, [decision 0023](../decisions/0023-orchestrator-writes-the-final-answer.md); LangGraph graph with a Postgres checkpointer; see [decisions 0018](../decisions/0018-orchestrator-decides-in-an-agentic-loop.md) and [0019](../decisions/0019-orchestration-loop-runs-on-langgraph.md))
 
 This is the central mechanic of the whole system. The PM starts a **chat** with a research request.
 An **orchestrator** works on it alone: it chooses an agent, reads that agent's answer, and decides
@@ -34,7 +34,7 @@ flowchart TD
     C -->|no: reason goes back| D
     C -->|yes| S["Step created, agent runs behind the Critic"]
     S -->|"accepted or failed,<br/>result added to the history"| D
-    D -->|finish| F["Final result compiled from successful steps"]
+    D -->|finish| F["Orchestrator writes the answer to the PM from successful steps"]
 ```
 
 - **The model proposes, code decides.** The orchestrator model is shown the agent catalog, the request, the scope

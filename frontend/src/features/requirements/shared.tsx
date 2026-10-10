@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ReactNode } from 'react'
-import { Check, Flag, RotateCcw, ShieldQuestion, X, Archive, Eye, type LucideIcon } from 'lucide-react'
+import { ArrowRight, Check, Flag, RotateCcw, ShieldQuestion, X, Archive, Eye, type LucideIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -119,25 +119,45 @@ export function DecisionButtons({ req, only, onDecide }: { req: Requirement; onl
   )
 }
 
-/** Where the PM is in BMW's process, with one click to each place. Counts show what is waiting. */
-export function ProcessStrip({ current, counts }: { current: 'research' | 'requirements' | 'priorities' | 'tracking' | 'dossiers'; counts?: { review?: number; tracked?: number; flags?: number } }) {
-  const steps: { id: typeof current; label: string; href: string; badge?: ReactNode }[] = [
+type Step = 'research' | 'requirements' | 'priorities' | 'tracking' | 'dossiers'
+type Counts = { review?: number; tracked?: number; flags?: number; dossiers?: number }
+
+type Guide = { next?: { label: string; href: string }; status: (c: Counts) => string | undefined }
+const GUIDE: Record<Step, Guide> = {
+  research: { next: { label: 'Review', href: '#requirements' }, status: () => undefined },
+  requirements: { next: { label: 'Track', href: '#tracking' }, status: (c) => (c.review ? `${c.review} to review` : 'All reviewed') },
+  priorities: { next: { label: 'Review', href: '#requirements' }, status: (c) => (c.review ? `${c.review} to review` : undefined) },
+  tracking: { next: { label: 'Document', href: '#dossiers' }, status: (c) => (c.flags ? `${c.flags} to review` : 'No changes') },
+  dossiers: { next: { label: 'New research', href: '#research' }, status: (c) => (c.dossiers === undefined ? undefined : `${c.dossiers} dossier${c.dossiers === 1 ? '' : 's'}`) },
+}
+
+/** Where the PM is in BMW's process, with one click to each place, and a plain statement of what this step is for. */
+export function ProcessStrip({ current, counts }: { current: Step; counts?: Counts }) {
+  const steps: { id: Step; label: string; href: string; badge?: ReactNode }[] = [
     { id: 'research', label: 'Research', href: '#research' },
     { id: 'requirements', label: 'Review', href: '#requirements', badge: counts?.review ? counts.review : undefined },
     { id: 'priorities', label: 'Prioritize', href: '#requirements?tab=priorities' },
     { id: 'tracking', label: 'Track', href: '#tracking', badge: counts?.flags ? <Flag className="size-3" aria-label="has flags" /> : undefined },
     { id: 'dossiers', label: 'Document', href: '#dossiers' },
   ]
+  const guide = GUIDE[current]
+  const status = guide.status(counts ?? {})
   return (
-    <nav aria-label="Process" className="flex flex-wrap items-center gap-1 rounded-2xl border border-border bg-card p-1 shadow-xs">
-      {steps.map((s, i) => (
-        <a key={s.id} href={s.href} aria-current={s.id === current ? 'step' : undefined}
-          className={`flex h-9 items-center gap-2 rounded-xl px-3 text-sm focus-visible:outline-2 focus-visible:outline-ring ${s.id === current ? 'bg-accent font-medium text-accent-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
-          <span className="grid size-5 place-items-center rounded-full border border-current text-xs" aria-hidden>{i + 1}</span>
-          {s.label}
-          {s.badge !== undefined && <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground">{s.badge}</span>}
-        </a>
-      ))}
-    </nav>
+    <div className="flex flex-col gap-3">
+      <nav aria-label="Process" className="flex flex-wrap items-center gap-1 rounded-2xl border border-border bg-card p-1 shadow-xs">
+        {steps.map((s, i) => (
+          <a key={s.id} href={s.href} aria-current={s.id === current ? 'step' : undefined}
+            className={`flex h-9 items-center gap-2 rounded-xl px-3 text-sm focus-visible:outline-2 focus-visible:outline-ring ${s.id === current ? 'bg-accent font-medium text-accent-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}>
+            <span className="grid size-5 place-items-center rounded-full border border-current text-xs" aria-hidden>{i + 1}</span>
+            {s.label}
+            {s.badge !== undefined && <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground">{s.badge}</span>}
+          </a>
+        ))}
+      </nav>
+      <div data-testid="step-guide" className="flex flex-wrap items-center gap-2">
+        {status && <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">{status}</span>}
+        {guide.next && <a href={guide.next.href} className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-sm font-medium hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">{guide.next.label} <ArrowRight className="size-4" aria-hidden /></a>}
+      </div>
+    </div>
   )
 }

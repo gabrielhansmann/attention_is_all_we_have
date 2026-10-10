@@ -27,8 +27,8 @@ export function DossiersPage() {
   return (
     <SourceViewerProvider>
       <PageShell testId="dossiers" Icon={FileText} title="Dossiers"
-        description="The written record of each research run: what was found, what was decided and the sources behind it.">
-        <ProcessStrip current="dossiers" />
+        description="One dossier per research run.">
+        <ProcessStrip current="dossiers" counts={state.kind === 'ok' ? { dossiers: list.length } : undefined} />
         {state.kind === 'loading' && <Skeleton className="h-64 w-full rounded-2xl" aria-label="Loading dossiers" />}
         {state.kind === 'error' && <p role="alert" className="rounded-2xl border border-destructive p-4 text-destructive">{`Dossiers unavailable: ${state.message}`}</p>}
         {state.kind === 'ok' && list.length === 0 && (
@@ -51,7 +51,7 @@ export function DossiersPage() {
             </nav>
             <article aria-label="Dossier" className="rounded-2xl border border-border bg-card p-5 shadow-xs">
               <div className="mb-3 flex justify-end"><Button variant="outline" onClick={copy}>{copied ? <Check aria-hidden /> : <Copy aria-hidden />} {copied ? 'Copied' : 'Copy as Markdown'}</Button></div>
-              <Prose text={open.dossier} findings={indexOf(findingsFrom(open.findings))} />
+              <Prose text={open.dossier} findings={indexOf(findingsFrom(open.findings))} collapse={['Accepted steps', 'Audit trail']} />
             </article>
           </div>
         )}
