@@ -1,0 +1,52 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4M044CMVQ4BRTFK2T0W7GJK",
+  "session_id": "01a126d2-8d4f-7750-92d9-6df554c403bf",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-10T22:49:48.697518963Z",
+  "branch": "feat/model-comparison-overviews",
+  "checkpoints_count": 4,
+  "files_touched": [
+    ".gitignore",
+    ".vercelignore",
+    "backend/app/deploy/__init__.py",
+    "backend/app/deploy/build.py",
+    "docs/architecture/09-tech-stack.md",
+    "docs/architecture/12-repo-structure.md",
+    "docs/decisions/0027-git-backed-full-stack-vercel-deployment.md",
+    "docs/decisions/README.md",
+    "docs/validation/model-comparisons-2026-10-11.md",
+    "frontend/README.md",
+    "pyproject.toml",
+    "requirements.txt",
+    "vercel.json"
+  ],
+  "agent": "Codex",
+  "model": "gpt-6.1-sol",
+  "turn_id": "b27963013d57",
+  "checkpoint_transcript_start": 4006,
+  "transcript_lines_at_start": 4006,
+  "compact_transcript_start": 461,
+  "token_usage": {
+    "input_tokens": 40361,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 1608343,
+    "output_tokens": 12721,
+    "api_call_count": 15
+  },
+  "session_metrics": {
+    "turn_count": 10
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-10T22:49:48.377093627Z",
+    "agent_lines": 152,
+    "agent_removed": 20,
+    "human_added": 7275,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 7427,
+    "total_lines_changed": 7657,
+    "agent_percentage": 2.246310565495625,
+    "metric_version": 2
+  }
+}

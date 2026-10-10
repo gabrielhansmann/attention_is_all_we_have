@@ -1,0 +1,38 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4M044CMVQ4BRTFK2T0W7GJK",
+  "strategy": "manual-commit",
+  "branch": "feat/model-comparison-overviews",
+  "checkpoints_count": 4,
+  "files_touched": [
+    ".gitignore",
+    ".vercelignore",
+    "backend/app/deploy/__init__.py",
+    "backend/app/deploy/build.py",
+    "docs/architecture/09-tech-stack.md",
+    "docs/architecture/12-repo-structure.md",
+    "docs/decisions/0027-git-backed-full-stack-vercel-deployment.md",
+    "docs/decisions/README.md",
+    "docs/validation/model-comparisons-2026-10-11.md",
+    "frontend/README.md",
+    "pyproject.toml",
+    "requirements.txt",
+    "vercel.json"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 40361,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 1608343,
+    "output_tokens": 12721,
+    "api_call_count": 15
+  }
+}
