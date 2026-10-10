@@ -1,0 +1,33 @@
+make the powerpoint presentaiton with the pptx mcp
+
+---
+
+download libreoffice
+
+---
+
+delete all deprecated powerpoint slides
+
+---
+
+pull the new changes and run frontend with backend like shown in the docs
+
+---
+
+update the frontend and backend and run it
+
+---
+
+my email is gabrielhansmann@web.de with Name "Gabriel Hansmann"
+
+---
+
+reiterate the whole project and fix all mistakes found. also relook at all docs to update your infromation. take 30 min
+
+---
+
+dont ask for something i have to give permisson for for the next 30 min
+
+---
+
+delete all hardcoded values and only use real data that is coming from the database and the web crawlers,...
