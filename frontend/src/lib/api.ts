@@ -2,6 +2,8 @@ import { getToken, markRequired } from '@/lib/auth'
 import type {
   AuthUser,
   ConversationDetail,
+  DecisionAction,
+  Dossier,
   Conversation,
   Coverage,
   EvidenceContext,
@@ -11,10 +13,15 @@ import type {
   Health,
   LoginResult,
   PostResult,
+  RequirementDetail,
+  RequirementList,
+  RequirementStatus,
   SearchResponse,
   SearchSource,
   SourceInfo,
   StatsResponse,
+  TrackingResult,
+  TrackingState,
 } from '@/types/api'
 
 export class ApiError extends Error {
@@ -90,6 +97,14 @@ export const api = {
     request<ConversationDetail>('POST', '/conversations', { request: requestText }),
   postRequest: (id: string, content: string) =>
     request<PostResult>('POST', `/conversations/${id}/messages`, { content }),
+  requirements: (status?: RequirementStatus, signal?: AbortSignal) =>
+    get<RequirementList>(status ? `/requirements?${query({ status })}` : '/requirements', signal),
+  decide: (id: string, action: DecisionAction, note?: string) =>
+    request<RequirementDetail>('POST', `/requirements/${id}/decision`, { action, note }),
+  requirement: (id: string, signal?: AbortSignal) => get<RequirementDetail>(`/requirements/${id}`, signal),
+  tracking: (signal?: AbortSignal) => get<TrackingState>('/tracking', signal),
+  checkTracking: () => request<TrackingResult>('POST', '/tracking/check', {}),
+  dossiers: (signal?: AbortSignal) => get<Dossier[]>('/dossiers', signal),
 }
 
 /** The original file as a blob: the download route needs the bearer token, so a plain link cannot open it. */

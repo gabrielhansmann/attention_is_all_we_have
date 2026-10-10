@@ -10,6 +10,7 @@ steps read the accepted output from there, so nothing a failed step produced can
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import asdict, replace
 from typing import Any
 from uuid import NAMESPACE_URL, UUID, uuid5
@@ -19,9 +20,11 @@ from psycopg.types.json import Jsonb
 
 from app.agents import critic_agent as critic
 
-from . import service
+from . import register, service
 from .agents import RUNNERS, AgentRunner, StepContext
 from .steps import InvalidTransition, StepAction, StepStatus, next_status
+
+log = logging.getLogger(__name__)
 
 MAX_CRITIC_RETRIES = 1        # each automatic retry re-runs the agent (model and web calls), so keep it small
 DOCUMENTATION_AGENT = "Documentation Agent"
@@ -113,11 +116,23 @@ def _complete(conn, run: dict, steps: list[dict], messages: list[dict]) -> None:
     conn.execute("update public.pipeline_run set status = 'completed' where id = %s", (run["id"],))
     accepted = [str(s["id"]) for s in steps if s["status"] == "accepted"]
     rejected = [s["agent_name"] for s in steps if s["status"] == "rejected"]
+    filed = _register_requirements(conn, run["id"])
     messages.append(service.add_message(
         conn, run["conversation_id"], "orchestrator", "final_result", _final_text(run, steps), run_id=run["id"],
-        payload={"accepted_step_ids": accepted, "coverage_gaps": rejected}))
+        payload={"accepted_step_ids": accepted, "coverage_gaps": rejected, "requirements": filed}))
     _audit(conn, "pipeline_run", run["id"], "orchestrator", "run_completed",
-           after={"accepted_steps": len(accepted), "coverage_gaps": rejected})
+           after={"accepted_steps": len(accepted), "coverage_gaps": rejected, "requirements": filed})
+
+
+def _register_requirements(conn, run_id: UUID) -> int:
+    """File the run's drafted requirements in the register for the PM to review. A failure here must never
+    lose the research result, so it is contained in a savepoint and left in the log."""
+    try:
+        with conn.transaction():
+            return register.sync_run(conn, run_id)
+    except psycopg.Error:
+        log.exception("could not file the requirements of run %s", run_id)
+        return 0
 
 
 # ---------------------------------------------------------------- running an agent

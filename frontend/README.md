@@ -24,6 +24,11 @@ npm test         # Playwright, desktop and mobile, with axe checks; every API ca
   decides whether to call another ([decision 0018](../docs/decisions/0018-orchestrator-decides-in-an-agentic-loop.md)).
   The thread shows each decision with its reason, each agent's cited result and the final result. Nothing to approve.
   It refreshes while a run is in progress; one request runs at a time.
+- **Requirements**: requirements from finished runs, each with target, acceptance criteria and sources. Approve, challenge
+  or reject (a reason is asked for). The Priorities tab re-ranks with weight sliders (a what-if, not saved) and shows
+  customer need against business signal ([decision 0022](../docs/decisions/0022-requirement-register-and-process-views.md)).
+- **Tracking**: approved requirements under watch. "Check for new evidence" flags new, contradicting or old evidence.
+- **Dossiers**: the written record of each run, with citations that open the source.
 - **Evidence**: search customer feedback and catalog text with filters; every hit shows its citation. Exact counts by group.
 - **Sources**: coverage per vehicle line and market with gaps marked, and the loaded source files.
 

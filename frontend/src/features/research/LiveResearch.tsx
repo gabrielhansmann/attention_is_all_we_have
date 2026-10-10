@@ -46,6 +46,11 @@ function Message({ message, findings }: { message: ChatMessage; findings: Map<st
         <div className="min-w-0 flex-1 rounded-2xl border border-primary/30 bg-accent/60 p-4">
           <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-accent-foreground"><CheckCircle2 className="size-4" /> Result</p>
           <Prose text={message.content} findings={findings} />
+          {Number(message.payload.requirements) > 0 && (
+            <a href="#requirements" className="mt-3 inline-flex h-10 items-center rounded-xl bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm focus-visible:outline-2 focus-visible:outline-ring">
+              {`Review ${message.payload.requirements} requirement${Number(message.payload.requirements) === 1 ? '' : 's'}`}
+            </a>
+          )}
         </div>
       </div>
     )

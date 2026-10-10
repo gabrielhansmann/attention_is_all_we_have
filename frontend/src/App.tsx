@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { Menu } from 'lucide-react'
-import { NAV, Sidebar } from '@/components/layout/Sidebar'
+import { NAV, Sidebar, type PageId } from '@/components/layout/Sidebar'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -11,10 +11,17 @@ const LiveResearch = lazy(() => import('@/features/research/LiveResearch').then(
 const EvidencePage = lazy(() => import('@/features/evidence/EvidencePage').then((m) => ({ default: m.EvidencePage })))
 const LiveLibrary = lazy(() => import('@/features/library/LiveLibrary').then((m) => ({ default: m.LiveLibrary })))
 
-const VIEWS = { research: LiveResearch, evidence: EvidencePage, sources: LiveLibrary }
-type PageId = keyof typeof VIEWS
+const RequirementsPage = lazy(() => import('@/features/requirements/RequirementsPage').then((m) => ({ default: m.RequirementsPage })))
+const TrackingPage = lazy(() => import('@/features/requirements/TrackingPage').then((m) => ({ default: m.TrackingPage })))
+const DossiersPage = lazy(() => import('@/features/requirements/DossiersPage').then((m) => ({ default: m.DossiersPage })))
 
-const fromHash = (): PageId => NAV.find((p) => `#${p.id}` === window.location.hash)?.id ?? 'research'
+const VIEWS: Record<PageId, React.ComponentType> = {
+  research: LiveResearch, requirements: RequirementsPage, tracking: TrackingPage, dossiers: DossiersPage,
+  evidence: EvidencePage, sources: LiveLibrary,
+}
+
+// A hash may carry a query (`#requirements?tab=priorities`); only the part before it names the page.
+const fromHash = (): PageId => NAV.find((p) => p.id === window.location.hash.slice(1).split('?')[0])?.id ?? 'research'
 
 function Shell() {
   const [page, setPage] = useState<PageId>(fromHash)

@@ -26,3 +26,4 @@ changes — note the supersession in the new file and update the old one's statu
 | [0019](0019-orchestration-loop-runs-on-langgraph.md) | The orchestration loop runs as a LangGraph graph with a Postgres checkpointer, so runs survive a restart | accepted |
 | [0020](0020-source-viewer-for-citations.md) | Citations open a source viewer: the passage in context and the original file | accepted |
 | [0021](0021-rounded-chat-first-frontend.md) | Chat-first frontend with rounded components and soft elevation | accepted |
+| [0022](0022-requirement-register-and-process-views.md) | Requirement register, PM decisions, tracking checks and the requirements, tracking and dossier views | accepted |
