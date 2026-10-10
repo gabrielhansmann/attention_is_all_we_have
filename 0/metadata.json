@@ -1,0 +1,65 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4K7TVQGXMJBZ5C0NQBH744M",
+  "session_id": "01a12676-d2c1-73b2-bb16-ba150118803d",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-10T15:45:17.690977Z",
+  "branch": "docs/bmw-design-guidelines",
+  "checkpoints_count": 3,
+  "save_step_count": 2,
+  "files_touched": [
+    "AGENTS.md",
+    "design.md",
+    "docs/ui-design-guidelines.md"
+  ],
+  "agent": "Codex",
+  "model": "gpt-6.1-sol",
+  "turn_id": "fe0d45a32422",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 72884,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 630128,
+    "output_tokens": 11941,
+    "api_call_count": 16,
+    "subagent_tokens_complete": true
+  },
+  "session_metrics": {
+    "turn_count": 3
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-10T15:45:17.54318Z",
+    "agent_lines": 669,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 669,
+    "total_lines_changed": 669,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 544,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 669,
+      "agent_lines_removed": 0
+    }
+  ]
+}
