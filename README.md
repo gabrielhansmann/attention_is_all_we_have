@@ -17,12 +17,28 @@ skills/      agent skills (database setup)
 data/        provided BMW files (gitignored)
 ```
 
+## Frontend
+
+The responsive PM workspace lives in [`frontend/`](frontend/README.md). It implements the
+documented overview, editable successor targets, requirement reviews, guided research gates,
+evidence library, and programme reports using the BMW design tokens. The current frontend uses
+clearly labeled illustrative data and browser storage; it does not call the agent backend yet.
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+See the [frontend guide](frontend/README.md) for build, browser tests, and Vercel deployment.
+Live demo: [bmw-product-intelligence.vercel.app](https://bmw-product-intelligence.vercel.app).
+
 ## Setup
 
 1. Put the provided BMW files in `data/` (gitignored) if you want to re-run the loaders. The data is already loaded in Supabase.
 2. `cp .env.example .env` and fill in `OPENAI_API_KEY` and `SUPABASE_DB_URL`
    (see [`skills/database-setup/SKILL.md`](skills/database-setup/SKILL.md)).
-3. `make install` (Python 3.11+, Node 20+, pnpm). PDF loaders also need `pdftotext`/`pdfinfo` (poppler).
+3. `make install` (Python 3.11+, Node 24 LTS, npm). PDF loaders also need `pdftotext`/`pdfinfo` (poppler).
 4. `make check-db` to verify the database connection and the OpenAI key.
 
 ## Run
@@ -35,9 +51,10 @@ make test         # backend tests, no database or OpenAI key needed
 make build        # type-check and build the frontend
 ```
 
-The UI has two screens: **Chat** (the research workspace; the orchestrator is not connected yet) and
-**Evidence** (search the stored feedback and catalog text, with exact counts; every result shows its
-file, location and verbatim quote).
+The UI has five views: **Overview**, **Requirements**, **Research**, **Evidence library**, and
+**Reports**. In local development, Evidence library also offers **Browse backend evidence** to
+search stored feedback/catalog text and exact counts through `/api`. Every live result shows
+its file, location, and verbatim quote. The Research flow remains a guided fixture demo.
 
 ## Load and query data
 

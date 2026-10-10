@@ -1,6 +1,6 @@
 # Orchestration & human-in-the-loop: a chat that plans, then runs one agent at a time
 
-> Status: `draft` · Last updated: 2026-10-10 (chat entry point, orchestrator-planned agents, auto-start after accept — see [decision 0005](../decisions/0005-chat-entry-and-orchestrator-planned-steps.md))
+> Status: `building` · Last updated: 2026-10-10 (demo UI boundary — see [decision 0011](../decisions/0011-local-demo-frontend-and-vercel.md); live orchestration remains proposed)
 
 This is the central mechanic of the whole system. The PM starts a **chat** with a research request.
 An **orchestrator** decides which agents are needed. They run **one at a time**, and each agent's
@@ -150,3 +150,16 @@ citations plus **Accept / Edit / Retry / Reject**; anything else is read-only hi
 at the top shows which steps are planned, running, or done. It's closer to a CI pipeline with
 manual approval gates, driven through a chat, than to a chatbot that answers in one go — the PM is
 operating the system, not just chatting with it.
+
+## Delivered frontend demo
+
+`frontend/` implements a Research view with a question composer, plan strip, cited fixture
+cards, and Accept / Edit / Retry / Reject actions. Only one contribution is reviewable at a
+time. Accept advances to the next; rejection requires an explicit coverage-gap or abort
+decision, including after reload. A draft appears only after the final review.
+
+This UI currently uses a fixed three-step plan and local browser state. Retry stores steering
+against the same illustrative evidence, and Edit records the PM's revised summary. There is
+no live planner, agent invocation, Critic verification, or LangGraph checkpointer behind it.
+The preceding sections describe the intended backend behavior; the
+[frontend guide](../../frontend/README.md) documents the implemented demo.

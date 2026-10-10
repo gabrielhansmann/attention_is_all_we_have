@@ -1,6 +1,6 @@
 # Tech stack
 
-> Status: `draft` · Last updated: 2026-10-10 (web search through the LLM, see decision 0009)
+> Status: `building` · Last updated: 2026-10-10 (local demo frontend and Vercel, see decision 0011)
 
 Kept boring on purpose — a hackathon is not the place to debug infrastructure.
 
@@ -13,6 +13,16 @@ Kept boring on purpose — a hackathon is not the place to debug infrastructure.
 | Excel | openpyxl (+ psycopg for loading) | Loaders in `backend/app/ingest/`; the customer-study cross-tabs need a custom parser |
 | Storage | Supabase (managed Postgres) + pgvector 0.8 | One database for both relational entities (`Finding`, `Requirement`, `AuditEvent`, …) and embeddings — keeps traceability joins simple instead of reconciling two stores. Schema is live: see `supabase/migrations/`. RLS is on for every table with no policies yet, so only the backend (service role / direct connection) can read or write; the frontend goes through the API |
 | Embeddings | OpenAI `text-embedding-3-small` (1536 dims, cosine, HNSW) | Key in `.env` as `OPENAI_API_KEY`. Only `finding.text` and `chunk.content` are embedded; option codes and sales numbers stay exact, un-embedded data. Changing the model means re-embedding and altering the column — see [decision 0004](../decisions/0004-supabase-and-openai-embeddings.md) |
-| API | FastAPI (`backend/app/api`), served by uvicorn | Thin HTTP layer over the knowledge layer and, later, the orchestrator. See [`12-repo-structure.md`](12-repo-structure.md) |
-| Frontend | Vite + React + TypeScript + Tailwind v4 + shadcn/ui, BMW tokens from `design.md` (`frontend/`) | Chat thread with step cards (Accept / Edit / Retry / Reject) and a plan strip, evidence panel with citations, score breakdown, audit timeline |
-| Deploy | Docker-compose / Vercel demo instance; Supabase hosts the database and raw-file storage | Single environment for the demo |
+| API | FastAPI (`backend/app/api`), served by uvicorn | Evidence endpoints are implemented. Authentication and live orchestration remain future work; see [`12-repo-structure.md`](12-repo-structure.md) |
+| Frontend | React + TypeScript + Vite; Radix primitives and variant-based components following the shadcn pattern | Implemented in `frontend/`: scoped overview, targets, portfolio, review gates, evidence, reports, and local decision history. BMW tokens, self-hosted Inter, Phosphor icons; see [decision 0011](../decisions/0011-local-demo-frontend-and-vercel.md) |
+| Frontend persistence | Browser local storage (demo only) | Illustrative fixtures, local edits and previews, JSON/CSV export. No shared or immutable server persistence |
+| Deploy | Static Vercel frontend; Supabase hosts the backend database | Deploy `frontend/` as Vite. Python services are separate and are not deployed with this frontend. Docker-compose remains a possible future backend option |
+
+The deployed PM workspace is a working local demo, not a live agent client. It does not query Supabase,
+perform LLM/web research, parse binary uploads, or schedule weekly reports. Service credentials
+remain backend-only. See the [frontend guide](../../frontend/README.md) for setup and verification.
+
+The backend-connected Evidence browser from the repository restructure is retained in the local
+frontend, reached from Evidence library. Vite proxies its `/api` calls to FastAPI. It can also be
+enabled in another deployment with `VITE_LIVE_EVIDENCE=true` once that origin serves the API.
+The current static Vercel demo has no backend and keeps this option disabled.

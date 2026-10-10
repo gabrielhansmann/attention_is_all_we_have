@@ -15,3 +15,10 @@ __pycache__/
 # Frontend
 node_modules/
 dist/
+
+# Workspace test and deployment artifacts
+frontend/test-results/
+frontend/playwright-report/
+*.tsbuildinfo
+frontend/.vercel/
+!frontend/.vercelignore

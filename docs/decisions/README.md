@@ -15,3 +15,4 @@ changes — note the supersession in the new file and update the old one's statu
 | [0008](0008-knowledge-layer-normalization-and-retrieval.md) | Normalize all evidence to one vocabulary; one retrieval interface that returns citations | accepted |
 | [0009](0009-web-search-through-the-llm.md) | Web search runs through the LLM's built-in search tool for now, not a separate search API | accepted |
 | [0010](0010-frontend-backend-repo-structure.md) | Split the repository into a FastAPI backend and a React frontend | accepted |
+| [0011](0011-local-demo-frontend-and-vercel.md) | Deliver a local demo PM workspace and Vercel hosting alongside the backend Evidence browser | accepted |

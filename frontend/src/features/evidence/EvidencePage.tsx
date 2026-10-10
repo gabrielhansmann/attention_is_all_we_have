@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { HitCard } from '@/components/evidence/HitCard'
 import { FilterSelect } from '@/components/evidence/FilterSelect'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -98,9 +98,9 @@ export function EvidencePage() {
       <form onSubmit={onSearch} className="flex flex-col gap-4 border border-border p-6">
         <div className="grid gap-4 md:grid-cols-[1fr_220px]">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="q">Search</Label>
+            <Label htmlFor="live-q">Search</Label>
             <Input
-              id="q"
+              id="live-q"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="For example: seat ventilation too weak"
@@ -109,7 +109,7 @@ export function EvidencePage() {
             />
           </div>
           <FilterSelect
-            id="source"
+            id="live-source"
             label="Source"
             value={source}
             options={SOURCES}
@@ -121,19 +121,19 @@ export function EvidencePage() {
           <p role="alert" className="text-sm text-destructive">{`Filters unavailable: ${optionsError}`}</p>
         )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <FilterSelect id="line" label="Vehicle line" value={filters.line}
+          <FilterSelect id="live-line" label="Vehicle line" value={filters.line}
             options={(options?.lines ?? []).map((v) => ({ value: v, label: v }))}
             onChange={(v) => set('line', v as Line | undefined)} />
-          <FilterSelect id="market" label="Market" value={filters.market}
+          <FilterSelect id="live-market" label="Market" value={filters.market}
             options={(options?.markets ?? []).map((m) => ({ value: m.key, label: m.label }))}
             onChange={(v) => set('market', v as Market | undefined)} />
-          <FilterSelect id="domain" label="Domain" value={filters.domain}
+          <FilterSelect id="live-domain" label="Domain" value={filters.domain}
             options={(options?.domains ?? []).map((d) => ({ value: d.key, label: d.label }))}
             onChange={(v) => set('domain', v)} />
-          <FilterSelect id="polarity" label="Polarity" value={filters.polarity}
+          <FilterSelect id="live-polarity" label="Polarity" value={filters.polarity}
             options={(options?.polarities ?? []).map((v) => ({ value: v, label: v }))}
             onChange={(v) => set('polarity', v as Polarity | undefined)} />
-          <FilterSelect id="powertrain" label="Powertrain" value={filters.powertrain}
+          <FilterSelect id="live-powertrain" label="Powertrain" value={filters.powertrain}
             options={(options?.powertrains ?? []).map((v) => ({ value: v, label: v }))}
             onChange={(v) => set('powertrain', v as Powertrain | undefined)} />
         </div>
@@ -143,7 +143,7 @@ export function EvidencePage() {
           </p>
         )}
         <div>
-          <Button type="submit" size="lg" disabled={q.trim().length < 2 || results.kind === 'loading'}>
+          <Button type="submit" disabled={q.trim().length < 2 || results.kind === 'loading'}>
             Search
           </Button>
         </div>
@@ -174,7 +174,7 @@ export function EvidencePage() {
           <p className="text-sm text-muted-foreground">
             Exact number of customer comments under the filters above.
           </p>
-          <FilterSelect id="group" label="Group by" value={groupBy} options={GROUPS}
+          <FilterSelect id="live-group" label="Group by" value={groupBy} options={GROUPS}
             onChange={(v) => setGroupBy((v as GroupBy) ?? 'market_code')} allLabel="Market" />
           {stats.kind === 'loading' && <Skeleton className="h-32 w-full" aria-label="Loading counts" />}
           {stats.kind === 'error' && <p role="alert" className="text-sm text-destructive">{stats.message}</p>}
