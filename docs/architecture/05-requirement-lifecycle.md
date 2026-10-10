@@ -1,6 +1,6 @@
 # Requirement lifecycle & the two-year tracking loop
 
-> Status: `draft` · Last updated: 2026-10-10
+> Status: `draft` · Last updated: 2026-10-10 (chat wording)
 
 This is the *long-horizon* state of a requirement once it has made it out of a
 [run](02-orchestration-and-human-in-the-loop.md) — weeks to months, across the life of the
@@ -36,8 +36,8 @@ stateDiagram-v2
 
 A requirement enters this state machine at `Draft` the moment a
 [`PipelineRun`](02-orchestration-and-human-in-the-loop.md#data-model-additions)'s Documentation
-step is accepted. Everything before that — launching each agent, reviewing its human-readable
-output, retrying or rejecting a step — happens *inside* the run, at a finer grain than this
+step is accepted. Everything before that — the orchestrator's plan, reviewing each agent's
+human-readable output in the chat, retrying or rejecting a step — happens *inside* the run, at a finer grain than this
 diagram shows. Think of this doc as "what happens after the research is done and a requirement
 exists," and [`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and-human-in-the-loop.md)
 as "how the research itself gets approved."

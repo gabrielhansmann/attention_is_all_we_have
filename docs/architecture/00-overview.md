@@ -1,6 +1,6 @@
 # Overview
 
-> Status: `draft` · Last updated: 2026-10-10
+> Status: `draft` · Last updated: 2026-10-10 (chat entry point)
 
 ## Mission
 
@@ -45,9 +45,12 @@ flowchart LR
     DOC -.->|requirements tracking loop,<br/>~quarterly over ~2 yrs| SA
 ```
 
-What makes this more than a batch pipeline is **how** a PM moves work from stage to stage — see
-[`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and-human-in-the-loop.md): nothing
-advances to the next stage without an explicit accept, one agent at a time.
+What makes this more than a batch pipeline is **how** a PM drives it — see
+[`02-orchestration-and-human-in-the-loop.md`](02-orchestration-and-human-in-the-loop.md): the PM
+starts a **chat** with a research request, an **orchestrator** plans which agents are needed, and
+they run one at a time. Each agent's cited answer can be pushed back on or accepted before the
+next agent starts, and the final result appears only after all needed agents are accepted. Not
+every request runs every stage. See [decision 0005](../decisions/0005-chat-entry-and-orchestrator-planned-steps.md).
 
 ## Document map
 
