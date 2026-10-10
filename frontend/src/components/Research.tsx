@@ -1,13 +1,17 @@
 import { ArrowRight, Check, CheckCircle, MagnifyingGlass, PencilSimple, Plus, Sparkle, X } from '@phosphor-icons/react'
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useWorkspace } from '../context'
 import { createResearch, dateLabel, uid } from '../data'
 import type { Requirement, ResearchRun } from '../data'
+import { liveEnabled } from '../lib/live'
 import { Badge, Button, Dialog, Empty } from './ui'
+
+const LiveResearch = lazy(() => import('../features/research/LiveResearch').then(module => ({ default: module.LiveResearch })))
 
 export function Research() {
   const { workspace, line, market, mutate, openSource, openRequirement, notify } = useWorkspace()
   const [query, setQuery] = useState(''), [selected, setSelected] = useState(''), [note, setNote] = useState(''), [error, setError] = useState('')
+  const [live, setLive] = useState(false)
   const [edit, setEdit] = useState<{ index: number; summary: string } | null>(null)
   const [rejection, setRejection] = useState<{ run: string; index: number } | null>(null)
   const runs = workspace.runs.filter(r => r.line === line && r.market === market)
@@ -58,8 +62,14 @@ export function Research() {
   }
   const unresolvedIndex = run?.steps.findIndex((step, index) => step.status === 'rejected' && (!run.steps[index + 1] || run.steps[index + 1].status === 'planned')) ?? -1
   const pendingRejected = run?.status === 'active' && !run.steps.some(s => s.status === 'awaiting_review') && unresolvedIndex >= 0
+  if (live) return <>
+    <div className="page-heading"><div><p className="eyebrow">RESEARCH WORKSPACE</p><h1>Ask. Review. Decide.</h1><p>One question, a visible plan, and your approval at every step.</p></div><Badge tone="blue">Live planner</Badge></div>
+    {liveEnabled && <div className="evidence-mode-controls"><Button variant={live ? 'secondary' : 'primary'} aria-pressed={!live} onClick={() => setLive(false)}>Demo walkthrough</Button><Button variant={live ? 'primary' : 'secondary'} aria-pressed={live} onClick={() => setLive(true)}>Live planner (backend)</Button></div>}
+    <section className="live-research-section"><Suspense fallback={<p role="status">Loading the live planner...</p>}><LiveResearch /></Suspense></section>
+  </>
   return <>
     <div className="page-heading"><div><p className="eyebrow">RESEARCH WORKSPACE</p><h1>Ask. Review. Decide.</h1><p>One question, a visible plan, and your approval at every step.</p></div><Badge tone="blue">Guided demo</Badge></div>
+    {liveEnabled && <div className="evidence-mode-controls"><Button variant={live ? 'secondary' : 'primary'} aria-pressed={!live} onClick={() => setLive(false)}>Demo walkthrough</Button><Button variant={live ? 'primary' : 'secondary'} aria-pressed={live} onClick={() => setLive(true)}>Live planner (backend)</Button></div>}
     <div className="notice"><Sparkle size={20} /><p>This research flow uses illustrative fixtures. It makes no live AI or web calls. Each accepted step starts the next; the final result appears after review.</p></div>
     <form className="research-composer" onSubmit={start}><label htmlFor="research-question">What would you like to explore?</label><div className="composer-row"><input id="research-question" value={query} maxLength={500} onChange={e => { setQuery(e.target.value); setError('') }} placeholder="What should we improve about cabin comfort?" /><Button type="submit" disabled={query.trim().length < 5}>Start research <ArrowRight size={18} /></Button></div><div className="suggested-questions">{['Improve cabin comfort', 'Close the charging gap', 'Simplify climate controls'].map(q => <button type="button" key={q} onClick={() => setQuery(q)}>{q}<Plus size={13} /></button>)}</div></form>
     {error && <p className="field-error" role="alert">{error}</p>}

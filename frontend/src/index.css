@@ -28,7 +28,7 @@
     --color-accent-foreground: var(--accent-foreground);
     --color-accent: var(--accent);
     --color-muted-foreground: var(--muted-foreground);
-    --color-muted: var(--muted);
+    --color-muted: var(--ui-muted);
     --color-secondary-foreground: var(--secondary-foreground);
     --color-secondary: var(--secondary);
     --color-primary-foreground: var(--primary-foreground);
@@ -74,7 +74,9 @@
     --primary-foreground: #ffffff;
     --secondary: #f7f7f7;
     --secondary-foreground: #262626;
-    --muted: #f7f7f7;
+    /* Named --ui-muted on purpose: styles.css defines --muted as a TEXT colour (#6b6b6b), and its later load
+       order made every bg-muted dark grey (contrast 2.83:1). Do not rename this back. */
+    --ui-muted: #f7f7f7;
     --muted-foreground: #6b6b6b;
     --accent: #f7f7f7;
     --accent-foreground: #262626;
