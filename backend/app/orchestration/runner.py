@@ -152,7 +152,7 @@ def _complete(conn, run: dict, steps: list[dict], messages: list[dict]) -> None:
            after={"accepted_steps": len(accepted), "coverage_gaps": rejected})
 
 
-def start_run(conn, run_id: UUID) -> dict:
+def start_run(conn, run_id: UUID, actor: str = "pm") -> dict:
     """The PM confirms the plan: the first agent starts. After this the plan can no longer be edited."""
     run = _locked_run(conn, run_id)
     if run["status"] != "in_progress":
@@ -166,48 +166,48 @@ def start_run(conn, run_id: UUID) -> dict:
 
 # ---------------------------------------------------------------- the PM's four actions
 
-def accept(conn, step_id: UUID, note: str | None = None) -> dict:
+def accept(conn, step_id: UUID, note: str | None = None, actor: str = "pm") -> dict:
     """Accept is the only trigger for the next agent."""
     step, run = _locked_step(conn, step_id)
-    conn.execute("update public.step set status = %s, resolved_by = 'pm', resolved_at = now() where id = %s",
-                 (_transition(step, StepAction.ACCEPT), step_id))
-    _audit(conn, "step", step_id, "pm", "step_accepted", after={"agent": step["agent_name"], "attempt": step["attempt"]},
+    conn.execute("update public.step set status = %s, resolved_by = %s, resolved_at = now() where id = %s",
+                 (_transition(step, StepAction.ACCEPT), actor, step_id))
+    _audit(conn, "step", step_id, actor, "step_accepted", after={"agent": step["agent_name"], "attempt": step["attempt"]},
            rationale=note)
     messages: list[dict] = []
     started = _start_next(conn, run, messages, f"{step['agent_name']} accepted by the PM")
     return _result(conn, run, messages, started)
 
 
-def retry(conn, step_id: UUID, note: str) -> dict:
+def retry(conn, step_id: UUID, note: str, actor: str = "pm") -> dict:
     """Same agent, same step, with the PM's steering note appended to its task."""
     step, run = _locked_step(conn, step_id)
     status = _transition(step, StepAction.RETRY, note)
     note = note.strip()
-    conn.execute("update public.step set status = %s, attempt = attempt + 1, pm_note = %s, launched_by = 'pm', "
-                 "launched_at = now() where id = %s", (status, note, step_id))
+    conn.execute("update public.step set status = %s, attempt = attempt + 1, pm_note = %s, launched_by = %s, "
+                 "launched_at = now() where id = %s", (status, note, actor, step_id))
     message = service.add_message(conn, run["conversation_id"], "pm", "pushback", note, run_id=run["id"],
                                   step_id=step_id, payload={"action": "retry", "attempt": step["attempt"] + 1})
-    _audit(conn, "step", step_id, "pm", "step_retried", before={"attempt": step["attempt"]},
+    _audit(conn, "step", step_id, actor, "step_retried", before={"attempt": step["attempt"]},
            after={"attempt": step["attempt"] + 1}, rationale=note)
     return _result(conn, run, [message], step_id)
 
 
-def reject(conn, step_id: UUID, note: str, proceed: bool) -> dict:
+def reject(conn, step_id: UUID, note: str, proceed: bool, actor: str = "pm") -> dict:
     """Reject, then either go on without this agent (a coverage gap downstream) or abort the run."""
     step, run = _locked_step(conn, step_id)
     note = note.strip()
-    conn.execute("update public.step set status = %s, pm_note = %s, resolved_by = 'pm', resolved_at = now() "
-                 "where id = %s", (_transition(step, StepAction.REJECT), note, step_id))
+    conn.execute("update public.step set status = %s, pm_note = %s, resolved_by = %s, resolved_at = now() "
+                 "where id = %s", (_transition(step, StepAction.REJECT), note, actor, step_id))
     messages = [service.add_message(conn, run["conversation_id"], "pm", "pushback", note, run_id=run["id"],
                                     step_id=step_id, payload={"action": "reject", "proceed": proceed})]
-    _audit(conn, "step", step_id, "pm", "step_rejected", after={"agent": step["agent_name"], "proceed": proceed},
+    _audit(conn, "step", step_id, actor, "step_rejected", after={"agent": step["agent_name"], "proceed": proceed},
            rationale=note)
     if not proceed:
         conn.execute("update public.pipeline_run set status = 'aborted' where id = %s", (run["id"],))
         messages.append(service.add_message(
             conn, run["conversation_id"], "orchestrator", "system_note",
             f"Run aborted after {step['agent_name']} was rejected. No result is shown.", run_id=run["id"]))
-        _audit(conn, "pipeline_run", run["id"], "pm", "run_aborted", rationale=note)
+        _audit(conn, "pipeline_run", run["id"], actor, "run_aborted", rationale=note)
         return _result(conn, run, messages)
     messages.append(service.add_message(
         conn, run["conversation_id"], "orchestrator", "system_note",
@@ -217,7 +217,7 @@ def reject(conn, step_id: UUID, note: str, proceed: bool) -> dict:
     return _result(conn, run, messages, started)
 
 
-def edit(conn, step_id: UUID, summary: str, note: str | None = None) -> dict:
+def edit(conn, step_id: UUID, summary: str, note: str | None = None, actor: str = "pm") -> dict:
     """The PM rewrites the step's summary before accepting. The diff is the audit event."""
     step, run = _locked_step(conn, step_id)
     _transition(step, StepAction.EDIT)
@@ -229,8 +229,8 @@ def edit(conn, step_id: UUID, summary: str, note: str | None = None) -> dict:
                  (summary, Jsonb(stored), step_id))
     message = service.add_message(conn, run["conversation_id"], "pm", "step_card", summary, run_id=run["id"],
                                   step_id=step_id, payload={"agent": step["agent_name"], "attempt": step["attempt"],
-                                                            "edited_by": "pm"})
-    _audit(conn, "step", step_id, "pm", "step_edited", before={"summary": step["human_readable_summary"]},
+                                                            "edited_by": actor})
+    _audit(conn, "step", step_id, actor, "step_edited", before={"summary": step["human_readable_summary"]},
            after={"summary": summary}, rationale=note)
     return _result(conn, run, [message])
 

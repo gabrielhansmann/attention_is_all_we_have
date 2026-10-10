@@ -40,6 +40,7 @@ Live demo: [bmw-product-intelligence.vercel.app](https://bmw-product-intelligenc
    (see [`skills/database-setup/SKILL.md`](skills/database-setup/SKILL.md)).
 3. `make install` (Python 3.11+, Node 24 LTS, npm). PDF loaders also need `pdftotext`/`pdfinfo` (poppler).
 4. `make check-db` to verify the database connection and the OpenAI key.
+5. Create your first user (the API needs sign-in): `cd backend && ../.venv/bin/python -m app.auth.manage create-user --email you@example.com --name "Your Name"`. The password is typed at a hidden prompt.
 
 ## Run
 

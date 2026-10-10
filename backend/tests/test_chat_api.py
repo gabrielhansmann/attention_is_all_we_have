@@ -66,8 +66,13 @@ def test_a_request_becomes_a_stored_plan_of_planned_steps(client, monkeypatch):
     assert [(s["position"], s["agent_name"], s["status"], s["available"]) for s in run["steps"]] == \
         [(1, "Competitor Agent", "planned", False), (2, "Market & Trend Agent", "planned", True)]
     assert run["steps"][0]["plan_reason"] == "because Competitor Agent"
-    audit = client.db.execute("select action, actor from public.audit_event where entity_id = %s", (run["id"],)).fetchall()
-    assert audit == [{"action": "plan_created", "actor": "orchestrator"}]
+    audit = client.db.execute("select action, actor, after from public.audit_event where entity_id = %s", (run["id"],)).fetchall()
+    assert [(a["action"], a["actor"]) for a in audit] == [("plan_created", "orchestrator")]
+    # who asked is recorded, not just that "a PM" did
+    assert audit[0]["after"]["requested_by"] == "tester@example.com"
+    assert client.db.execute("select created_by from public.pipeline_run where id = %s", (run["id"],)).fetchone() == {"created_by": "tester@example.com"}
+    assert client.db.execute("select created_by from public.conversation where id = %s", (body["conversation"]["id"],)).fetchone() == {"created_by": "tester@example.com"}
+    assert body["messages"][0]["payload"] == {"author": "tester@example.com"}
 
 
 def test_scope_is_optional_and_means_all(client):
@@ -142,9 +147,9 @@ def test_the_pm_can_edit_the_plan_before_anything_starts(client):
     assert change["payload"]["removed"] == ["Competitor Agent"] and change["payload"]["added"] == ["Customer Feedback Agent"]
     thread = client.get(f"/api/conversations/{body['conversation']['id']}").json()
     assert [s["agent_name"] for s in thread["runs"][0]["steps"]] == ["Customer Feedback Agent", "Market & Trend Agent"]
-    actions = [a["action"] for a in client.db.execute(
-        "select action from public.audit_event where entity_id = %s order by timestamp, action", (run_id,)).fetchall()]
-    assert sorted(actions) == ["plan_created", "plan_edited"]
+    audit = client.db.execute("select action, actor from public.audit_event where entity_id = %s", (run_id,)).fetchall()
+    assert sorted((a["action"], a["actor"]) for a in audit) == [("plan_created", "orchestrator"), ("plan_edited", "tester@example.com")]
+    assert change["payload"]["author"] == "tester@example.com"
 
 
 def test_plan_edits_are_checked_and_locked_once_an_agent_starts(client):

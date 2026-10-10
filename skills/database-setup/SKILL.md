@@ -129,6 +129,23 @@ do $$ declare t text; begin
 
 Never hand out the service-role key. It bypasses all security. Each teammate uses their own `OPENAI_API_KEY`.
 
+## 6b. Application users (signing in to the API)
+
+Everything under `/api` except `/api/health` and `/api/auth/login` needs a signed-in user. Users are created by an
+administrator on a machine that has `SUPABASE_DB_URL`; there is no sign-up endpoint. Passwords are typed at a hidden
+prompt (at least 12 characters), never passed as arguments:
+
+```
+python -m app.auth.manage create-user --email pat@example.com --name "Pat Manager" [--role pm|admin]
+python -m app.auth.manage set-password --email pat@example.com      # also signs that user out everywhere
+python -m app.auth.manage deactivate --email pat@example.com        # or: activate
+python -m app.auth.manage list-users
+```
+
+Agents must not create users or invent passwords: ask the human to run the command. Five wrong passwords lock an
+account for 15 minutes. A session lasts `AUTH_SESSION_HOURS` (default 12). These users are separate from the database
+roles in section 6.
+
 ## 7. Common errors
 
 | Symptom | Cause and fix |
@@ -142,6 +159,7 @@ Never hand out the service-role key. It bypasses all security. Each teammate use
 | `openai.RateLimitError` / 429 during a loader | Re-run the loader; it replaces the file's rows. Reduce `BATCH` in the loader if it persists |
 | `model_not_found` | The key has no access to the model. Set `OPENAI_CHAT_MODEL` to one it can use (embeddings model is fixed) |
 | `expected 1536 dimensions` | An embedding model other than `text-embedding-3-small` was used |
+| `password authentication failed` then `Connection refused` | The database password was reset, and repeated failed logins can get your IP temporarily blocked by Supabase (Database settings, Network Bans). Update `.env` once, do not retry in a loop |
 | `.env` variable not found by a script | Run from the repo root; each variable on its own line |
 | Loader reports success but tables are empty | Connection was not autocommit (section 5) |
 

@@ -4,11 +4,14 @@ from __future__ import annotations
 import os
 from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager
+from typing import Annotated
 
 import psycopg
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from psycopg.rows import dict_row
 
+from app.auth import service as auth_service
 from app.config import get_settings
 from app.orchestration.agents import RUNNERS, AgentRunner
 from app.orchestration.planner import LLMPlanner, Planner, RulePlanner
@@ -58,3 +61,33 @@ def get_connect() -> Callable[[], AbstractContextManager[psycopg.Connection]]:
 def get_runners() -> dict[str, AgentRunner]:
     """The callable behind each catalog agent. Tests replace it with fakes."""
     return RUNNERS
+
+
+_bearer = HTTPBearer(auto_error=False)
+_UNAUTHENTICATED = dict(status_code=401, detail="not authenticated", headers={"WWW-Authenticate": "Bearer"})
+
+
+def bearer_token(creds: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)]) -> str:
+    """The token from the Authorization header, or 401. Runs before any database access, so a request without a
+    token never opens a connection."""
+    if creds is None or creds.scheme.lower() != "bearer" or not creds.credentials:
+        raise HTTPException(**_UNAUTHENTICATED)
+    return creds.credentials
+
+
+def current_user(token: Annotated[str, Depends(bearer_token)],
+                 conn: Annotated[psycopg.Connection, Depends(get_conn)]) -> dict:
+    """The signed-in user, or 401. Every protected router depends on this. The reason a token is refused
+    (unknown, expired, revoked, deactivated user) is never revealed. The token parameter comes first on purpose:
+    FastAPI resolves dependencies in order, so a missing token fails before the connection is opened."""
+    try:
+        user = auth_service.user_for_token(conn, token)
+        conn.commit()          # persists the throttled last_used_at refresh
+    except psycopg.Error:
+        raise HTTPException(status_code=503, detail="database unavailable")
+    if user is None:
+        raise HTTPException(**_UNAUTHENTICATED)
+    return user
+
+
+User = Annotated[dict, Depends(current_user)]

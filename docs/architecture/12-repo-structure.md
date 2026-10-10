@@ -25,6 +25,7 @@ backend/
   app/
     main.py               FastAPI app (CORS, routers)
     config.py             repo-root .env and data/ paths, settings; no secrets in logs
+    auth/                 password hashing, users and sessions, the admin script (`python -m app.auth.manage`)
     api/                  HTTP layer: health, evidence search / counts / cite / filters, response schemas
     knowledge/            retrieval tools every agent uses; each hit carries a citation
     agents/               LLM-backed agents (Market & Trend today)
@@ -67,6 +68,8 @@ Makefile  .env.example    common tasks and the environment template (one .env at
 
 | Endpoint | Returns |
 |---|---|
+| `POST /api/auth/login` | public: email and password in, a session token out; every failure reads the same, five wrong passwords lock the account for 15 minutes |
+| `GET /api/auth/me`, `POST /api/auth/logout` | who am I; revoke this session |
 | `GET /api/health` | database and OpenAI-key status (never connection details) |
 | `GET /api/evidence/search?q=&source=feedback\|docs&line=&market=&domain=&polarity=&powertrain=&k=` | cited hits, hybrid vector and keyword search |
 | `GET /api/evidence/stats?group_by=&line=&market=...` | exact counts and their total |
@@ -82,7 +85,8 @@ Makefile  .env.example    common tasks and the environment template (one .env at
 | `POST /api/runs/{id}/start` | the PM confirms the plan; the first agent starts in the background |
 | `POST /api/steps/{id}/accept`, `retry`, `reject`, `edit` | the PM's four actions on a step in review; accept starts the next agent |
 
-Bad parameters give 422, unknown rows 404, and an unreachable database 503 with no internals in the
+Everything except `/api/health` and `/api/auth/login` needs `Authorization: Bearer <token>`; without it the answer is a
+uniform 401 and no database connection is opened. Bad parameters give 422, unknown rows 404, and an unreachable database 503 with no internals in the
 message. Interactive docs are served at `/docs`.
 
 ## Not built yet
@@ -90,7 +94,6 @@ message. Interactive docs are served at `/docs`.
 - Starting the plan: accepting the plan, running the first step, and the PM actions on a step card (accept,
   edit, retry, reject). The chat API and the planner exist; the agents behind the steps and the runner do not.
 - The Requirements, Overview and Reports views still show local demo data; they need requirements and findings in the database first.
-- Authentication: the API is open, which is fine for a local demo and must change before it is exposed.
 - A Docker setup and CI.
 
 ## Frontend delivery

@@ -14,7 +14,7 @@ from app.orchestration.agents import AgentRunner
 from app.orchestration.catalog import CATALOG
 from app.orchestration.planner import PlanError, Planner, PlannerError
 
-from .deps import get_conn, get_connect, get_planner, get_runners
+from .deps import User, get_conn, get_connect, get_planner, get_runners
 from .schemas import (AgentOut, ConversationDetail, ConversationOut, CreateConversation, EditPlan, EditStep, PostMessage,
                       PostResult, RejectStep, RetryStep, StepNote, UpdateConversation)
 
@@ -61,11 +61,11 @@ def list_conversations(conn: Conn, status: Literal["active", "archived"] = "acti
 
 
 @router.post("/conversations", response_model=ConversationDetail, status_code=201)
-def create_conversation(body: CreateConversation, conn: Conn, planner: Plan):
+def create_conversation(body: CreateConversation, conn: Conn, planner: Plan, user: User):
     try:
-        conv = service.create_conversation(conn, body.title)
+        conv = service.create_conversation(conn, body.title, user["email"])
         if body.request:
-            service.post_request(conn, conv["id"], body.request, planner)
+            service.post_request(conn, conv["id"], body.request, planner, user["email"])
         conn.commit()
         return _detail(conn, conv["id"])
     except Exception as e:
@@ -91,10 +91,10 @@ def update_conversation(conversation_id: UUID, body: UpdateConversation, conn: C
 
 
 @router.post("/conversations/{conversation_id}/messages", response_model=PostResult, status_code=201)
-def post_message(conversation_id: UUID, body: PostMessage, conn: Conn, planner: Plan):
+def post_message(conversation_id: UUID, body: PostMessage, conn: Conn, planner: Plan, user: User):
     """A PM request: the orchestrator chooses agents and stores the plan (steps stay `planned`)."""
     try:
-        result = service.post_request(conn, conversation_id, body.content.strip(), planner)
+        result = service.post_request(conn, conversation_id, body.content.strip(), planner, user["email"])
         conn.commit()
         return result
     except Exception as e:
@@ -103,10 +103,10 @@ def post_message(conversation_id: UUID, body: PostMessage, conn: Conn, planner: 
 
 
 @router.put("/runs/{run_id}/plan", response_model=PostResult)
-def edit_plan(run_id: UUID, body: EditPlan, conn: Conn):
+def edit_plan(run_id: UUID, body: EditPlan, conn: Conn, user: User):
     """Replace the plan while no agent has started. The PM's edit is checked, never silently completed."""
     try:
-        result = service.edit_plan(conn, run_id, body.agents)
+        result = service.edit_plan(conn, run_id, body.agents, user["email"])
         conn.commit()
         return result
     except Exception as e:
@@ -137,34 +137,35 @@ def _apply(action: Callable[[], dict], conn: psycopg.Connection, background: Bac
 
 
 @router.post("/runs/{run_id}/start", response_model=PostResult)
-def start_run(run_id: UUID, conn: Conn, background: BackgroundTasks, connect: Connect, runners: Runners):
+def start_run(run_id: UUID, conn: Conn, background: BackgroundTasks, connect: Connect, runners: Runners,
+              user: User):
     """The PM confirms the plan and the first agent starts. From here on the plan is locked."""
-    return _apply(lambda: runner.start_run(conn, run_id), conn, background, connect, runners)
+    return _apply(lambda: runner.start_run(conn, run_id, user["email"]), conn, background, connect, runners)
 
 
 @router.post("/steps/{step_id}/accept", response_model=PostResult)
 def accept_step(step_id: UUID, body: StepNote, conn: Conn, background: BackgroundTasks, connect: Connect,
-                runners: Runners):
+                runners: Runners, user: User):
     """Accept the step. This is what starts the next agent, or compiles the final result after the last one."""
-    return _apply(lambda: runner.accept(conn, step_id, body.note), conn, background, connect, runners)
+    return _apply(lambda: runner.accept(conn, step_id, body.note, user["email"]), conn, background, connect, runners)
 
 
 @router.post("/steps/{step_id}/retry", response_model=PostResult)
 def retry_step(step_id: UUID, body: RetryStep, conn: Conn, background: BackgroundTasks, connect: Connect,
-               runners: Runners):
+               runners: Runners, user: User):
     """Re-run the same agent with a steering note."""
-    return _apply(lambda: runner.retry(conn, step_id, body.note), conn, background, connect, runners)
+    return _apply(lambda: runner.retry(conn, step_id, body.note, user["email"]), conn, background, connect, runners)
 
 
 @router.post("/steps/{step_id}/reject", response_model=PostResult)
 def reject_step(step_id: UUID, body: RejectStep, conn: Conn, background: BackgroundTasks, connect: Connect,
-                runners: Runners):
+                runners: Runners, user: User):
     """Reject the step, then go on without this agent or abort the run."""
-    return _apply(lambda: runner.reject(conn, step_id, body.note, body.proceed), conn, background, connect, runners)
+    return _apply(lambda: runner.reject(conn, step_id, body.note, body.proceed, user["email"]), conn, background, connect, runners)
 
 
 @router.post("/steps/{step_id}/edit", response_model=PostResult)
 def edit_step(step_id: UUID, body: EditStep, conn: Conn, background: BackgroundTasks, connect: Connect,
-              runners: Runners):
+              runners: Runners, user: User):
     """Rewrite the step's summary before accepting it. The step stays in review."""
-    return _apply(lambda: runner.edit(conn, step_id, body.summary, body.note), conn, background, connect, runners)
+    return _apply(lambda: runner.edit(conn, step_id, body.summary, body.note, user["email"]), conn, background, connect, runners)

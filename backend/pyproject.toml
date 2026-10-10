@@ -25,3 +25,4 @@ include = ["app*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["real_auth: exercises the real authentication dependency instead of the signed-in test user"]

@@ -28,6 +28,8 @@ class Settings:
     openai_chat_model: str
     embed_model: str
     cors_origins: list[str]
+    session_hours: int = 12
+    production: bool = False
 
 
 def get_settings() -> Settings:
@@ -39,4 +41,6 @@ def get_settings() -> Settings:
         openai_chat_model=os.environ.get("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
         embed_model="text-embedding-3-small",
         cors_origins=[o.strip() for o in origins.split(",") if o.strip()],
+        session_hours=max(1, int(os.environ.get("AUTH_SESSION_HOURS", "12"))),
+        production=os.environ.get("APP_ENV", "").lower() == "production",
     )
