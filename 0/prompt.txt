@@ -1,0 +1,9 @@
+look at idea.md and map out the situation. after that look at the whole repo and .md files to get an overview.
+
+---
+
+include idea.md for the software inside the docs, then pull and push the changes
+
+---
+
+on a new branches, then merge
