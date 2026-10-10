@@ -1,0 +1,67 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4K10R5FXJSJ2AFP25HTYVPD",
+  "session_id": "feeb7540-c7d8-425c-85f4-9a156d07eddb",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-10T13:46:19.291939Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "save_step_count": 1,
+  "files_touched": [
+    "README.md"
+  ],
+  "agent": "Claude Code",
+  "model": "claude-sonnet-5",
+  "turn_id": "24d40255c94f",
+  "checkpoint_transcript_start": 107,
+  "transcript_lines_at_start": 107,
+  "compact_transcript_start": 20,
+  "token_usage": {
+    "input_tokens": 6,
+    "cache_creation_tokens": 900,
+    "cache_read_tokens": 225976,
+    "output_tokens": 484,
+    "api_call_count": 3
+  },
+  "session_metrics": {
+    "turn_count": 2
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-10T13:46:19.280539Z",
+    "agent_lines": 6,
+    "agent_removed": 1,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 6,
+    "total_lines_changed": 7,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 726,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "docs/README.md": 49,
+        "docs/architecture/00-overview.md": 57,
+        "docs/architecture/01-agents.md": 55,
+        "docs/architecture/02-orchestration-and-human-in-the-loop.md": 138,
+        "docs/architecture/03-ingestion.md": 49,
+        "docs/architecture/04-data-model.md": 88,
+        "docs/architecture/05-requirement-lifecycle.md": 51,
+        "docs/architecture/06-prioritization.md": 48,
+        "docs/architecture/07-audit-trail.md": 34,
+        "docs/architecture/08-scaling-and-config.md": 33,
+        "docs/architecture/09-tech-stack.md": 17,
+        "docs/decisions/0001-two-tier-pdf-ingestion.md": 30,
+        "docs/decisions/0002-stepwise-agent-approval-chain.md": 38,
+        "docs/decisions/0003-critic-agent-and-agent-split.md": 29,
+        "docs/decisions/README.md": 10
+      }
+    }
+  ]
+}
