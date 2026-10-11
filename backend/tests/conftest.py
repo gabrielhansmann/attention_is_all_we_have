@@ -18,7 +18,16 @@ def db():
     import psycopg
     from psycopg.rows import dict_row
 
-    conn = psycopg.connect(os.environ["SUPABASE_DB_URL"], row_factory=dict_row, connect_timeout=10)
+    conn = None
+    connection_error = ''
+    try:
+        conn = psycopg.connect(os.environ["SUPABASE_DB_URL"], row_factory=dict_row, connect_timeout=10)
+    except psycopg.Error as error:
+        # Library stack frames can contain the expanded connection string and password.
+        connection_error = type(error).__name__
+    if conn is None:
+        # Fail outside the exception handler so no credential-bearing exception is chained.
+        pytest.fail(f"Database connection unavailable ({connection_error}).", pytrace=False)
 
     class Wrapped:
         def __getattr__(self, name):

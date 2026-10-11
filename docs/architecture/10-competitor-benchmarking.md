@@ -2,7 +2,8 @@
 
 > Status: `building` · Last updated: 2026-10-11
 
-See [decision 0025](../decisions/0025-server-owned-model-comparisons.md). Model overviews are a
+See [decision 0025](../decisions/0025-server-owned-model-comparisons.md) and the collection/performance
+refinement in [decision 0031](../decisions/0031-recoverable-competitor-collection.md). Model overviews are a
 protected backend API feature backed by Supabase. The browser never reads the database directly
 or computes comparison benchmarks. Germany/Europe is the user-selected default market.
 
@@ -40,16 +41,30 @@ HTTP fetch validates public addresses and redirects, honors robots.txt and bound
 bot checks, unavailable robots files, oversized documents and JavaScript-only pages become visible
 coverage gaps. No access restriction is bypassed.
 
+Discovery prefers direct technical PDFs and pressroom specification tables. Collection follows a
+bounded set of actual same-publisher PDF links and preserves HTML table-cell boundaries. A stale
+or readable-but-empty page can trigger a fresh exact-variant technical-source search, including
+from the per-rival recrawl control. Recovery accepts actual search-result URLs, never guessed paths.
+Provider calls and individual targets share a bounded time budget; robots policies are reused only
+within the request and still checked for each path. Failed sources retain their coverage notes.
+
 Internal catalog extraction is deterministic and local: match registered variant names against the
 technical table header, use the corresponding column, preserve the complete row/header and omit
 incomplete or ambiguous cells. System power is distinct from a hybrid's combustion-engine power.
 Fuel/energy intervals stay intervals; seats-up boot capacity is distinct from seats-folded capacity.
 
-Public-source extraction proposes facts from fetched passages. Backend validation requires an actual
-passage ID, a verbatim quote, a scope quote, an exact numeric token in canonical units, the expected
+Public-source extraction selects inclusive original line spans from fetched passages; the server
+copies the source text to form the quote. Backend validation requires an actual passage ID, a
+verbatim quote, a scope quote, an exact numeric token in canonical units, the expected
 powertrain and an explicit WLTP/EPA/CLTC standard where applicable. The source panel exposes the
 complete stored passage so a human can check interpretation and identity. These are extracted claims,
 not independently certified measurements.
+
+PDF table scope must identify the selected variant on the same page. A continuation page can
+instead use an actual model-specific PDF filename containing that exact variant; a generic filename
+or another page's header cannot supply identity. This filename identity is resolved on the server
+even if the extractor selects an incomplete continuation-page header. HTML scope uses the local section or document title.
+An omitted unit or test standard remains a gap even when a human might infer it.
 
 ## Benchmarks and diagrams
 
@@ -92,6 +107,9 @@ with its original timestamps and a failure/coverage note.
 
 These routes require the existing application session. Collection remains inside a bounded request
 suitable for the Vercel function duration; interrupted requests have a research record and can be retried.
+Registry listing batches identities, variants and market choices into four warm queries. Overview
+feedback examples use a partitioned query for three examples per section; the full dataset section
+packet uses five queries, retaining counts, citations and deterministic example order.
 
 ## Model chat
 

@@ -107,7 +107,17 @@ general enquiries or service). Agents state these gaps instead of implying cover
 
 - `finding` rows are not derived yet (that is the first agent's job); `requirement` versioning
   ("versioned sets" in the architecture diagram) is not built.
-- Web research (Competitor and Market/Trend agents) runs through the LLM's search tool (decision 0009); the pages are not fetched.
+- General Competitor and Market/Trend agent research runs through the LLM's search tool (decision
+  0009). Model-overview comparisons additionally fetch permitted public OEM pages/PDFs and store
+  immutable, quote-backed observations (decisions 0025 and 0031).
 
 Verified feature mentions without directional market support appear separately as general web context, with
 short page excerpts and source links. They never color a market or fill its evidence gap.
+
+## Model overview read performance
+
+The knowledge layer batches model inventory, variants and available markets into four warm queries.
+Feedback examples are selected with `row_number()` per section and limited to three cited records;
+counts, study rows, equipment categories and sales complete a five-query dataset section packet.
+The number of feedback sections no longer increases query count. See
+[decision 0031](../decisions/0031-recoverable-competitor-collection.md).
