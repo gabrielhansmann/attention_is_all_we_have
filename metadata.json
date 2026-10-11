@@ -1,0 +1,37 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4N4MWAEE4FQ42DDR2WAG4JG",
+  "strategy": "manual-commit",
+  "branch": "feat/increase-competitor-coverage",
+  "checkpoints_count": 1,
+  "files_touched": [
+    ".env.example",
+    "backend/app/comparisons/catalog.py",
+    "backend/app/comparisons/research.py",
+    "backend/app/knowledge/models.py",
+    "backend/tests/test_competitor_coverage.py",
+    "backend/tests/test_competitor_sources.py",
+    "backend/tests/test_model_comparisons.py",
+    "docs/architecture/08-scaling-and-config.md",
+    "docs/architecture/10-competitor-benchmarking.md",
+    "docs/decisions/0032-complementary-competitor-evidence.md",
+    "docs/decisions/README.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 2953149,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 93995706,
+    "output_tokens": 623382,
+    "api_call_count": 822,
+    "subagent_tokens_complete": true
+  }
+}

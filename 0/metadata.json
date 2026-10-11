@@ -1,0 +1,66 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4N4MWAEE4FQ42DDR2WAG4JG",
+  "session_id": "01a126d2-8d4f-7750-92d9-6df554c403bf",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-11T09:28:06.528293899Z",
+  "branch": "feat/increase-competitor-coverage",
+  "checkpoints_count": 1,
+  "save_step_count": 2,
+  "files_touched": [
+    ".env.example",
+    "backend/app/comparisons/catalog.py",
+    "backend/app/comparisons/research.py",
+    "backend/app/knowledge/models.py",
+    "backend/tests/test_competitor_coverage.py",
+    "backend/tests/test_competitor_sources.py",
+    "backend/tests/test_model_comparisons.py",
+    "docs/architecture/08-scaling-and-config.md",
+    "docs/architecture/10-competitor-benchmarking.md",
+    "docs/decisions/0032-complementary-competitor-evidence.md",
+    "docs/decisions/README.md"
+  ],
+  "agent": "Codex",
+  "model": "gpt-6.1-sol",
+  "turn_id": "b80f0b5fb7de",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 2953149,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 93995706,
+    "output_tokens": 623382,
+    "api_call_count": 822,
+    "subagent_tokens_complete": true
+  },
+  "session_metrics": {
+    "turn_count": 11
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-11T09:28:06.11499226Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 387,
+    "human_modified": 57,
+    "human_removed": 0,
+    "total_committed": 387,
+    "total_lines_changed": 444,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    }
+  ]
+}

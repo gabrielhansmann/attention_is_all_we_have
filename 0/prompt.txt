@@ -1,0 +1,9 @@
+pull main and merge feat/model-comparison-overviews into main. be really careful
+
+---
+
+the comparison api does not find any information to competitor models in the models column. change the comparison api used in models for better competitor web scraping
+
+---
+
+after you improved the performance merge it into main
