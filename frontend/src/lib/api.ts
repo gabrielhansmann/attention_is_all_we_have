@@ -13,6 +13,11 @@ import type {
   GroupBy,
   Health,
   LoginResult,
+  Line,
+  MarketOptionsResponse,
+  MarketAssessmentRequest,
+  MarketAssessmentResponse,
+  MarketWebAssessmentResponse,
   PostResult,
   RequirementDetail,
   RequirementList,
@@ -85,6 +90,12 @@ async function request<T>(method: string, path: string, body?: unknown, signal?:
 const get = <T>(path: string, signal?: AbortSignal) => request<T>('GET', path, undefined, signal)
 
 export const api = {
+  marketAssessment: (body: MarketAssessmentRequest, signal?: AbortSignal) =>
+    request<MarketAssessmentResponse>('POST', '/market-impact/assessment', body, signal),
+  marketWebAssessment: (body: MarketAssessmentRequest, signal?: AbortSignal) =>
+    request<MarketWebAssessmentResponse>('POST', '/market-impact/web-assessment', body, signal),
+  marketOptions: (line: Line, signal?: AbortSignal) =>
+    get<MarketOptionsResponse>(`/market-impact/options?${query({ line })}`, signal),
   health: (signal?: AbortSignal) => get<Health>('/health', signal),
   filters: (signal?: AbortSignal) => get<FilterOptions>('/evidence/filters', signal),
   search: (q: string, source: SearchSource, f: EvidenceFilters, signal?: AbortSignal) =>

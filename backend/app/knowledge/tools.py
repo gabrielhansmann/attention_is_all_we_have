@@ -118,6 +118,52 @@ def search_docs(query: str, *, line: str | None = None, k: int = 8) -> list[Hit]
 
 # ---------------------------------------------------------------- exact lookups
 
+def feature_feedback(terms: list[str], *, line: str, limit_per_market: int = 12) -> list[Hit]:
+    """Local feature-name/synonym matches. No embeddings or external model call.
+
+    Boundary-aware literal patterns avoid partial-word matches and regex injection. Balance the
+    bounded sample across recorded polarities before filling it; it is not a representative survey.
+    """
+    import re
+    if not 1 <= limit_per_market <= 48:
+        raise ValueError("limit_per_market must be from 1 to 48")
+    patterns = []
+    for term in terms[:16]:
+        term = term.strip()
+        if term:
+            patterns.append((r"\m" if term[0].isalnum() else "") + re.escape(term)
+                            + (r"\M" if term[-1].isalnum() else ""))
+    if not patterns:
+        return []
+    rows = _conn().execute(
+        "with unique_matches as ("
+        " select distinct on (f.market_code, regexp_replace(lower(f.comment), '\\s+', ' ', 'g')) f.*, s.uri as file"
+        " from public.feedback_raw f join public.source s on s.id = f.source_id"
+        " where f.vehicle_line = %(line)s and f.market_code in ('US','EU','CN','RoW')"
+        " and f.polarity in ('positive','negative','request') and f.comment ~* any(%(patterns)s::text[])"
+        " order by f.market_code, regexp_replace(lower(f.comment), '\\s+', ' ', 'g'), f.row_no, f.id"
+        "), matches as ("
+        " select f.*, count(*) over (partition by f.market_code, f.polarity) as polarity_count,"
+        " row_number() over (partition by f.market_code, f.polarity order by f.row_no, f.id) as polarity_rank"
+        " from unique_matches f"
+        "), ranked as (select *, row_number() over (partition by market_code order by polarity_rank, polarity, row_no, id) as market_rank from matches)"
+        " select * from ranked where market_rank <= %(limit)s order by market_code, market_rank",
+        {"line": line, "patterns": patterns, "limit": limit_per_market}).fetchall()
+    return [Hit(
+        Citation("feedback", str(r["id"]), r["file"], f"sheet {r['sheet']}, row {r['row_no']} ({r['ext_id']})", _quote(r["comment"])),
+        r["comment"], {key: r[key] for key in ("vehicle_line", "market_code", "country", "powertrain", "polarity", "polarity_count")}) for r in rows]
+
+
+def public_web_text(url: str) -> tuple[str, str]:
+    """Read public page text through the existing DNS/redirect-checked, bounded fetcher.
+
+    No embeddings, database writes, internal evidence, or model call. Unreadable pages raise.
+    """
+    from app.ingest.load_web import extract, fetch_page
+    kind, content = fetch_page(url)
+    title, blocks = extract(kind, content)
+    return title, "\n".join(text for _, text in blocks)
+
 def get_options(*, line: str | None = None, variant: str | None = None, status: str | None = None,
                 text: str | None = None, limit: int = 25) -> list[Hit]:
     """Equipment options with per-variant availability. status: standard|optional.

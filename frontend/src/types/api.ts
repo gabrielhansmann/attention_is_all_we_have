@@ -35,6 +35,48 @@ export interface SearchResponse {
   hits: Hit[]
 }
 
+export interface MarketOptionsResponse {
+  line: Line
+  options: Hit[]
+  truncated: boolean
+}
+
+export interface MarketAssessmentRequest {
+  line: Line
+  option_id?: string
+  feature?: string
+}
+
+export interface MarketSignal {
+  market: Market
+  direction: 'positive' | 'negative' | 'mixed' | 'insufficient'
+  explanation: string
+  total_feedback: number
+  matched_total: number
+  counts: { positive: number; request: number; negative: number }
+  reviewed: number
+  evidence: { citation: Citation; stance: 'supports' | 'risk' | 'mixed' | 'unclear'; reason: string }[]
+}
+
+export interface MarketAssessmentResponse {
+  line: Line
+  feature: string
+  catalog_citation: Citation | null
+  basis: string
+  query_terms: string[]
+  markets: MarketSignal[]
+}
+
+export interface MarketWebEvidence {
+  market: Market | null; stance: 'supports' | 'risk' | 'context'; url: string; title: string; summary: string;
+  retrieved_at: string; source_type: string; scope: string; reason: string;
+}
+export interface MarketWebAssessmentResponse {
+  public_query: string | null
+  context?: MarketWebEvidence[]
+  markets: { market: Market; direction: MarketSignal['direction']; evidence: MarketWebEvidence[] }[]
+}
+
 export interface StatsResponse {
   group_by: string
   total: number

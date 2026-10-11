@@ -1,6 +1,6 @@
 # Knowledge layer: normalized evidence the agents can query
 
-> Status: `stable` for normalization and retrieval, `building` for findings · Last updated: 2026-10-11 (see [decision 0008](../decisions/0008-knowledge-layer-normalization-and-retrieval.md))
+> Status: `stable` for normalization and retrieval, `building` for findings · Last updated: 2026-10-11 (feature-specific and verified public market evidence; see [decision 0030](../decisions/0030-feature-specific-and-public-market-evidence.md))
 
 The knowledge layer sits between ingestion and the agents. Ingestion parses files and keeps
 provenance per row and page ([`03-ingestion.md`](03-ingestion.md)); the knowledge layer makes those
@@ -68,11 +68,28 @@ The `evidence_item` view unions all five raw kinds into one shape (`kind`, `id`,
 | `get_study(line, market, question)` | satisfaction scores and answer shares | `study_response` |
 | `feedback_stats(group_by, filters)` | exact counts | SQL aggregate, not sampled |
 | `feedback_rows(filters)` | the rows behind a count, for evidence links | SQL |
+| `feature_feedback(terms, line, limit_per_market)` | local equipment-topic matches, exact polarity counts, and up to 12 distinct sample citations per market | boundary-aware, escaped literal SQL matching; no embeddings or external model |
 | `cite(kind, id)` | resolve any row to file, locator and quote | `evidence_item` |
 
 Every `Hit` returned carries a `Citation` (file, locator, verbatim quote). Counts and numbers come
 from SQL; only meaning-based matching uses embeddings. Keyword search matters because part numbers,
 model names and option codes embed poorly.
+
+Market impact matches exact feature names and explicit German/English functional synonyms locally. SQL deduplicates
+normalized comment text within each line/market before topic counts and a balanced citation sample are returned.
+The assessment interprets feature-specific passages in the bounded sample; whole-comment polarity is never used as
+an option verdict. Explicit preferences or unmet demand indicate potential benefits, implementation/cost/acceptance
+problems indicate risks, conflicting evidence remains mixed, and ambiguous passages remain unclear. These local
+rules can miss paraphrases and are disclosed as sample interpretations, not population estimates or causal effects.
+
+Public research uses the existing Responses API web-search tool with generic public feature terms and public BMW
+model names. Internal comments, row metadata, IDs, counts and private catalog labels are never included. Candidate
+pages are fetched through `public_web_text`, using the existing public DNS and redirect checks, body limits and
+timeouts. Only short verbatim passages from fetched pages can be cited. Model relevance/stance extraction is an
+interpretation; a market-specific direction requires an actual source geography passage. Shopping sites are
+excluded; manufacturer availability and social anecdotes are context. A country outside US/Europe/China does not
+establish a direction for heterogeneous RoW. Sources that cannot be fetched/verified produce a visible evidence gap.
+Public results are bounded and cached for 15 minutes in process memory. See [decision 0030](../decisions/0030-feature-specific-and-public-market-evidence.md).
 
 ## Coverage you should know about
 
@@ -91,3 +108,6 @@ general enquiries or service). Agents state these gaps instead of implying cover
 - `finding` rows are not derived yet (that is the first agent's job); `requirement` versioning
   ("versioned sets" in the architecture diagram) is not built.
 - Web research (Competitor and Market/Trend agents) runs through the LLM's search tool (decision 0009); the pages are not fetched.
+
+Verified feature mentions without directional market support appear separately as general web context, with
+short page excerpts and source links. They never color a market or fill its evidence gap.

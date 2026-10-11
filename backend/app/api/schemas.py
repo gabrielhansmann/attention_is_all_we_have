@@ -3,8 +3,9 @@ always receives a citation (file, locator, verbatim quote) next to every piece o
 from __future__ import annotations
 
 from typing import Any, Literal
+from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 Line = Literal["F70", "G60", "G68", "G70"]
 Market = Literal["EU", "CN", "US", "RoW"]
@@ -56,6 +57,76 @@ class HitOut(BaseModel):
     score: float | None = None
 
 
+class MarketOptionsOut(BaseModel):
+    line: Line
+    options: list[HitOut]
+    truncated: bool
+
+
+class MarketAssessmentIn(BaseModel):
+    line: Line
+    option_id: UUID | None = None
+    feature: str | None = Field(default=None, min_length=2, max_length=120)
+
+    @model_validator(mode="after")
+    def one_feature(self) -> "MarketAssessmentIn":
+        if self.feature is not None:
+            self.feature = self.feature.strip()
+        if (self.option_id is None) == (self.feature is None) or (self.feature is not None and len(self.feature) < 2):
+            raise ValueError("Supply either an option_id or a custom feature of at least two characters.")
+        return self
+
+
+class MarketSignalEvidenceOut(BaseModel):
+    citation: CitationOut
+    stance: Literal["supports", "risk", "mixed", "unclear"]
+    reason: str
+
+
+class MarketSignalOut(BaseModel):
+    market: Market
+    direction: Literal["positive", "negative", "mixed", "insufficient"]
+    explanation: str
+    total_feedback: int
+    matched_total: int
+    counts: dict[str, int]
+    reviewed: int
+    evidence: list[MarketSignalEvidenceOut]
+
+
+class MarketAssessmentOut(BaseModel):
+    line: Line
+    feature: str
+    catalog_citation: CitationOut | None
+    basis: str
+    query_terms: list[str]
+    markets: list[MarketSignalOut]
+
+
+class MarketWebEvidenceOut(BaseModel):
+    market: Market | None
+    stance: Literal["supports", "risk", "context"]
+    url: str
+    title: str
+    summary: str
+    retrieved_at: str
+    source_type: str
+    scope: str
+    reason: str
+
+
+class MarketWebSignalOut(BaseModel):
+    market: Market
+    direction: Literal["positive", "negative", "mixed", "insufficient"]
+    evidence: list[MarketWebEvidenceOut]
+
+
+class MarketWebOut(BaseModel):
+    public_query: str | None
+    context: list[MarketWebEvidenceOut] = Field(default_factory=list)
+    markets: list[MarketWebSignalOut]
+
+
 class SearchResponse(BaseModel):
     query: str
     source: Literal["feedback", "docs"]
@@ -83,7 +154,6 @@ class HealthResponse(BaseModel):
 # ---------------------------------------------------------------- chat
 
 from datetime import datetime  # noqa: E402
-from uuid import UUID  # noqa: E402
 
 MessageRole = Literal["pm", "orchestrator", "agent", "system"]
 MessageKind = Literal["request", "plan", "plan_change", "step_card", "pushback", "final_result", "system_note"]
