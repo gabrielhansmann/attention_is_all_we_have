@@ -1,9 +1,1 @@
-also check for external (web)! and internal customer feedback about the specified feature to asses the market impact, make no  mistakes
-
----
-
-ok open it
-
----
-
 is everything from the last prompts on main? fix errors, make no mistakes, make the backend work with the frontend very good, use for the market impact stuff the backend aswell, make the information claer and present everything nicely.
