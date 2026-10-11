@@ -184,8 +184,8 @@ def test_rival_without_observations_can_be_crawled_in_app(monkeypatch):
     monkeypatch.setattr(models,'finish_research',lambda *a:calls.append(('finish',a[2])))
     monkeypatch.setattr(models,'get_model',lambda *a:{'name':'Source model'})
     monkeypatch.setattr(models,'store_observations',lambda *a:len(a[-1]))
-    monkeypatch.setattr(crawler,'scrape',lambda c,cl,url:calls.append(('crawl',url)) or [{'id':'stored'}])
-    monkeypatch.setattr(crawler,'extract_observations',lambda *a:([{'metric':'power'}],[]))
+    monkeypatch.setattr(crawler,'scrape',lambda c,cl,url,**kw:calls.append(('crawl',url)) or [{'id':'stored'}])
+    monkeypatch.setattr(crawler,'extract_observations',lambda *a:([{'metric':'power','value':80}],[]))
     class Conn:
         def commit(self):pass
         def rollback(self):pass

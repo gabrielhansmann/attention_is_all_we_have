@@ -35,3 +35,4 @@ changes — note the supersession in the new file and update the old one's statu
 | [0028](0028-market-impact-scenarios.md) | Optional-feature market map with explicit share assumptions, cited catalog equipment and local geometry | accepted |
 | [0029](0029-automatic-market-feedback-assessment.md) | Automatically assess selected equipment using local, cited market feedback signals | accepted |
 | [0030](0030-feature-specific-and-public-market-evidence.md) | Combine deduplicated feature-specific internal signals with verified public web excerpts and preserve trade-offs | accepted |
+| [0031](0031-recoverable-competitor-collection.md) | Recover from stale competitor sources, copy original source lines and batch model overview queries | accepted |

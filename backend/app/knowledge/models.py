@@ -34,14 +34,20 @@ def inventory(conn) -> dict:
 
 def sync_inventory(conn) -> None:
     """Names are taken from source cells, with the ontology label as an explicit fallback."""
-    for row in conn.execute("select o.key,o.label,(select r.model from public.study_response r where r.vehicle_line=o.key order by r.model limit 1) as name from public.ontology o where o.kind='vehicle_line' and o.active").fetchall():
+    rows=conn.execute("""select o.key,o.label,r.model as name,r.id,r.sheet,r.cell_ref,r.file,
+        m.name as registered_name,m.identity as registered_identity
+        from public.ontology o
+        left join lateral (select r.id,r.model,r.sheet,r.cell_ref,s.uri as file
+            from public.study_response r join public.source s on s.id=r.source_id
+            where r.vehicle_line=o.key order by r.model,r.id limit 1) r on true
+        left join public.comparison_model m on m.vehicle_line=o.key and m.origin='dataset'
+        where o.kind='vehicle_line' and o.active""").fetchall()
+    for row in rows:
         name = row['name'] or row['label']
         identity = {'basis': 'Customer-study model field' if row['name'] else 'Dataset ontology label'}
-        source=conn.execute('select r.id,r.model,r.sheet,r.cell_ref,s.uri as file from public.study_response r join public.source s on s.id=r.source_id where r.vehicle_line=%s order by r.model,r.id limit 1',(row['key'],)).fetchone()
-        if source:
-            identity['citation']={'kind':'study','id':str(source['id']),'file':source['file'],'locator':f"sheet {source['sheet']}, cell {source['cell_ref']}",'quote':source['model']}
-        current=conn.execute("select name,identity from public.comparison_model where vehicle_line=%s and origin='dataset'",(row['key'],)).fetchone()
-        if current and current['name']==name and current['identity']==identity:
+        if row['id']:
+            identity['citation']={'kind':'study','id':str(row['id']),'file':row['file'],'locator':f"sheet {row['sheet']}, cell {row['cell_ref']}",'quote':row['name']}
+        if row['registered_name']==name and row['registered_identity']==identity:
             continue
         conn.execute("insert into public.comparison_model(name,origin,vehicle_line,identity) values (%s,'dataset',%s,%s) on conflict (vehicle_line) where origin='dataset' do update set name=excluded.name,identity=excluded.identity", (name,row['key'],Jsonb(identity)))
 
@@ -58,7 +64,18 @@ def get_model(conn, model_id: UUID | str) -> dict:
 
 def list_models(conn) -> list[dict]:
     sync_inventory(conn)
-    return [get_model(conn,r['id']) for r in conn.execute("select id from public.comparison_model where origin <> 'competitor' order by (origin='dataset') desc,name").fetchall()]
+    rows=conn.execute("select * from public.comparison_model where origin <> 'competitor' order by (origin='dataset') desc,name").fetchall()
+    variants=defaultdict(list)
+    for v in conn.execute('select vehicle_line,name,powertrain from public.model_variant order by name').fetchall():
+        variants[v['vehicle_line']].append({'name':v['name'],'powertrain':v['powertrain']})
+    markets=defaultdict(list)
+    for m in conn.execute('select distinct vehicle_line,market_code from public.study_response where market_code is not null order by market_code').fetchall():
+        markets[m['vehicle_line']].append(m['market_code'])
+    for row in rows:
+        row['id']=str(row['id'])
+        row['variants']=variants[row['vehicle_line']] if row['vehicle_line'] else row['identity'].get('variants',[])
+        row['markets']=markets[row['vehicle_line']] if row['vehicle_line'] else []
+    return rows
 
 
 def add_model(conn, name: str, variant: str = '', powertrain: str | None = None, origin: str = 'manual') -> dict:
@@ -201,8 +218,16 @@ def dataset_sections(conn, model: dict, market: str) -> dict:
     if not line:
         return {'feedback':[],'study':[],'options':[],'sales':[]}
     feedback=conn.execute("select f.vfc_level2 as section,count(*) as n,count(*) filter(where f.polarity='negative') as negative,count(*) filter(where f.polarity='positive') as positive,count(*) filter(where f.polarity='request') as requests from public.feedback_raw f where f.vehicle_line=%s and f.market_code=%s group by f.vfc_level2 order by count(*) desc,f.vfc_level2",(line,market)).fetchall()
+    examples=defaultdict(list)
+    for row in conn.execute("""select id,comment,file,sheet,row_no,ext_id,section from (
+        select f.id,f.comment,s.uri as file,f.sheet,f.row_no,f.ext_id,f.vfc_level2 as section,
+            row_number() over (partition by f.vfc_level2 order by f.row_no,f.id) as example_rank
+        from public.feedback_raw f join public.source s on s.id=f.source_id
+        where f.vehicle_line=%s and f.market_code=%s) ranked
+        where example_rank<=3 order by section,row_no,id""",(line,market)).fetchall():
+        examples[row.pop('section')].append(row)
     for section in feedback:
-        section['examples']=conn.execute("select f.id,f.comment,s.uri as file,f.sheet,f.row_no,f.ext_id from public.feedback_raw f join public.source s on s.id=f.source_id where f.vehicle_line=%s and f.market_code=%s and f.vfc_level2 is not distinct from %s order by f.row_no limit 3",(line,market,section['section'])).fetchall()
+        section['examples']=examples[section['section']]
         for e in section['examples']:
             e['citation']={'kind':'feedback','id':str(e['id']),'file':e['file'],'locator':f"sheet {e['sheet']}, row {e['row_no']} ({e['ext_id']})",'quote':e['comment']}
     study=conn.execute('select r.*,s.uri as file from public.study_response r join public.source s on s.id=r.source_id where r.vehicle_line=%s and r.market_code=%s order by r.question,r.metric,r.answer_option',(line,market)).fetchall()
