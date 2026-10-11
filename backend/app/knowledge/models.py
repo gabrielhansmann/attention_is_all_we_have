@@ -122,11 +122,11 @@ def finish_research(conn, research_id: str, status: str, notes: list[str]) -> No
 
 
 def link_rival(conn, model_id: str, variant: str, market: str, rival_id: str, rival_variant: str, powertrain: str | None, reason: str, url: str | None, selection: str = 'automatic') -> None:
-    conn.execute('insert into public.comparison_rival(model_id,variant,market,rival_id,rival_variant,powertrain,reason,discovery_url,selection) values (%s,%s,%s,%s,%s,%s,%s,%s,%s) on conflict(model_id,variant,market,rival_id) do update set rival_variant=excluded.rival_variant,powertrain=excluded.powertrain,reason=excluded.reason,discovery_url=excluded.discovery_url,enabled=true', (model_id,variant,market,rival_id,rival_variant,powertrain,reason,url,selection))
+    conn.execute('insert into public.comparison_rival(model_id,variant,market,rival_id,rival_variant,powertrain,reason,discovery_url,selection) values (%s,%s,%s,%s,%s,%s,%s,%s,%s) on conflict(model_id,variant,market,rival_id) do update set rival_variant=excluded.rival_variant,powertrain=excluded.powertrain,reason=excluded.reason,discovery_url=excluded.discovery_url,selection=excluded.selection,enabled=true', (model_id,variant,market,rival_id,rival_variant,powertrain,reason,url,selection))
 
 
-def rivals(conn, model_id: str, variant: str, market: str) -> list[dict]:
-    rows=conn.execute('select r.*,m.name,a.name as anchor_name from public.comparison_rival r join public.comparison_model m on m.id=r.rival_id join public.comparison_model a on a.id=r.model_id where r.model_id=%s and r.variant=%s and r.market=%s and r.enabled order by m.name',(model_id,variant,market)).fetchall()
+def rivals(conn, model_id: str, variant: str, market: str, *, include_disabled: bool = False) -> list[dict]:
+    rows=conn.execute('select r.*,m.name,a.name as anchor_name from public.comparison_rival r join public.comparison_model m on m.id=r.rival_id join public.comparison_model a on a.id=r.model_id where r.model_id=%s and r.variant=%s and r.market=%s and (%s or r.enabled) order by m.name',(model_id,variant,market,include_disabled)).fetchall()
     return [r for r in rows if r['selection']=='manual' or r['name'].split()[0].casefold()!=r['anchor_name'].split()[0].casefold()]
 
 

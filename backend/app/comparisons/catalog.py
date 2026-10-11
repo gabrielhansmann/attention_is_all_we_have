@@ -26,6 +26,7 @@ def parse_catalog(model: dict, variant: str, docs: list[dict]) -> tuple[list[dic
         ('range',r'^Elektrische Reichweite, WLTP in km','combined','range'),
         ('boot',r'^Gepäckraumvolumen in l','seats_up','boot'),
         ('charging',r'^Maximale Ladeleistung DC in kW','peak_dc','plain'),
+        ('top_speed',r'^Höchstgeschwindigkeit in km/h','maximum','plain'),
     ]
     for group in pages.values():
         headers=[line for d in group for line in d['content'].splitlines() if line.startswith('BMW ') and 'TECHNISCHE WERTE' in '\n'.join(x['content'] for x in group)]
