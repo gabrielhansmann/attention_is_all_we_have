@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4N4GR4KVSA1BCWM50C66F5A",
+  "strategy": "manual-commit",
+  "branch": "codex/market-impact-integration",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "backend/app/agents/market_impact_agent.py",
+    "backend/app/agents/market_impact_web.py",
+    "backend/app/api/schemas.py",
+    "backend/tests/test_market_impact_agent.py",
+    "backend/tests/test_market_impact_web.py",
+    "docs/architecture/11-knowledge-layer.md",
+    "docs/architecture/12-repo-structure.md",
+    "docs/decisions/0032-independent-market-evidence-and-readable-assessments.md",
+    "docs/decisions/README.md",
+    "frontend/README.md",
+    "frontend/src/features/market-impact/EvidencePanel.tsx",
+    "frontend/src/features/market-impact/MarketImpact.tsx",
+    "frontend/src/features/market-impact/scenario.ts",
+    "frontend/src/types/api.ts",
+    "frontend/tests/market-impact.spec.ts",
+    "frontend/tests/market-scenario.spec.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 144231,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 7821674,
+    "output_tokens": 41249,
+    "api_call_count": 61
+  }
+}
