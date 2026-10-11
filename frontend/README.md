@@ -42,5 +42,30 @@ npm test         # Playwright, desktop and mobile, with axe checks; every API ca
 
 ## Deploying
 
-Serve the `dist` build from an origin that also serves `/api` (see `vercel.json` for the Vercel settings). Keep
-database and AI keys on the backend; never expose them through `VITE_*`.
+Deploy Vercel from the repository root using the root `vercel.json` and `pyproject.toml`.
+`PYTHONPATH=backend python -m app.deploy.build` installs the frontend lockfile, builds it and
+copies `dist` to root `public/` for the CDN. The same deployment serves the existing protected
+FastAPI `/api` routes. Runtime dependencies come from the backend package. Keep database and AI
+keys encrypted on the backend; never expose them through `VITE_*`.
+The frontend-only `frontend/vercel.json` does not package the API.
+See [decision 0027](../docs/decisions/0027-git-backed-full-stack-vercel-deployment.md).
+
+
+## Model comparisons
+
+Open `#models` for the Supabase-derived model inventory, registered variants and Germany/Europe
+default market. The protected `/api/models` backend owns the cohort, source extraction, median
+and mean. Up to six measured charts distinguish the reference model (BMW blue), each rival
+(gray), competitor median (dark) and competitor mean (dashed). Reported ranges retain both
+endpoints. Feature claims use an evidence matrix; absent evidence is not an absent feature.
+
+Every rival card has **Crawl rival sources** and **Reevaluate rival** actions, including a
+first crawl before any finding exists. Every finding exposes its quote, source, crawl/evaluation
+time and validation controls. Refreshes preserve prior citations. Add a competitor by name, or
+supply an exact variant and an optional official technical page/PDF when discovery needs help.
+The model chat reuses the existing research component and receives the server's current model,
+variant, market, selected competitors and cited evidence on each request.
+
+See [benchmarking architecture](../docs/architecture/10-competitor-benchmarking.md) and
+[decision 0025](../docs/decisions/0025-server-owned-model-comparisons.md). Inaccessible sources and
+incompatible measurements remain explicit gaps; the application does not fabricate benchmarks.

@@ -8,6 +8,7 @@ import { AuthGate } from '@/features/auth/AuthGate'
 import { ChatProvider } from '@/features/research/chat-store'
 
 const LiveResearch = lazy(() => import('@/features/research/LiveResearch').then((m) => ({ default: m.LiveResearch })))
+const ModelsPage = lazy(() => import('@/features/models/ModelsPage').then((m) => ({ default: m.ModelsPage })))
 const EvidencePage = lazy(() => import('@/features/evidence/EvidencePage').then((m) => ({ default: m.EvidencePage })))
 const LiveLibrary = lazy(() => import('@/features/library/LiveLibrary').then((m) => ({ default: m.LiveLibrary })))
 
@@ -16,6 +17,7 @@ const TrackingPage = lazy(() => import('@/features/requirements/TrackingPage').t
 const DossiersPage = lazy(() => import('@/features/requirements/DossiersPage').then((m) => ({ default: m.DossiersPage })))
 
 const VIEWS: Record<PageId, React.ComponentType> = {
+  models: ModelsPage,
   research: LiveResearch, requirements: RequirementsPage, tracking: TrackingPage, dossiers: DossiersPage,
   evidence: EvidencePage, sources: LiveLibrary,
 }

@@ -28,7 +28,7 @@ Each doc opens with a status line:
 | [`idea.md`](idea.md) | The original software concept and the PM's model-specific decision loop |
 | [`architecture/00-overview.md`](architecture/00-overview.md) | What is this, in scope / out of scope, the five-stage pipeline at a glance |
 | [`architecture/01-agents.md`](architecture/01-agents.md) | Every agent: what it reads, what it produces, how autonomous it is |
-| [`architecture/02-orchestration-and-human-in-the-loop.md`](architecture/02-orchestration-and-human-in-the-loop.md) | **How the PM actually stays in control** — the chat → orchestrator plan → review-and-accept-each-agent model |
+| [`architecture/02-orchestration-and-human-in-the-loop.md`](architecture/02-orchestration-and-human-in-the-loop.md) | How a chat request drives the autonomous orchestrator loop, Critic checks and checkpointed execution |
 | [`architecture/03-ingestion.md`](architecture/03-ingestion.md) | How a PDF or Excel file becomes a cited `Finding` |
 | [`architecture/04-data-model.md`](architecture/04-data-model.md) | Every entity and how they reference each other |
 | [`architecture/05-requirement-lifecycle.md`](architecture/05-requirement-lifecycle.md) | What happens to a requirement after it's accepted, over the ~2-year program |
@@ -44,8 +44,12 @@ Each doc opens with a status line:
 
 ## Functional requirements
 
-The [frontend guide](../frontend/README.md) documents the delivered PM workspace, local setup,
-verification, Vercel hosting, and its explicit demo-data/backend limitations.
+The [frontend guide](../frontend/README.md) documents the delivered live research workspace, local setup,
+verification and hosting. The [current presentation](pitch/README.md) records a dated Supabase snapshot,
+the verified Vercel deployment and the prototype's remaining limits.
+
+The [model comparison validation](validation/model-comparisons-2026-10-11.md) records the newer
+overview deployment, real source recrawl, regression checks and current evidence gaps.
 
 What the system must do, as testable statements with IDs and priorities, in
 [`requirements/`](requirements/) — partly derived from the architecture docs above, partly new
@@ -64,6 +68,6 @@ can push back on later.
 - Provided data: `F70`/`G60`/`G70` feedback, option lists, customer studies, `sales_volumes.xlsx`
   (presumed mapping: F70 → 1 Series successor, G60 → 5 Series, G70 → 7 Series — **confirm against
   BMW's codebook before stating this as fact**)
-- A rendered, presentation-friendly version of the pipeline/data-model/lifecycle diagrams in this
-  doc set exists as a standalone artifact for pitching; these `.md` files are the source of truth
-  for building.
+- The [current PowerPoint and PDF](pitch/README.md) show the deployed research workflow and dated
+  database observations, with a source-linked speaker script. These `.md` files remain the source of
+  truth for building; planned capabilities are distinguished from shipped and verified behavior.

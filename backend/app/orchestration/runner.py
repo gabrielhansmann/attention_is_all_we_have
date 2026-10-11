@@ -152,7 +152,8 @@ def _context(conn, run: dict, step: dict) -> StepContext:
              for s in earlier]
     decisions = [{**e, "entity_id": str(e["entity_id"]), "timestamp": e["timestamp"].isoformat()} for e in events]
     return StepContext(query=run["query_text"] or "", vehicle_line=run["vehicle_line"], market=run["market"],
-                       run_id=str(run["id"]), steps=steps, decisions=decisions)
+                       run_id=str(run["id"]), steps=steps, decisions=decisions,
+                       comparison_context=run.get('comparison_context'))
 
 
 def _failure_reason(error: BaseException) -> str:

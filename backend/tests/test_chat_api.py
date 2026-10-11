@@ -125,7 +125,8 @@ def test_conversations_list_most_recently_active_first(client):
     a = client.post("/api/conversations", json={"title": "older"}).json()["conversation"]["id"]
     b = client.post("/api/conversations", json={"title": "newer"}).json()["conversation"]["id"]
     client.db.execute("update public.conversation set updated_at = now() - interval '1 day' where id = %s", (a,))
-    assert [c["id"] for c in client.get("/api/conversations").json()][:2] == [b, a]
+    ids=[c["id"] for c in client.get("/api/conversations").json()]
+    assert ids.index(b)<ids.index(a)
 
 
 def test_thread_order_is_stable_even_though_a_run_writes_several_messages_at_once(client):

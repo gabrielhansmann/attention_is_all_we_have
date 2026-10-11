@@ -1,0 +1,42 @@
+{
+  "checked_at": "2026-10-10T21:01:45.547741+00:00",
+  "base_url": "https://bmw-product-intelligence.vercel.app",
+  "frontend": {
+    "status": 200,
+    "content_type": "text/html; charset=utf-8"
+  },
+  "health": {
+    "status": "ok",
+    "db": "ok",
+    "openai_key": true,
+    "version": "0.1.0"
+  },
+  "frontend_asset": {
+    "path": "/assets/index-Bws7ha2M.js",
+    "status": 200,
+    "sha256": "00e9817346a9dc873235179244a10d1b9e767f2d39abb70baa077ff52345c4a3",
+    "matches_built_main": true
+  },
+  "public_boundary": {
+    "/api/auth/me": 401,
+    "/api/conversations": 401,
+    "/api/sources": 401,
+    "/docs": 404
+  },
+  "deployment": {
+    "id": "dpl_5cFNQvbBaoGrNYk8e4M6t7rHrv9z",
+    "url": "bmw-product-intelligence-qcw8kp5w4-gabrielhansmanns-projects.vercel.app",
+    "readyState": "READY",
+    "target": "production",
+    "createdAt": 1791664832911,
+    "meta": {
+      "githubCommitRef": "main",
+      "githubCommitSha": "7c7ba8619daee786309e8ef10caca85b7b5d24f2",
+      "actor": "codex",
+      "lambdaRuntimeStats": "{\"python\":1}"
+    },
+    "branch": "main",
+    "source_commit": "7c7ba8619daee786309e8ef10caca85b7b5d24f2"
+  },
+  "verification_scope": "Public hosted checks and read-only Supabase data. Authenticated hosted workflows were not exercised."
+}

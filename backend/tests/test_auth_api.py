@@ -46,7 +46,7 @@ def test_login_returns_a_token_that_works_and_exposes_no_secrets(client):
 
 def test_only_a_hash_of_the_token_is_stored(client):
     token = login(client).json()["token"]
-    rows = client.db.execute("select token_hash from public.auth_session").fetchall()
+    rows = client.db.execute("select token_hash from public.auth_session where user_id=%s",(client.user['id'],)).fetchall()
     assert [r["token_hash"] for r in rows] == [hashlib.sha256(token.encode()).hexdigest()]
     assert token not in rows[0]["token_hash"]
 

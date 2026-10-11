@@ -1,0 +1,14 @@
+[project]
+name = "bmw-product-intelligence-deployment"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = ["bmw-requirement-evidence-engine"]
+
+[tool.uv.sources]
+bmw-requirement-evidence-engine = { path = "backend" }
+
+[tool.vercel]
+entrypoint = "backend.app.deploy.vercel:app"
+
+[tool.vercel.fastapi.static]
+cdn = true

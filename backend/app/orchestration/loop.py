@@ -105,7 +105,9 @@ def _answer(conn: psycopg.Connection, run: dict, orchestrator: Orchestrator, not
     scope = Scope("", None if run["vehicle_line"] == "ALL" else run["vehicle_line"],
                   None if run["market"] == "ALL" else run["market"])
     try:
-        return ask(run["query_text"] or "", scope, _history(conn, run["id"]), [note] if note else [])
+        from app.knowledge.models import context_text
+        request = (run["query_text"] or "") + context_text(run.get("comparison_context"))
+        return ask(request, scope, _history(conn, run["id"]), [note] if note else [])
     except Exception:
         log.exception("could not write the answer of run %s", run["id"])
         return None
@@ -141,8 +143,12 @@ def build_graph(connect: Connect, orchestrator: Orchestrator, runners: dict[str,
                     "note": f"I stopped after {max_calls} agent calls, the most one request may use."}
         scope = Scope("", None if run["vehicle_line"] == "ALL" else run["vehicle_line"],
                       None if run["market"] == "ALL" else run["market"])
+        if run.get('comparison_context') and not history:
+            return {'next': 'validate', 'decision': {'agent': 'Competitor Agent',
+                    'reason': 'Read this model’s preloaded BMW evidence, selected competitors and source-backed comparisons.'}}
         try:
-            decision = orchestrator.decide(run["query_text"] or "", scope, history, state.get("refused") or [], calls_left)
+            from app.knowledge.models import context_text
+            decision = orchestrator.decide((run["query_text"] or "") + context_text(run.get('comparison_context')), scope, history, state.get("refused") or [], calls_left)
         except OrchestratorError as e:
             return {"next": "finish", "decision": None, "failed": str(e)}
         if decision.action == "finish":

@@ -1,4 +1,5 @@
 import { getToken, markRequired } from '@/lib/auth'
+import type { Model, ModelScope, Overview } from '@/features/models/types'
 import type {
   AuthUser,
   ConversationDetail,
@@ -105,8 +106,14 @@ export const api = {
   removeWebsite: (id: string) => request<void>('DELETE', `/sources/${id}`),
   conversations: (signal?: AbortSignal) => get<Conversation[]>('/conversations', signal),
   conversation: (id: string, signal?: AbortSignal) => get<ConversationDetail>(`/conversations/${id}`, signal),
-  createConversation: (requestText: string) =>
-    request<ConversationDetail>('POST', '/conversations', { request: requestText }),
+  createConversation: (requestText: string, scope?: ModelScope) =>
+    request<ConversationDetail>('POST', '/conversations', { request: requestText, ...(scope ? { comparison_model_id: scope.comparison_model_id, comparison_variant: scope.comparison_variant, comparison_market: scope.comparison_market } : {}) }),
+  models: (signal?: AbortSignal) => get<{ models: Model[]; default_market: string; markets: { code: string; name: string }[] }>('/models', signal),
+  modelOverview: (id: string, variant: string, market: string, signal?: AbortSignal) => get<Overview>(`/models/${id}/overview?${query({ variant, market })}`, signal),
+  addModel: (name: string, variant: string, powertrain: string | null) => request<Model>('POST', '/models', { name, variant, powertrain }),
+  researchModel: (id: string, variant: string, market: string, rivalName?: string, sourceUrl?: string, rivalVariant?: string) => request<Overview>('POST', `/models/${id}/research`, { variant, market, rival_name: rivalName, source_url: sourceUrl, rival_variant: rivalVariant }),
+  removeRival: (id: string, rivalId: string, variant: string, market: string) => request<Overview>('PATCH', `/models/${id}/rivals/${rivalId}?${query({ variant, market, enabled: 'false' })}`),
+  validateModel: (id: string, variant: string, market: string, mode: 'reevaluate' | 'recrawl', observationId?: string, rivalId?: string) => request<Overview>('POST', `/models/${id}/validate`, { variant, market, mode, observation_id: observationId, rival_id: rivalId }),
   postRequest: (id: string, content: string) =>
     request<PostResult>('POST', `/conversations/${id}/messages`, { content }),
   requirements: (status?: RequirementStatus, signal?: AbortSignal) =>

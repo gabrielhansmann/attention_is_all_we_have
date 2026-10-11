@@ -12,7 +12,8 @@ from uuid import UUID
 from psycopg.types.json import Jsonb
 
 from .catalog import get as agent_spec
-from .orchestrator import Orchestrator
+from .orchestrator import Orchestrator, Scope
+from app.knowledge import models
 
 DEFAULT_TITLE = "New research request"
 
@@ -35,7 +36,16 @@ class RunInProgress(ValueError):
 
 # ---------------------------------------------------------------- conversations and messages
 
-def create_conversation(conn, title: str | None = None, actor: str = "pm") -> dict:
+def create_conversation(conn, title: str | None = None, actor: str = "pm", *, model_id=None,
+                        variant: str = '', market: str = 'EU') -> dict:
+    if model_id:
+        model = models.get_model(conn, model_id)
+        models.validate_variant(model, variant)
+        conv = conn.execute('insert into public.conversation(title,created_by,comparison_model_id,comparison_variant,comparison_market,vehicle_line,market_code) values (%s,%s,%s,%s,%s,%s,%s) returning *',
+                            (title or f'{model["name"]} {variant}'[:120],actor,model_id,variant,market,model['vehicle_line'],market)).fetchone()
+        add_message(conn,conv['id'],'system','system_note',
+                    f'Context loaded for {model["name"]}, {variant or "family overview"}, {market}. Each request loads the current selected competitors, measured comparisons and dataset evidence from Supabase. Sources remain available in the overview.')
+        return conv
     return conn.execute("insert into public.conversation (title, created_by) values (%s, %s) returning *",
                         ((title or DEFAULT_TITLE).strip()[:120], actor)).fetchone()
 
@@ -104,13 +114,19 @@ def post_request(conn, conversation_id: UUID, text: str, orchestrator: Orchestra
     if conn.execute("select 1 from public.pipeline_run where conversation_id = %s and status = 'in_progress'",
                     (conversation_id,)).fetchone():
         raise RunInProgress("the previous request is still being worked on")
-    scope = orchestrator.scope(text)          # may raise OrchestratorError before any write
+    packet = None
+    if conv.get('comparison_model_id'):
+        packet = models.context_packet(conn,str(conv['comparison_model_id']),conv['comparison_variant'],conv['comparison_market'])
+        # A manual model has no internal BMW line: EXTERNAL never means ALL evidence.
+        scope = Scope(conv['title'],packet['model']['vehicle_line'] or 'EXTERNAL',packet['market'])
+    else:
+        scope = orchestrator.scope(text)          # may raise OrchestratorError before any write
 
     messages = [add_message(conn, conversation_id, "pm", "request", text, payload={"author": actor})]
     run = conn.execute(
-        "insert into public.pipeline_run (trigger, vehicle_line, market, query_text, created_by, conversation_id) "
-        "values ('pm_query', %s, %s, %s, %s, %s) returning *",
-        (scope.vehicle_line or "ALL", scope.market or "ALL", text, actor, conversation_id)).fetchone()
+        "insert into public.pipeline_run (trigger, vehicle_line, market, query_text, created_by, conversation_id, comparison_context) "
+        "values ('pm_query', %s, %s, %s, %s, %s, %s) returning *",
+        (scope.vehicle_line or "ALL", scope.market or "ALL", text, actor, conversation_id, Jsonb(packet) if packet else None)).fetchone()
     run["steps"] = []
     conn.execute(
         "update public.conversation set title = case when title = %s then %s else title end, "
