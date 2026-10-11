@@ -55,6 +55,7 @@ export interface MarketSignal {
   matched_total: number
   counts: { positive: number; request: number; negative: number }
   reviewed: number
+  signal_counts: { benefit: number; risk: number; unclear: number }
   evidence: { citation: Citation; stance: 'supports' | 'risk' | 'mixed' | 'unclear'; reason: string }[]
 }
 
@@ -74,7 +75,8 @@ export interface MarketWebEvidence {
 export interface MarketWebAssessmentResponse {
   public_query: string | null
   context?: MarketWebEvidence[]
-  markets: { market: Market; direction: MarketSignal['direction']; evidence: MarketWebEvidence[] }[]
+  notes?: string[]
+  markets: { market: Market; direction: MarketSignal['direction']; evidence: MarketWebEvidence[]; status?: 'complete' | 'partial' | 'unmapped'; explanation?: string }[]
 }
 
 export interface StatsResponse {

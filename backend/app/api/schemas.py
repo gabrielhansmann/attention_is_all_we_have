@@ -83,6 +83,12 @@ class MarketSignalEvidenceOut(BaseModel):
     reason: str
 
 
+class MarketSignalCountsOut(BaseModel):
+    benefit: int = Field(default=0, ge=0)
+    risk: int = Field(default=0, ge=0)
+    unclear: int = Field(default=0, ge=0)
+
+
 class MarketSignalOut(BaseModel):
     market: Market
     direction: Literal["positive", "negative", "mixed", "insufficient"]
@@ -91,6 +97,7 @@ class MarketSignalOut(BaseModel):
     matched_total: int
     counts: dict[str, int]
     reviewed: int
+    signal_counts: MarketSignalCountsOut = Field(default_factory=MarketSignalCountsOut)
     evidence: list[MarketSignalEvidenceOut]
 
 
@@ -119,12 +126,15 @@ class MarketWebSignalOut(BaseModel):
     market: Market
     direction: Literal["positive", "negative", "mixed", "insufficient"]
     evidence: list[MarketWebEvidenceOut]
+    status: Literal["complete", "partial", "unmapped"] = "complete"
+    explanation: str = ""
 
 
 class MarketWebOut(BaseModel):
     public_query: str | None
     context: list[MarketWebEvidenceOut] = Field(default_factory=list)
     markets: list[MarketWebSignalOut]
+    notes: list[str] = Field(default_factory=list)
 
 
 class SearchResponse(BaseModel):

@@ -34,11 +34,14 @@ npm test         # Playwright, desktop and mobile, with axe checks; every API ca
   A PDF or Excel file can be added here; the backend stores it and reports what it read.
 - **Market impact** (`#market-impact`): selecting optional equipment independently assesses internal customer feedback
   and public web evidence. Custom text uses Assess feature. Green is potential benefit/demand; red is implementation
-  or acceptance risk; mixed preserves trade-offs. Internal comments are deduplicated and their feature passages are
+  or acceptance risk; amber preserves trade-offs. Either backend result can color a market independently, including
+  while the other is loading or unavailable. Internal comments are deduplicated and their feature passages are
   interpreted locally. Public evidence has verified page excerpts and source links; availability and unverified
-  geography do not establish a direction. Provider failures and evidence gaps are visible. Numeric share changes
+  geography do not establish a direction. Provider failures and evidence gaps are visible; partial public research
+  preserves successful markets and retries only that source. The evidence area shows reviewed benefit/risk/unclear
+  counts, sample passages and public excerpts side by side. Numeric share changes
   remain optional, explicit PM assumptions, and override a market's color. Export retains both assessments and
-  assumptions. See [decision 0030](../docs/decisions/0030-feature-specific-and-public-market-evidence.md) and the
+  assumptions and completion status. See [decision 0032](../docs/decisions/0032-independent-market-evidence-and-readable-assessments.md) and the
   [geometry guide](src/features/market-impact/README.md).
 
 ## Structure

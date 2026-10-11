@@ -34,6 +34,7 @@ def test_feature_passages_overrule_whole_comment_polarity_and_preserve_tradeoffs
     result = agent.assess("G60", feature="Seat ventilation")
     markets = {m["market"]: m for m in result["markets"]}
     assert markets["US"]["direction"] == "mixed" and markets["US"]["matched_total"] == 52
+    assert markets["US"]["signal_counts"] == {"benefit": 1, "risk": 1, "unclear": 0}
     assert markets["EU"]["direction"] == "positive" and markets["EU"]["counts"]["negative"] == 8
     assert markets["RoW"]["direction"] == "mixed"
     assert markets["CN"]["direction"] == "insufficient" and "No customer feedback" in markets["CN"]["explanation"]
@@ -105,8 +106,26 @@ def test_local_query_is_parameterized_and_never_uses_embeddings(monkeypatch):
     ('I prefer seat ventilation.', 'supports'),
     ('The screen is great but seat ventilation is weak.', 'risk'),
     ('Seat ventilation is great but seat ventilation is too noisy.', 'mixed'),
+    ('Seat ventilation could be better.', 'risk'),
+    ('Seat ventilation needs to work better.', 'risk'),
+    ('Seat ventilation is not needed.', 'risk'),
+    ('I never use seat ventilation.', 'risk'),
 ])
 def test_comment_reason_attaches_to_feature_not_unrelated_equipment(text, stance):
     feature = '19" wheels' if '19 inch' in text else 'Seat ventilation'
     actual, reason, excerpt = agent.comment_signal(text, agent.feature_terms(feature))
     assert actual == stance and excerpt in text and reason
+
+
+def test_comfort_topic_alone_does_not_imply_praise():
+    assert agent.comment_signal('Seat comfort was evaluated.', agent.feature_terms('Comfort seats'))[0] == 'unclear'
+
+
+def test_mixed_excerpt_shows_both_feature_passages_or_explains_the_excerpt_limit():
+    text = 'Seat ventilation is great but seat ventilation is too noisy.'
+    stance, reason, quote = agent.comment_signal(text, agent.feature_terms('Seat ventilation'))
+    assert stance == 'mixed' and 'great' in quote and 'too noisy' in quote and quote in text
+    text = 'Seat ventilation is great. ' + 'Unrelated context. ' * 25 + 'Seat ventilation is too noisy.'
+    stance, reason, quote = agent.comment_signal(text, agent.feature_terms('Seat ventilation'))
+    assert stance == 'mixed' and quote in text and len(quote) <= 300
+    assert 'open the source to review both' in reason
