@@ -11,7 +11,7 @@ export type Scenario = Record<Market, Assumption>
 export type Impact = { state: 'positive' | 'negative' | 'mixed' | 'neutral' | 'unknown'; delta: number | null; baseline: number | null; resulting: number | null; error: string | null; basis: 'scenario' | 'evidence' | 'unassessed' | 'excluded' }
 export const IMPACT_COLORS: Record<Impact['state'], string> = {
   positive: 'color-mix(in srgb, var(--success) 70%, var(--foreground))',
-  negative: 'var(--destructive)', mixed: 'var(--muted-foreground)', neutral: 'var(--muted-foreground)', unknown: 'var(--input)',
+  negative: 'var(--destructive)', mixed: 'var(--warning)', neutral: 'var(--muted-foreground)', unknown: 'var(--input)',
 }
 export const emptyScenario = (): Scenario => Object.fromEntries(MARKETS.map(({ key }) => [key, { baseline: '', delta: '', reason: '' }])) as Scenario
 
@@ -35,7 +35,7 @@ export function impact(assumption: Assumption, included: boolean): Impact {
     basis: !included ? 'excluded' : delta === null ? 'unassessed' : 'scenario' }
 }
 
-export function assessedImpact(assumption: Assumption, included: boolean, signal?: MarketSignal): Impact {
+export function assessedImpact(assumption: Assumption, included: boolean, signal?: Pick<MarketSignal, 'direction'>): Impact {
   const result = impact(assumption, included)
   if (result.error || result.delta !== null || !signal) return result
   return { ...result, state: signal.direction === 'insufficient' ? 'unknown' : signal.direction, basis: 'evidence' }

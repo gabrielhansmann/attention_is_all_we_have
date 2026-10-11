@@ -37,6 +37,12 @@ def test_us_evidence_cannot_be_counted_as_chinese_or_rest_of_world_evidence():
     assert result == []
 
 
+def test_first_person_us_is_not_united_states_geography():
+    text = 'Seat ventilation gives us comfortable seats.'
+    result = web.validate_sources([doc(text=text)], {'evidence': [item(excerpt=text, scope_excerpt=text)]}, 'seat ventilation')
+    assert result == []
+
+
 def test_catalog_queries_are_generic_public_terms_and_unknown_labels_stay_local():
     assert web.public_topic('19" Leichtmetallräder Triplex-Speiche 933', custom=False) == '19 inch wheels'
     assert web.public_topic('Secret development package 991', custom=False) is None
@@ -90,3 +96,44 @@ def test_verified_mentions_without_classified_market_direction_remain_global_con
     assert len(result) == 1 and result[0]['market'] is None and result[0]['stance'] == 'context'
     assert result[0]['summary'] in doc().snippet and len(result[0]['summary'].split()) <= 25
     assert web.general_context([doc()], [{'url': doc().url, 'scope': 'United States evidence'}], 'seat ventilation') == []
+
+
+def test_a_failed_market_search_preserves_verified_results_and_can_be_retried(monkeypatch):
+    topic = 'seat ventilation partial-test'
+    text = f'US owners value {topic} for comfort.'
+    source = doc(text=text)
+    monkeypatch.setattr(web, 'sources_from_web_search_response', lambda *args: [source])
+    monkeypatch.setattr(web.tools, 'public_web_text', lambda url: (source.title, text))
+    def create(**kwargs):
+        if kwargs.get('tools'):
+            if 'specifically in China' in kwargs['input']:
+                raise RuntimeError('secret provider error')
+            return SimpleNamespace(output_text='search')
+        import json
+        return SimpleNamespace(output_text=json.dumps({'evidence': [item(excerpt=text, scope_excerpt=text)]}))
+    result = web.research('G60', topic, client=SimpleNamespace(responses=SimpleNamespace(create=create)))
+    by_market = {row['market']: row for row in result['markets']}
+    assert by_market['US']['direction'] == 'positive' and by_market['US']['status'] == 'complete'
+    assert by_market['CN']['direction'] == 'insufficient' and by_market['CN']['status'] == 'partial'
+    assert 'Research is incomplete' in by_market['CN']['explanation']
+    assert result['notes'] and 'secret' not in str(result)
+    assert ('G60', topic) not in web._CACHE
+
+
+@pytest.mark.parametrize('response', ['not json', '[]', '{"evidence":null}'])
+def test_bad_interpretation_preserves_verified_context_without_inventing_color(response, monkeypatch):
+    monkeypatch.setattr(web, 'sources_from_web_search_response', lambda *args: [doc()])
+    monkeypatch.setattr(web.tools, 'public_web_text', lambda url: (doc().title, doc().snippet))
+    client = SimpleNamespace(responses=SimpleNamespace(create=lambda **kwargs: SimpleNamespace(output_text=response)))
+    result = web.research('G60', 'seat ventilation', client=client)
+    assert result['context'][0]['summary'] in doc().snippet
+    assert all(row['direction'] == 'insufficient' and row['status'] == 'partial' for row in result['markets'])
+    assert 'did not complete' in result['notes'][0]
+
+
+def test_all_market_searches_failing_is_an_outage():
+    def fail(**kwargs):
+        raise RuntimeError('private provider details')
+    client = SimpleNamespace(responses=SimpleNamespace(create=fail))
+    with pytest.raises(RuntimeError, match='^Public research is unavailable.$'):
+        web.research('G60', 'seat ventilation', client=client)

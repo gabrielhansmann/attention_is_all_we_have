@@ -86,13 +86,16 @@ def comment_signal(text: str, terms: list[str]) -> tuple[str, str, str]:
             # Double negation and negated problem words are ambiguous without semantic parsing.
             if re.search(r"\b(?:do not hate|don't hate|not (?:weak|unreliable|broken|poor)|no problems)\b", context):
                 continue
-            rejection = re.search(r"\b(?:not worth|do not want|don't want|do not need|don't need|do not like|don't like|do not love|don't love|do not prefer|don't prefer|does not prefer|doesn't prefer|unnecessary|too expensive|overpriced|not (?:good|useful|comfortable|great|nice|excellent|terrific|better|happy))\b", context)
+            rejection = re.search(r"\b(?:not worth|do not want|don't want|do not need|don't need|do not like|don't like|do not love|don't love|do not prefer|don't prefer|does not prefer|doesn't prefer|unnecessary|unwanted|never use|too expensive|overpriced|not (?:needed|necessary|required|good|useful|comfortable|great|nice|excellent|terrific|better|happy))\b", context)
             problem = re.search(r"\b(?:uncomfortable|weak|unreliable|broken|fails|failure|not working|does not work|doesn't work|poor|annoying|difficult|too noisy|too hot|too cold|dislike|hate|worse)\b", context)
             desire = re.search(r"\b(?:wish|would like|would rather|prefers|prefer|want|need|should have|missing|not available|does not have|doesn't have|without|not having)\b", context)
-            praise = re.search(r"\b(?:terrific|love|nice|comfortable|comfort|excellent|great|useful|better|smoother|improve|happy)\b", context)
-            risk |= bool(rejection or problem)
-            benefit |= bool((desire or praise) and not rejection and not problem)
-            if rejection or problem or desire or praise:
+            # A request for better execution is a risk, not praise. A topic such as "seat
+            # comfort" contains the noun comfort itself, which must never become a vote.
+            improvement = re.search(r"\b(?:could|should|must|needs? to) (?:be|work) better\b", context)
+            praise = re.search(r"\b(?:terrific|love|nice|comfortable|excellent|great|useful|better|smoother|improve|happy)\b", context)
+            risk |= bool(rejection or problem or improvement)
+            benefit |= bool((desire or praise) and not rejection and not problem and not improvement)
+            if rejection or problem or improvement or desire or praise:
                 meaningful.append(clause.strip())
     stance = "mixed" if benefit and risk else "supports" if benefit else "risk" if risk else "unclear"
     reason = {"supports": "The feature-specific passage expresses praise, preference, or unmet demand.",
@@ -102,6 +105,15 @@ def comment_signal(text: str, terms: list[str]) -> tuple[str, str, str]:
     # Keep a verbatim feature passage, not an unrelated opening sentence from a long comment.
     passages = meaningful or excerpts
     excerpt = next((e for e in passages if len(e) <= 300), passages[0][:300] if passages else text[:300])
+    if stance == "mixed" and meaningful:
+        # Show both signals as one verbatim span when they fit. A lone positive clause must
+        # not appear to be the entire justification for a mixed verdict.
+        start = min(text.index(p) for p in meaningful)
+        end = max(text.index(p) + len(p) for p in meaningful)
+        if end - start <= 300:
+            excerpt = text[start:end]
+        else:
+            reason += " This excerpt shows one passage; open the source to review both."
     return stance, reason, excerpt
 
 
@@ -138,7 +150,8 @@ def assess(line: str, *, option_id: str | None = None, feature: str | None = Non
             explanation = f"In {len(evidence)} distinct sample comments: {support} benefit or demand signals, {risk} risks, {unclear} unclear. These are feature-specific interpretations, not share calculations."
         markets.append({"market": market, "direction": direction(support, risk), "explanation": explanation,
                         "total_feedback": coverage.get(market, 0), "matched_total": sum(counts[market].values()),
-                        "counts": counts[market], "reviewed": len(evidence), "evidence": evidence})
+                        "counts": counts[market], "reviewed": len(evidence),
+                        "signal_counts": {"benefit": support, "risk": risk, "unclear": unclear}, "evidence": evidence})
     return {"line": line, "feature": feature, "catalog_citation": asdict(catalog.citation) if catalog else None,
             "basis": "Local, deduplicated feature-passage interpretations with sampled citations; whole-comment polarity counts do not determine direction or market share.",
             "query_terms": terms, "markets": markets}

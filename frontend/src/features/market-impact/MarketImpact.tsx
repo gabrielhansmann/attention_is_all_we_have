@@ -14,11 +14,12 @@ import { cn } from '@/lib/utils'
 import type { Hit, Line, Market, MarketOptionsResponse, MarketAssessmentRequest, MarketAssessmentResponse, MarketWebAssessmentResponse } from '@/types/api'
 import { assessedImpact, combineDirections, changeLabel, emptyScenario, IMPACT_COLORS, MARKETS, shareLabel, type Assumption, type Impact, type Scenario } from './scenario'
 import { WorldMap } from './WorldMap'
+import { EvidencePanel } from './EvidencePanel'
 
 type Catalog = { line: Line; state: 'loading' } | { line: Line; state: 'error'; message: string } | { line: Line; state: 'ready'; data: MarketOptionsResponse }
 const LINES: Line[] = ['F70', 'G60', 'G68', 'G70']
 const STATE_LABEL: Record<Impact['state'], string> = { positive: 'Benefit', negative: 'Risk', mixed: 'Trade-offs', neutral: 'No change', unknown: 'Unknown' }
-const SIGNAL_LABEL: Record<Impact['state'], string> = { positive: 'Benefit signal', negative: 'Risk signal', mixed: 'Benefits and risks', neutral: 'No change', unknown: 'No matched evidence' }
+const SIGNAL_LABEL: Record<Impact['state'], string> = { positive: 'Benefit signal', negative: 'Risk signal', mixed: 'Benefits and risks', neutral: 'No change', unknown: 'No directional evidence' }
 type Load<T> = { key: string; state: 'idle' | 'loading' } | { key: string; state: 'error'; message: string } | { key: string; state: 'ready'; data: T }
 type Assessment = Load<MarketAssessmentResponse>
 type AssessmentTarget = { key: string; body: MarketAssessmentRequest }
@@ -92,25 +93,31 @@ function Content() {
   const activeAssessment = assessment.key === scenarioKey ? assessment : undefined
   const activeWeb = webAssessment.key === scenarioKey ? webAssessment : undefined
   const webSignals = activeWeb?.state === 'ready' ? activeWeb.data.markets : []
-  const signals = activeAssessment?.state === 'ready' ? activeAssessment.data.markets.map((s) => ({ ...s, direction: combineDirections(s.direction, webSignals.find((w) => w.market === s.market)?.direction) })) : []
+  const internalSignals = activeAssessment?.state === 'ready' ? activeAssessment.data.markets : []
+  const signals = activeAssessment?.state === 'ready' || activeWeb?.state === 'ready' ? MARKETS.map(({ key }) => ({ market: key,
+    direction: combineDirections(internalSignals.find((s) => s.market === key)?.direction ?? 'insufficient', webSignals.find((s) => s.market === key)?.direction),
+  })) : []
   const webSignal = webSignals.find((s) => s.market === market)
   const signal = signals.find((s) => s.market === market)
-  const internalSignal = activeAssessment?.state === 'ready' ? activeAssessment.data.markets.find((s) => s.market === market) : undefined
+  const internalSignal = internalSignals.find((s) => s.market === market)
+  const pending = activeAssessment?.state === 'loading' || activeWeb?.state === 'loading'
+  const partialWeb = webSignals.some((s) => s.status === 'partial')
   const impacts = Object.fromEntries(MARKETS.map(({ key }) => [key, assessedImpact(ready ? scenario[key] : { baseline: '', delta: '', reason: '' }, ready ? included : true, ready ? signals.find((s) => s.market === key) : undefined)])) as Record<Market, Impact>
   const selected = impacts[market]
   const current = scenario[market]
   const selectedMarket = MARKETS.find((m) => m.key === market)!
   const invalid = MARKETS.some(({ key }) => impacts[key].error)
 
-  const startAssessment = (key: string, body: MarketAssessmentRequest, refresh = false) => {
-    if (refresh) { assessmentCache.current.delete(key); webCache.current.delete(key) }
+  const startAssessment = (key: string, body: MarketAssessmentRequest, refresh: false | 'all' | 'internal' | 'web' = false) => {
+    if (refresh === 'all' || refresh === 'internal') assessmentCache.current.delete(key)
+    if (refresh === 'all' || refresh === 'web') webCache.current.delete(key)
     const cached = assessmentCache.current.get(key)
     const cachedWeb = webCache.current.get(key)
     setWebAssessment(cachedWeb ? { key, state: 'ready', data: cachedWeb } : { key, state: 'loading' })
     setAssessment(cached ? { key, state: 'ready', data: cached } : { key, state: 'loading' })
     setAssessmentTarget(cached && cachedWeb ? null : { key, body })
   }
-  const assessSelected = () => startAssessment(scenarioKey, featureId === 'custom' ? { line, feature: name } : { line, option_id: featureId }, true)
+  const assessSelected = (source: 'all' | 'internal' | 'web' = 'all') => startAssessment(scenarioKey, featureId === 'custom' ? { line, feature: name } : { line, option_id: featureId }, source)
 
   const update = (field: keyof Assumption, value: string) => setScenarios((prev) => ({ ...prev,
     [scenarioKey]: { ...(prev[scenarioKey] ?? emptyScenario()), [market]: { ...(prev[scenarioKey]?.[market] ?? { baseline: '', delta: '', reason: '' }), [field]: value } },
@@ -124,6 +131,7 @@ function Content() {
       markets: MARKETS.map(({ key, label }) => ({ market: key, label, assumptions: scenario[key], result: impacts[key] })),
       assessment: activeAssessment?.state === 'ready' ? activeAssessment.data : null,
       public_research: activeWeb?.state === 'ready' ? activeWeb.data : null,
+      assessment_status: { internal: activeAssessment?.state ?? 'idle', public: activeWeb?.state ?? 'idle', incomplete_public_research: partialWeb },
     }
     const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }))
     const link = document.createElement('a')
@@ -147,7 +155,7 @@ function Content() {
       {catalog.state === 'error' && <div className="mt-4 flex flex-wrap items-center gap-3"><p role="alert" className="text-sm text-destructive">{catalog.message} You can use a custom feature.</p><Button variant="outline" onClick={() => { setCatalog({ line, state: 'loading' }); setRetry((n) => n + 1) }}>Retry catalog</Button></div>}
       {catalog.state === 'ready' && catalog.data.options.length === 0 && <p className="mt-4 text-sm text-muted-foreground">No optional equipment is loaded for {line}. Choose a custom feature to explore a scenario.</p>}
       {catalog.state === 'ready' && catalog.data.truncated && <p className="mt-4 text-xs text-muted-foreground">Showing the first 200 catalog options. Use a custom feature for other equipment.</p>}
-      {featureId === 'custom' && <div className="mt-4 space-y-2"><Label htmlFor="custom-feature">Feature name</Label><div className="flex flex-wrap gap-2"><Input id="custom-feature" value={custom} maxLength={120} onChange={(e) => { setCustom(e.target.value); setAssessmentTarget(null); setAssessment({ key: '', state: 'idle' }); setWebAssessment({ key: '', state: 'idle' }) }} placeholder="Name the optional feature" className="min-w-0 flex-1 basis-48" /><Button disabled={name.length < 2 || activeAssessment?.state === 'loading'} onClick={assessSelected}>Assess feature</Button></div><p className="text-xs text-muted-foreground">Search internal feedback and public web sources using this name. No catalog evidence is attached.</p></div>}
+      {featureId === 'custom' && <div className="mt-4 space-y-2"><Label htmlFor="custom-feature">Feature name</Label><div className="flex flex-wrap gap-2"><Input id="custom-feature" value={custom} maxLength={120} onChange={(e) => { setCustom(e.target.value); setAssessmentTarget(null); setAssessment({ key: '', state: 'idle' }); setWebAssessment({ key: '', state: 'idle' }) }} placeholder="Name the optional feature" className="min-w-0 flex-1 basis-48" /><Button disabled={name.length < 2 || pending} onClick={() => assessSelected()}>Assess feature</Button></div><p className="text-xs text-muted-foreground">Search internal feedback and public web sources using this name. No catalog evidence is attached.</p></div>}
       {option && <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1"><p className="text-sm text-muted-foreground">Optional on at least one catalog variant. Catalog availability does not establish market impact.</p><Button variant="link" className="px-0" onClick={() => openSource(option.citation)}>View catalog source</Button></div>}
     </section>
 
@@ -157,12 +165,13 @@ function Content() {
         <div className="flex h-11 items-center gap-3"><Label htmlFor="include-feature" className={cn(!ready && 'text-muted-foreground')}>Include feature</Label><Switch id="include-feature" checked={included} disabled={!ready} onCheckedChange={setIncluded} /></div>
       </header>
       {ready && activeAssessment?.state === 'loading' && <div role="status" className="flex items-center gap-3 border-b border-border px-6 py-4"><Skeleton className="h-4 w-20 shrink-0" /><p className="text-sm text-muted-foreground">Assessing customer feedback across markets...</p></div>}
-      {ready && activeAssessment?.state === 'error' && <div className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-4"><p role="alert" className="text-sm text-destructive">{activeAssessment.message}</p><Button variant="outline" onClick={assessSelected}>Retry assessment</Button></div>}
-      {ready && activeAssessment?.state === 'ready' && <p className="border-b border-border px-6 py-3 text-xs text-muted-foreground">Assessment complete. {signals.reduce((n, s) => n + s.matched_total, 0)} distinct matching comments found across {signals.filter((s) => s.matched_total > 0).length} markets. Entering a share change overrides that market's map color.</p>}
+      {ready && activeAssessment?.state === 'error' && <div className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-4"><p role="alert" className="text-sm text-destructive">{activeAssessment.message} Public evidence can still appear on the map.</p><Button variant="outline" onClick={() => assessSelected('internal')}>Retry assessment</Button></div>}
+      {ready && activeAssessment?.state === 'ready' && <p className="border-b border-border px-6 py-3 text-xs text-muted-foreground">Assessment complete. {internalSignals.reduce((n, s) => n + s.matched_total, 0)} distinct matching comments found across {internalSignals.filter((s) => s.matched_total > 0).length} markets. Map directions also include public evidence as it arrives.</p>}
       {ready && activeWeb?.state === 'loading' && <p role="status" className="border-b border-border px-6 py-3 text-xs text-muted-foreground">Researching public web sources. Internal feedback appears independently...</p>}
-      {ready && activeWeb?.state === 'error' && <div className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-3"><p role="alert" className="text-xs text-destructive">{activeWeb.message}</p><Button variant="outline" onClick={assessSelected}>Retry research</Button></div>}
-      {ready && activeWeb?.state === 'ready' && <p className="border-b border-border px-6 py-3 text-xs text-muted-foreground">{activeWeb.data.public_query ? `Public research complete for ${activeWeb.data.public_query}. Sources below contain verified page excerpts; availability alone does not affect map colors.` : 'No public feature term is mapped for this catalog entry. Use a custom public feature name to research it.'}</p>}
-      <div className="grid xl:grid-cols-[minmax(0,1fr)_17rem]">
+      {ready && activeWeb?.state === 'error' && <div className="flex flex-wrap items-center gap-3 border-b border-border px-6 py-3"><p role="alert" className="text-xs text-destructive">{activeWeb.message}</p><Button variant="outline" onClick={() => assessSelected('web')}>Retry research</Button></div>}
+      {ready && activeWeb?.state === 'ready' && <p className="border-b border-border px-6 py-3 text-xs text-muted-foreground">{activeWeb.data.public_query ? `Public research ${partialWeb ? 'partially complete' : 'complete'} for ${activeWeb.data.public_query}. Sources below contain verified page excerpts; availability alone does not affect map colors.` : 'No public feature term is mapped for this catalog entry. Use a custom public feature name to research it.'}</p>}
+      {ready && activeWeb?.state === 'ready' && !!activeWeb.data.notes?.length && <div className="flex flex-wrap items-start gap-3 border-b border-border px-6 py-3"><ul className="min-w-0 flex-1 space-y-1 text-xs text-muted-foreground">{activeWeb.data.notes.map((note) => <li key={note}>{note}</li>)}</ul>{partialWeb && <Button variant="outline" onClick={() => assessSelected('web')}>Retry research</Button>}</div>}
+      <div className="grid xl:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="min-w-0 px-4 pt-5 pb-6 sm:px-6">
           <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted-foreground" aria-label="Map legend">
             {(['positive', 'negative', 'mixed', 'neutral', 'unknown'] as const).map((state) => <span key={state} className="flex items-center gap-1.5"><span aria-hidden style={{ backgroundColor: IMPACT_COLORS[state], opacity: state === 'neutral' ? 0.55 : 1 }} className={cn('size-2.5 rounded-full', state === 'unknown' && 'border border-muted-foreground')} />{STATE_LABEL[state]}</span>)}
@@ -171,11 +180,16 @@ function Content() {
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Choose a market">
             {MARKETS.map(({ key, label }) => {
               const result = impacts[key]
+              const comments = internalSignals.find((s) => s.market === key)
+              const publicEvidence = webSignals.find((s) => s.market === key)
+              const internalCoverage = comments ? commentCount(comments.matched_total) : activeAssessment?.state === 'error' ? 'Internal unavailable' : 'Internal pending'
+              const publicCount = publicEvidence?.evidence.filter((e) => e.stance !== 'context').length ?? 0
+              const publicCoverage = publicEvidence ? `${publicCount} public ${publicCount === 1 ? 'signal' : 'signals'}${publicEvidence.status === 'partial' ? ' (partial)' : ''}` : activeWeb?.state === 'error' ? 'Web unavailable' : 'Web pending'
               const Icon = result.state === 'positive' ? ArrowUpRight : result.state === 'negative' ? ArrowDownRight : Minus
               return <button type="button" key={key} aria-pressed={market === key} onClick={() => setMarket(key)}
                 className={cn('min-w-0 rounded-xl border px-3 py-3 text-left focus-visible:outline-2 focus-visible:outline-ring', market === key ? 'border-primary bg-accent' : 'border-border hover:bg-muted')}>
-                <span className="block text-xs text-muted-foreground">{label}</span><span className="mt-2 flex items-start gap-1 text-sm font-semibold tabular-nums"><Icon aria-hidden className="mt-0.5 size-4 shrink-0" />{result.basis === 'evidence' ? SIGNAL_LABEL[result.state] : changeLabel(result.delta)}</span>
-                <span className="mt-1 block text-xs text-muted-foreground">{result.basis === 'evidence' ? commentCount(signals.find((s) => s.market === key)?.matched_total ?? 0) : STATE_LABEL[result.state]}</span>
+                <span className="block text-xs text-muted-foreground">{label}</span><span className="mt-2 flex items-start gap-1 text-sm font-semibold tabular-nums"><Icon aria-hidden className="mt-0.5 size-4 shrink-0" />{result.basis === 'evidence' ? SIGNAL_LABEL[result.state] : pending && result.state === 'unknown' ? 'Checking evidence' : changeLabel(result.delta)}</span>
+                <span className="mt-1 block text-xs text-muted-foreground">{result.basis === 'evidence' ? `${internalCoverage}, ${publicCoverage}` : result.basis === 'scenario' ? 'Your share assumption' : STATE_LABEL[result.state]}</span>
               </button>
             })}
           </div>
@@ -184,18 +198,8 @@ function Content() {
         <section aria-label={`${selectedMarket.label} assumptions`} className="border-t border-border bg-canvas-tint p-6 xl:border-t-0 xl:border-l">
           <h3 className="text-base">{selectedMarket.label}</h3>
           <p className="mt-1 text-xs text-muted-foreground">{included ? 'With the optional feature' : 'Without the optional feature'}</p>
-          {signal && <div className="mt-4 border-b border-border pb-4">
-            <h4 className="text-sm">Combined evidence signal</h4><p className="mt-1 text-sm font-semibold">{SIGNAL_LABEL[signal.direction === 'insufficient' ? 'unknown' : signal.direction]}</p>
-            <p className="mt-2 text-xs text-muted-foreground">Internal: {internalSignal ? SIGNAL_LABEL[internalSignal.direction === 'insufficient' ? 'unknown' : internalSignal.direction] : 'Unavailable'}. Public: {webSignal ? SIGNAL_LABEL[webSignal.direction === 'insufficient' ? 'unknown' : webSignal.direction] : activeWeb?.state === 'loading' ? 'Researching' : 'Unavailable'}.</p>
-            <p className="mt-2 text-xs text-muted-foreground">{signal.explanation}</p>
-            {signal.evidence.length > 0 && <details className="mt-2"><summary className="min-h-9 cursor-pointer rounded-lg py-2 text-xs text-primary focus-visible:outline-2 focus-visible:outline-ring">View {signal.evidence.length} sample {signal.evidence.length === 1 ? 'comment' : 'comments'}</summary><ul className="max-h-64 space-y-3 overflow-y-auto pt-2">{signal.evidence.map((e, i) => <li key={e.citation.id} className="border-l-2 border-border pl-3"><blockquote className="text-xs">{e.citation.quote}</blockquote><p className="mt-1 text-xs text-muted-foreground">{e.reason}</p><Button variant="link" className="px-0 text-xs" aria-label={`View feedback source ${i + 1}`} onClick={() => openSource(e.citation)}>View source {i + 1}</Button></li>)}</ul></details>}
-            <p className="mt-2 text-xs text-muted-foreground">Based on {signal.reviewed} distinct internal sample comments, interpreted locally from feature-specific passages. Matches can refer to the feature's broader function. A missing feature can indicate demand; complaints about its operation indicate implementation risk. Comment counts do not estimate market share.</p>
-          </div>}
-          {webSignal && <div className="mt-4 border-b border-border pb-4"><h4 className="text-sm">Public web evidence</h4>
-            {webSignal.evidence.length === 0 ? <p className="mt-2 text-xs text-muted-foreground">No relevant cited public evidence was returned for this market.</p> : <ul className="mt-2 max-h-80 space-y-4 overflow-y-auto">{webSignal.evidence.map((e) => <li key={e.url} className="space-y-1 text-xs"><a href={e.url} target="_blank" rel="noreferrer" className="font-medium text-primary underline underline-offset-2">{e.title}</a><p className="text-muted-foreground">{e.source_type}, {e.scope}. Retrieved {new Date(e.retrieved_at).toLocaleDateString('en-GB')}.</p><p>{e.summary}</p><p className="text-muted-foreground">{e.reason}</p></li>)}</ul>}
-            <p className="mt-2 text-xs text-muted-foreground">Source relevance and stance are model interpretations of verified page excerpts. Broader-market reviews do not establish a BMW-specific share effect. Conflicting signals remain visible as trade-offs.</p></div>}
-          {activeWeb?.state === 'ready' && !!activeWeb.data.context?.length && <details className="mt-4 border-b border-border pb-4"><summary className="cursor-pointer py-2 text-sm font-semibold">General web context ({activeWeb.data.context.length})</summary><p className="mt-1 text-xs text-muted-foreground">These verified feature mentions have no established market direction and do not change map colors.</p><ul className="mt-3 max-h-64 space-y-4 overflow-y-auto">{activeWeb.data.context.map((e) => <li key={e.url} className="space-y-1 text-xs"><a href={e.url} target="_blank" rel="noreferrer" className="font-medium text-primary underline underline-offset-2">{e.title}</a><blockquote>{e.summary}</blockquote><p className="text-muted-foreground">{e.scope}. Retrieved {new Date(e.retrieved_at).toLocaleDateString('en-GB')}.</p></li>)}</ul></details>}
-          {ready && !signal && activeAssessment?.state !== 'loading' && activeAssessment?.state !== 'error' && <p className="mt-4 text-xs text-muted-foreground">Choose a catalog feature or assess a custom feature to load market evidence.</p>}
+          <p className="mt-4 text-sm font-semibold">{selected.basis === 'scenario' ? 'Map shows your share assumption' : selected.basis === 'excluded' ? 'Feature effect excluded' : signal ? SIGNAL_LABEL[signal.direction === 'insufficient' ? 'unknown' : signal.direction] : pending ? 'Checking evidence' : 'Awaiting assessment'}</p>
+          {selected.basis === 'scenario' && <p className="mt-2 text-xs text-muted-foreground">Your entered change determines this market's map color. The evidence below stays visible for comparison.</p>}
           <p className="mt-5 text-sm font-semibold">Share scenario (optional)</p>
           <fieldset disabled={!ready} className="mt-5 space-y-5">
             <div className="space-y-2"><Label htmlFor="baseline-share">Baseline share (%)</Label><Input id="baseline-share" inputMode="decimal" value={ready ? current.baseline : ''} onChange={(e) => update('baseline', e.target.value)} placeholder="Unknown" aria-describedby="baseline-help impact-error" aria-invalid={!!selected.error} /><p id="baseline-help" className="text-xs text-muted-foreground">Optional. Share without this feature.</p></div>
@@ -206,6 +210,9 @@ function Content() {
           <div className="mt-5 border-t border-border pt-5" aria-live="polite"><p className="text-xs text-muted-foreground">Scenario share</p>{selected.resulting !== null && <p className="mt-1 text-3xl font-semibold tabular-nums">{shareLabel(selected.resulting)}</p>}<p className="mt-2 text-xs text-muted-foreground">{selected.resulting === null ? 'Add a baseline and assumed change to calculate a numeric share scenario.' : `${shareLabel(selected.baseline)} baseline, ${changeLabel(selected.delta)} feature effect.`}</p></div>
         </section>
       </div>
+      <EvidencePanel marketLabel={selectedMarket.label} internal={internalSignal} web={webSignal}
+        direction={signal?.direction} internalState={activeAssessment?.state ?? 'idle'} webState={activeWeb?.state ?? 'idle'}
+        context={activeWeb?.state === 'ready' ? activeWeb.data.context ?? [] : []} />
       <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-6 py-4"><p className="text-xs text-muted-foreground">Assumptions stay in this view. Export to keep a copy.</p><div className="flex flex-wrap gap-2"><Button variant="ghost" disabled={!ready} onClick={() => setScenarios((prev) => ({ ...prev, [scenarioKey]: emptyScenario() }))}><RotateCcw aria-hidden />Reset scenario</Button><Button variant="outline" disabled={!ready || invalid} onClick={exportScenario}><Download aria-hidden />Export scenario</Button></div></footer>
     </section>
   </PageShell>

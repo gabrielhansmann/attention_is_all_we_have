@@ -1,6 +1,6 @@
 # Repository structure: frontend and backend
 
-> Status: `building` · Last updated: 2026-10-11 (combined internal/public market evidence; see [decision 0030](../decisions/0030-feature-specific-and-public-market-evidence.md))
+> Status: `building` · Last updated: 2026-10-11 (independent market assessment results and readable evidence; see [decision 0032](../decisions/0032-independent-market-evidence-and-readable-assessments.md))
 
 ```mermaid
 flowchart LR
@@ -81,8 +81,8 @@ public/                  generated CDN frontend build, gitignored
 | `GET /api/evidence/stats?group_by=&line=&market=...` | exact counts and their total |
 | `GET /api/evidence/filters` | the values the UI offers as filters |
 | `GET /api/market-impact/options?line=` | up to 200 cited equipment options that are optional on at least one variant, with a truncation flag |
-| `POST /api/market-impact/assessment` | local, deduplicated feature-passage signals with internal citations for one line/feature |
-| `POST /api/market-impact/web-assessment` | independent public-only web research with fetched page excerpts, geography checks and visible gaps |
+| `POST /api/market-impact/assessment` | local, deduplicated feature-passage signals, reviewed benefit/risk/unclear counts and internal citations for one line/feature |
+| `POST /api/market-impact/web-assessment` | independent public-only web research with fetched page excerpts, per-market completion status, sanitized gap explanations and partial results |
 | `GET /api/evidence/{kind}/{id}` | the citation for one stored row |
 | `GET /api/sources` | every loaded source file with what was extracted from it (comments, passages, options, study cells, sales rows) |
 | `POST /api/sources?filename=&line=&replace=` | upload one PDF or Excel file as the raw request body; it is stored by the loaders in `app/ingest` and the answer reports what was stored and skipped ([decision 0023](../decisions/0023-file-upload-reuses-the-loaders.md)) |

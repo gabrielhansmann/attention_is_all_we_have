@@ -1,6 +1,6 @@
 # Knowledge layer: normalized evidence the agents can query
 
-> Status: `stable` for normalization and retrieval, `building` for findings · Last updated: 2026-10-11 (feature-specific and verified public market evidence; see [decision 0030](../decisions/0030-feature-specific-and-public-market-evidence.md))
+> Status: `stable` for normalization and retrieval, `building` for findings · Last updated: 2026-10-11 (independent market evidence and research gaps; see [decision 0032](../decisions/0032-independent-market-evidence-and-readable-assessments.md))
 
 The knowledge layer sits between ingestion and the agents. Ingestion parses files and keeps
 provenance per row and page ([`03-ingestion.md`](03-ingestion.md)); the knowledge layer makes those
@@ -89,7 +89,13 @@ timeouts. Only short verbatim passages from fetched pages can be cited. Model re
 interpretation; a market-specific direction requires an actual source geography passage. Shopping sites are
 excluded; manufacturer availability and social anecdotes are context. A country outside US/Europe/China does not
 establish a direction for heterogeneous RoW. Sources that cannot be fetched/verified produce a visible evidence gap.
-Public results are bounded and cached for 15 minutes in process memory. See [decision 0030](../decisions/0030-feature-specific-and-public-market-evidence.md).
+Public results are bounded and successful results are cached for 15 minutes in process memory. Each regional search
+fails independently: other verified market results survive an outage, and partial results are not cached so a retry
+can recover immediately. If interpretation fails, fetched feature mentions survive as general context. Market status
+and sanitized explanations distinguish incomplete research from no directional evidence. Context quotes stay inside
+one fetched text block; the pronoun "us" cannot establish US geography. Internal responses expose benefit/demand,
+risk and unclear counts for the reviewed sample separately from exact topic-match totals and recorded row polarity.
+See [decision 0032](../decisions/0032-independent-market-evidence-and-readable-assessments.md).
 
 ## Coverage you should know about
 

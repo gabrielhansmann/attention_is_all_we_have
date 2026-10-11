@@ -289,3 +289,57 @@ test('web outage preserves internal results and a previous web reply cannot chan
   await expect(page.getByRole('link', { name: 'Public US study' })).toBeVisible()
   await expect(page.locator('path[data-market=US]').first()).toHaveAttribute('data-impact', 'mixed')
 })
+
+test('public results appear before internal feedback and survive its outage; retry only reloads internal evidence', async ({ page }, info) => {
+  let release!: () => void
+  const hold = new Promise<void>((resolve) => { release = resolve })
+  let internalCalls = 0
+  let webCalls = 0
+  await page.route('**/api/market-impact/assessment', async (r) => {
+    internalCalls++
+    if (internalCalls === 1) { await hold; await json(r, { detail: 'Internal feedback is unavailable.' }, 503) }
+    else await json(r, assessed())
+  })
+  await page.route('**/api/market-impact/web-assessment', async (r) => { webCalls++; await json(r, publicResult()) })
+  await page.goto('/#market-impact')
+  await page.getByLabel('Optional feature', { exact: true }).click()
+  await page.getByRole('option', { name: '453 · Seat ventilation' }).click()
+  await expect(page.locator('path[data-market=US]').first()).toHaveAttribute('data-impact', 'negative')
+  await expect(page.getByRole('link', { name: 'Public US study' })).toBeVisible()
+  release()
+  await expect(page.getByRole('alert')).toContainText('Internal feedback is unavailable.')
+  await expect(page.locator('path[data-market=US]').first()).toHaveAttribute('data-impact', 'negative')
+  await expect(page.getByRole('button', { name: /United States/ })).toContainText('Internal unavailable')
+  await page.screenshot({ path: `/tmp/market-integration-${info.project.name}-partial.png`, fullPage: true, scale: 'css' })
+  await page.getByRole('button', { name: 'Retry assessment' }).click()
+  await expect(page.locator('path[data-market=US]').first()).toHaveAttribute('data-impact', 'mixed')
+  expect(internalCalls).toBe(2)
+  expect(webCalls).toBe(1)
+  await noViolations(page)
+  await noOverflow(page)
+})
+
+test('partial public research shows its gap and retries without discarding internal results', async ({ page }, info) => {
+  let internalCalls = 0
+  let webCalls = 0
+  await page.route('**/api/market-impact/assessment', async (r) => { internalCalls++; await json(r, assessed()) })
+  await page.route('**/api/market-impact/web-assessment', async (r) => {
+    webCalls++
+    const result = publicResult()
+    await json(r, { ...result, notes: webCalls === 1 ? ['China research is incomplete.'] : [],
+      markets: result.markets.map((m) => ({ ...m, status: webCalls === 1 && m.market === 'CN' ? 'partial' : 'complete' })) })
+  })
+  await page.goto('/#market-impact')
+  await page.getByLabel('Optional feature', { exact: true }).click()
+  await page.getByRole('option', { name: '453 · Seat ventilation' }).click()
+  await expect(page.getByText('China research is incomplete.', { exact: true })).toBeVisible()
+  await expect(page.locator('path[data-market=US]').first()).toHaveAttribute('data-impact', 'mixed')
+  await page.getByRole('button', { name: 'Retry research' }).click()
+  await expect(page.getByText('China research is incomplete.', { exact: true })).toHaveCount(0)
+  expect(internalCalls).toBe(1)
+  expect(webCalls).toBe(2)
+  await page.screenshot({ path: `/tmp/market-integration-${info.project.name}-complete.png`, fullPage: true, scale: 'css' })
+  await page.getByRole('region', { name: 'United States evidence', exact: true }).screenshot({ path: `/tmp/market-integration-${info.project.name}-evidence.png`, scale: 'css' })
+  await noViolations(page)
+  await noOverflow(page)
+})

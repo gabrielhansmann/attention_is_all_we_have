@@ -37,7 +37,7 @@ test('real geometry covers all four business regions and contains valid paths', 
 
 test('automatic signals supply direction without inventing a share change and manual scenarios override them', () => {
   const signal: MarketSignal = { market: 'US', direction: 'positive', explanation: 'Customer requests', total_feedback: 20,
-    matched_total: 1, counts: { positive: 0, request: 1, negative: 0 }, reviewed: 1, evidence: [] }
+    matched_total: 1, counts: { positive: 0, request: 1, negative: 0 }, signal_counts: { benefit: 1, risk: 0, unclear: 0 }, reviewed: 1, evidence: [] }
   expect(assessedImpact({ baseline: '12', delta: '', reason: '' }, true, signal))
     .toMatchObject({ state: 'positive', basis: 'evidence', delta: null, resulting: null })
   expect(assessedImpact({ baseline: '12', delta: '-1', reason: '' }, true, signal))
