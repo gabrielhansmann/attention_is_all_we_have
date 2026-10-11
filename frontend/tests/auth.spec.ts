@@ -9,9 +9,9 @@ async function mockBackend(page: Page, opts: { sessionExpired?: () => boolean } 
   const log: Log = { sourcesAuth: [], logins: [], loggedOut: false, meCalls: 0 }
   const guarded = (body: unknown) => (route: Route) =>
     authed(route) && !opts.sessionExpired?.() ? json(route, body) : json(route, { detail: 'not authenticated' }, 401)
-  await page.route('**/api/conversations', guarded([]))
   await page.route('**/api/health', (r) => json(r, { status: 'ok', db: 'ok', openai_key: true, version: 'test' }))
   await page.route('**/api/evidence/coverage', guarded({ total_feedback: 1, options_by_line: { G60: 1 }, cells: [{ line: 'G60', market: 'US', feedback: 500, study_cells: 3, sales_2025: 10 }] }))
+  await page.route('**/api/conversations', guarded([]))
   await page.route('**/api/sources', (r) => {
     log.sourcesAuth.push(r.request().headers().authorization)
     return guarded([{ id: 'a', file: 'G60_feedback_hackathon.xlsx', type: 'internal_xlsx', family: 'Customer feedback', vehicle_line: 'G60', market: null, title: null, retrieved_at: NOW, trust_tier: null, counts: { feedback: 5005, pdf_chunks: 0, options: 0, study_cells: 0, sales_rows: 0 } }])(r)
@@ -82,10 +82,11 @@ test('a session that expires while the page is open sends the user back to sign 
   await page.goto('/#sources')
   await signIn(page)
   await expect(page.getByTestId('source-graph')).toBeVisible()
-  expired = true
   await openMenu(page)
+  await expect(page.getByText('No conversations yet.', { exact: true }).filter({ visible: true }).first()).toBeVisible()
   await page.getByRole('link', { name: 'Research', exact: true }).click()
   await openMenu(page)
+  expired = true
   await page.getByRole('link', { name: 'Sources', exact: true }).click()          // remount: requests now return 401
   await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible()
   expect(await page.evaluate(() => window.sessionStorage.getItem('bmw-api-token'))).toBeNull()

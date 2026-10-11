@@ -1,6 +1,6 @@
 # Repository structure: frontend and backend
 
-> Status: `building` · Last updated: 2026-10-11 (Git-backed full-stack deployment; see [decision 0027](../decisions/0027-git-backed-full-stack-vercel-deployment.md))
+> Status: `building` · Last updated: 2026-10-11 (combined internal/public market evidence; see [decision 0030](../decisions/0030-feature-specific-and-public-market-evidence.md))
 
 ```mermaid
 flowchart LR
@@ -34,10 +34,11 @@ backend/
     deploy/               repository-root Vercel build, produces public/ from frontend/dist
   tests/                  pytest; no database or OpenAI key needed
 frontend/                 Gabriel's PM workspace (npm, Vite + React + TypeScript), see frontend/README.md
-  src/App.tsx                shell: sign-in gate, top bar, hash navigation between the three views
+  src/App.tsx                shell: sign-in gate, sidebar, hash navigation between workspace views
   src/features/research/     live research: conversations and the orchestrator's decisions, agent results and final result, read-only (calls /api)
   src/features/library/      live sources view in tabs: source graph, files and upload, websites, coverage matrix (calls /api)
   src/features/evidence/     live evidence search with exact counts (calls /api)
+  src/features/market-impact/ optional-feature map with internal/public evidence and explicit share scenarios
   src/components/ui/         shadcn/ui components used by the live views, restyled with BMW tokens
   src/lib/api.ts             the only place the frontend talks to the backend; src/types/api.ts mirrors the schemas
 supabase/migrations/      schema, applied in filename order
@@ -79,6 +80,9 @@ public/                  generated CDN frontend build, gitignored
 | `GET /api/evidence/search?q=&source=feedback\|docs&line=&market=&domain=&polarity=&powertrain=&k=` | cited hits, hybrid vector and keyword search |
 | `GET /api/evidence/stats?group_by=&line=&market=...` | exact counts and their total |
 | `GET /api/evidence/filters` | the values the UI offers as filters |
+| `GET /api/market-impact/options?line=` | up to 200 cited equipment options that are optional on at least one variant, with a truncation flag |
+| `POST /api/market-impact/assessment` | local, deduplicated feature-passage signals with internal citations for one line/feature |
+| `POST /api/market-impact/web-assessment` | independent public-only web research with fetched page excerpts, geography checks and visible gaps |
 | `GET /api/evidence/{kind}/{id}` | the citation for one stored row |
 | `GET /api/sources` | every loaded source file with what was extracted from it (comments, passages, options, study cells, sales rows) |
 | `POST /api/sources?filename=&line=&replace=` | upload one PDF or Excel file as the raw request body; it is stored by the loaders in `app/ingest` and the answer reports what was stored and skipped ([decision 0023](../decisions/0023-file-upload-reuses-the-loaders.md)) |
@@ -133,3 +137,32 @@ The API shares that origin and uses
 encrypted server-only Supabase/OpenAI configuration.
 The root ignore/configuration files omit credentials, BMW files and development artifacts.
 Deployment runs no migrations or user-management commands. The local `make dev` workflow remains.
+
+### Market evidence and share scenarios
+
+Catalog selection automatically starts independent internal and public research requests. Custom feature text uses
+Assess feature. Both endpoints are authenticated and read catalog names through knowledge tools. Internal feedback
+stays local: feature-specific passages are classified conservatively, repeated text is counted once, and broad row
+polarity does not determine option impact. Source sample limits and ambiguous matches remain visible.
+
+Public search receives generic public feature terms only. Its candidate pages are fetched and checked; accepted
+citations are actual short page excerpts, not unverified generated search summaries. Manufacturer availability,
+shopping-site claims, social anecdotes and unverified geography cannot color a market. The source date, type, scope,
+and classification reason accompany every public citation. An unavailable public provider does not erase internal
+results; the view exposes Retry research. No supported public term for a catalog label is an explicit gap.
+
+Green means a potential feature benefit/demand signal, red an implementation or acceptance risk, and mixed means
+both kinds of evidence exist. Internal and external signals are combined without count weighting or averaging away
+conflicts. Color is never a validated share forecast. Manual percentage-point scenarios override a market color;
+baseline plus change must stay within 0–100%. Exclusion shows zero feature effect while retaining evidence. Numeric
+share values are only explicit PM assumptions. Export includes internal assessment, public citations, and scenarios.
+Responses are cached in view memory by line/feature; public research also has a bounded 15-minute backend cache.
+Old requests are aborted and late replies discarded. There is no schema change or new stored customer data.
+
+Natural Earth geometry is bundled locally and maps schematic regions: Europe excluding Russia, China, United
+States and rest of world. Countries share a region signal; the map is not a country-level forecast or an EU
+membership map. Equivalent keyboard-accessible market buttons and text summaries communicate the same result.
+See [decision 0030](../decisions/0030-feature-specific-and-public-market-evidence.md).
+
+Verified feature mentions without directional market support appear separately as general web context, with
+short page excerpts and source links. They never color a market or fill its evidence gap.

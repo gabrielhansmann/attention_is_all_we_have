@@ -32,3 +32,6 @@ changes — note the supersession in the new file and update the old one's statu
 | [0025](0025-server-owned-model-comparisons.md) | Server-owned model overviews, cited competitor median/mean, immutable recrawls and model-bound chat | accepted |
 | [0026](0026-orchestrator-writes-the-final-answer.md) | The orchestrator writes a cited final answer from accepted findings, with summaries as a fallback | accepted |
 | [0027](0027-git-backed-full-stack-vercel-deployment.md) | Git-backed Vercel deployment builds the frontend and serves the protected FastAPI backend from one origin | accepted |
+| [0028](0028-market-impact-scenarios.md) | Optional-feature market map with explicit share assumptions, cited catalog equipment and local geometry | accepted |
+| [0029](0029-automatic-market-feedback-assessment.md) | Automatically assess selected equipment using local, cited market feedback signals | accepted |
+| [0030](0030-feature-specific-and-public-market-evidence.md) | Combine deduplicated feature-specific internal signals with verified public web excerpts and preserve trade-offs | accepted |

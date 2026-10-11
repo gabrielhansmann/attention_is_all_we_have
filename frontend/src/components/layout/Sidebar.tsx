@@ -1,4 +1,4 @@
-import { Car, ClipboardCheck, Database, FileText, LogOut, MessageSquare, Plus, Radar, Search, type LucideIcon } from 'lucide-react'
+import { Car, ClipboardCheck, Database, Globe2, FileText, LogOut, MessageSquare, Plus, Radar, Search, type LucideIcon } from 'lucide-react'
 import { HealthBadge } from '@/components/layout/HealthBadge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,7 @@ import { useAuth } from '@/lib/auth'
 import { cn } from '@/lib/utils'
 import type { Conversation } from '@/types/api'
 
-export type PageId = 'models' | 'research' | 'requirements' | 'tracking' | 'dossiers' | 'evidence' | 'sources'
+export type PageId = 'models' | 'research' | 'requirements' | 'tracking' | 'dossiers' | 'evidence' | 'sources' | 'market-impact'
 
 export const NAV: { id: PageId; label: string; Icon: LucideIcon }[] = [
   { id: 'models', label: 'Models', Icon: Car },
@@ -21,6 +21,7 @@ export const NAV: { id: PageId; label: string; Icon: LucideIcon }[] = [
   { id: 'dossiers', label: 'Dossiers', Icon: FileText },
   { id: 'evidence', label: 'Evidence', Icon: Search },
   { id: 'sources', label: 'Sources', Icon: Database },
+  { id: 'market-impact', label: 'Market impact', Icon: Globe2 },
 ]
 
 const DAY = 86_400_000
