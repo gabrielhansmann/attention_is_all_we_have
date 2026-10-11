@@ -1,0 +1,13 @@
+push on the brnach
+
+---
+
+rebase main and run it on lokolhost
+
+---
+
+check why in the market impact map nothing gets assessed and nothing gets shown
+
+---
+
+open in local

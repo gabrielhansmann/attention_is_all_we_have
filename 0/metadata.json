@@ -1,0 +1,84 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4MY6J3NEQGC0V9YXP8RVH3B",
+  "session_id": "01a1270a-ba6f-7140-883a-a90d56720a43",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-11T07:35:25.290848Z",
+  "branch": "codex/market-impact-map",
+  "checkpoints_count": 4,
+  "save_step_count": 2,
+  "files_touched": [
+    "backend/app/agents/market_impact_agent.py",
+    "backend/app/api/market_impact.py",
+    "backend/app/api/schemas.py",
+    "backend/app/knowledge/tools.py",
+    "backend/tests/test_market_impact.py",
+    "backend/tests/test_market_impact_agent.py",
+    "docs/architecture/11-knowledge-layer.md",
+    "docs/architecture/12-repo-structure.md",
+    "docs/decisions/0022-market-impact-scenarios.md",
+    "docs/decisions/0023-automatic-market-feedback-assessment.md",
+    "docs/decisions/README.md",
+    "frontend/README.md",
+    "frontend/src/features/market-impact/MarketImpact.tsx",
+    "frontend/src/features/market-impact/scenario.ts",
+    "frontend/src/lib/api.ts",
+    "frontend/src/types/api.ts",
+    "frontend/tests/auth.spec.ts",
+    "frontend/tests/helpers.ts",
+    "frontend/tests/market-impact.spec.ts",
+    "frontend/tests/market-scenario.spec.ts"
+  ],
+  "agent": "Codex",
+  "model": "gpt-6.1-sol",
+  "turn_id": "6360e8ac76b7",
+  "checkpoint_transcript_start": 1029,
+  "transcript_lines_at_start": 1029,
+  "compact_transcript_start": 114,
+  "token_usage": {
+    "input_tokens": 918914,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 4826162,
+    "output_tokens": 52805,
+    "api_call_count": 56,
+    "subagent_tokens_complete": true
+  },
+  "session_metrics": {
+    "turn_count": 10
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-11T07:35:25.1555Z",
+    "agent_lines": 639,
+    "agent_removed": 42,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 639,
+    "total_lines_changed": 681,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 639,
+      "agent_lines_removed": 42
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 639,
+      "agent_lines_removed": 42
+    }
+  ]
+}

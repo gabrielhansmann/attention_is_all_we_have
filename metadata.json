@@ -1,0 +1,46 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4MY6J3NEQGC0V9YXP8RVH3B",
+  "strategy": "manual-commit",
+  "branch": "codex/market-impact-map",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "backend/app/agents/market_impact_agent.py",
+    "backend/app/api/market_impact.py",
+    "backend/app/api/schemas.py",
+    "backend/app/knowledge/tools.py",
+    "backend/tests/test_market_impact.py",
+    "backend/tests/test_market_impact_agent.py",
+    "docs/architecture/11-knowledge-layer.md",
+    "docs/architecture/12-repo-structure.md",
+    "docs/decisions/0022-market-impact-scenarios.md",
+    "docs/decisions/0023-automatic-market-feedback-assessment.md",
+    "docs/decisions/README.md",
+    "frontend/README.md",
+    "frontend/src/features/market-impact/MarketImpact.tsx",
+    "frontend/src/features/market-impact/scenario.ts",
+    "frontend/src/lib/api.ts",
+    "frontend/src/types/api.ts",
+    "frontend/tests/auth.spec.ts",
+    "frontend/tests/helpers.ts",
+    "frontend/tests/market-impact.spec.ts",
+    "frontend/tests/market-scenario.spec.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 918914,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 4826162,
+    "output_tokens": 52805,
+    "api_call_count": 56,
+    "subagent_tokens_complete": true
+  }
+}
