@@ -37,3 +37,4 @@ changes — note the supersession in the new file and update the old one's statu
 | [0030](0030-feature-specific-and-public-market-evidence.md) | Combine deduplicated feature-specific internal signals with verified public web excerpts and preserve trade-offs | accepted |
 | [0031](0031-recoverable-competitor-collection.md) | Recover from stale competitor sources, copy original source lines and batch model overview queries | accepted |
 | [0032](0032-independent-market-evidence-and-readable-assessments.md) | Preserve independent market evidence and partial public research, with readable reasons and explicit assumptions | accepted |
+| [0033](0033-complementary-competitor-evidence.md) | Gather complementary sources by missing field, retain wrapped units and label model-family feature evidence | accepted |

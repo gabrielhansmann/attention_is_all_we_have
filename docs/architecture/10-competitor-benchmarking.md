@@ -1,6 +1,6 @@
 # Model overviews and competitor benchmarking
 
-> Status: `building` · Last updated: 2026-10-11
+> Status: `building` · Last updated: 2026-10-11 (complementary sources and expanded fields)
 
 See [decision 0025](../decisions/0025-server-owned-model-comparisons.md) and the collection/performance
 refinement in [decision 0031](../decisions/0031-recoverable-competitor-collection.md). Model overviews are a
@@ -48,6 +48,18 @@ from the per-rival recrawl control. Recovery accepts actual search-result URLs, 
 Provider calls and individual targets share a bounded time budget; robots policies are reused only
 within the request and still checked for each path. Failed sources retain their coverage notes.
 
+Collection continues after the first successful measurement. Up to four discovery URLs include
+technical sheets and model equipment pages; missing-field searches gather complementary evidence
+and a second pass focuses on qualitative sections. Already fetched linked PDFs are reused within
+the request. Up to six source pages and two searches per target share a 250-second request deadline.
+Brochure parsing ranks whole specification/equipment pages from a bounded scan, so tables in the
+middle can be retained. See [decision 0033](../decisions/0033-complementary-competitor-evidence.md).
+
+Automatic refresh retains selected exact variants and disabled rivals, including manual selections.
+It refreshes their stored source URLs alongside newly discovered sources. An explicit manual
+replacement is selected only after exact-variant facts validate; failure retains the prior variant
+and its evidence. Family-level equipment alone cannot establish a new exact variant.
+
 Internal catalog extraction is deterministic and local: match registered variant names against the
 technical table header, use the corresponding column, preserve the complete row/header and omit
 incomplete or ambiguous cells. System power is distinct from a hybrid's combustion-engine power.
@@ -65,6 +77,18 @@ instead use an actual model-specific PDF filename containing that exact variant;
 or another page's header cannot supply identity. This filename identity is resolved on the server
 even if the extractor selects an incomplete continuation-page header. HTML scope uses the local section or document title.
 An omitted unit or test standard remains a gap even when a human might infer it.
+
+Wrapped wheelbase, weight and towing rows can include up to two adjacent source lines to retain
+their original explicit unit. The quote begins at that field's label and cannot borrow a unit from
+another field. Value-column checks distinguish wheelbase from track, weight without a driver from
+driver-inclusive weight, and 12% braked towing from 8% or unbraked capacity. Supported numerical
+fields additionally include top speed, body width without mirrors, height, weight and towing.
+Internal catalog top speed uses its selected variant column; missing reference values stay gaps.
+
+Qualitative connectivity, assistance and comfort may also cite an explicit same-page model-family
+identity. These observations visibly label selected-variant availability as unconfirmed and use a
+separate family-documentation basis. They never supply numeric values or enter a mean. Numeric
+facts continue to require the exact selected variant.
 
 ## Benchmarks and diagrams
 

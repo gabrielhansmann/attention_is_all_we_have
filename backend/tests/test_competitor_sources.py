@@ -136,7 +136,7 @@ def test_discovery_confirms_variant_and_pdf_before_using_marketing_lead():
     result=crawler.discover(client,{'name':'Reference BMW','markets':['EU']},'Reference','ICE','EU',deadline=time.monotonic()+60)
     assert len(calls)==2
     assert result['candidates'][0]['variant']=='30 TFSI'
-    assert result['candidates'][0]['urls']==['https://example.org/TD-30-TFSI.pdf']
+    assert result['candidates'][0]['urls']==['https://example.org/TD-30-TFSI.pdf','https://example.org/marketing']
 
 
 def test_comparison_search_model_can_be_configured_independently(monkeypatch):
@@ -160,19 +160,19 @@ def test_stale_sources_leave_capacity_for_new_technical_search(monkeypatch):
         if url.endswith('actual.pdf'):return [document()]
         raise UploadError('HTTP 404')
     monkeypatch.setattr(crawler,'scrape',scrape)
-    monkeypatch.setattr(crawler,'find_technical_sources',lambda *a:['https://example.org/actual.pdf'])
+    monkeypatch.setattr(crawler,'find_technical_sources',lambda *a,**kw:['https://example.org/actual.pdf'])
     monkeypatch.setattr(crawler,'extract_observations',lambda *a:([{'metric':'power','value':90}],[]))
     values,notes=crawler.collect_target(Connection(),object(),{'name':'Test model'},'30 TFSI','ICE','EU',
         [f'https://example.org/stale{i}.pdf' for i in range(4)],time.monotonic()+100,{})
     assert values[0]['value']==90
-    assert calls[-1]=='https://example.org/actual.pdf' and len(calls)==3
+    assert calls[-1]=='https://example.org/actual.pdf' and len(calls)==5
     assert any('HTTP 404' in note for note in notes)
 
 
 def test_marketing_only_source_triggers_recovery_search(monkeypatch):
     calls=[]
     monkeypatch.setattr(crawler,'scrape',lambda conn,client,url,**kw:calls.append(url) or [document(file=url)])
-    monkeypatch.setattr(crawler,'find_technical_sources',lambda *a:['https://example.org/actual.pdf'])
+    monkeypatch.setattr(crawler,'find_technical_sources',lambda *a,**kw:['https://example.org/actual.pdf'])
     def extract(client,name,variant,powertrain,market,docs):
         return ([{'metric':'power','value':90}],[]) if docs[0]['file'].endswith('.pdf') else ([],['No specifications'])
     monkeypatch.setattr(crawler,'extract_observations',extract)

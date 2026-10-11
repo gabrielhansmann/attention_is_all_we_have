@@ -1,6 +1,6 @@
 # Scaling & configuration
 
-> Status: `draft` · Last updated: 2026-10-11 (comparison research configuration)
+> Status: `draft` · Last updated: 2026-10-11 (complementary comparison evidence and extraction)
 
 Nothing about G60 or "Europe" is hardcoded. Every `PipelineRun` (one per chat request) takes a config:
 `{vehicle_line, market, generation_baseline}`, read from the PM's message or asked back by the
@@ -12,9 +12,11 @@ change, not a rewrite.
 `COMPARISON_SEARCH_MODEL` selects the model used by the protected Models comparison API for
 source discovery. It falls back to an explicitly configured `RESEARCH_AGENT_MODEL`, then `gpt-4.1`.
 The general research agents retain their existing defaults. Comparison searches request high
-search context and actual result-source URLs. `COMPARISON_EXTRACTION_MODEL` defaults to `gpt-4.1-mini`
+search context and actual result-source URLs. `COMPARISON_EXTRACTION_MODEL` defaults to `gpt-4.1`
 and must support strict structured outputs for original source-line selection. Neither setting
-changes embeddings or the database schema. See [decision 0031](../decisions/0031-recoverable-competitor-collection.md).
+changes embeddings or the database schema. See [decision 0031](../decisions/0031-recoverable-competitor-collection.md)
+and [decision 0033](../decisions/0033-complementary-competitor-evidence.md). Collection uses up to
+two missing-field searches and six source pages per target within a shared 250-second deadline.
 
 ## Domain taxonomy is config, not code
 

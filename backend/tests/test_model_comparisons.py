@@ -186,10 +186,11 @@ def test_rival_without_observations_can_be_crawled_in_app(monkeypatch):
     monkeypatch.setattr(models,'store_observations',lambda *a:len(a[-1]))
     monkeypatch.setattr(crawler,'scrape',lambda c,cl,url,**kw:calls.append(('crawl',url)) or [{'id':'stored'}])
     monkeypatch.setattr(crawler,'extract_observations',lambda *a:([{'metric':'power','value':80}],[]))
+    monkeypatch.setattr(crawler,'find_technical_sources',lambda *a,**kw:[])
     class Conn:
         def commit(self):pass
         def rollback(self):pass
     crawler.revalidate(Conn(),'anchor','Reference','EU','recrawl',client=object(),rival_id=rival_id)
-    assert calls==[('crawl','https://example.org/spec'),('finish','completed')]
+    assert calls==[('crawl','https://example.org/spec'),('finish','partial')]
     with pytest.raises(models.ModelNotFound):
         crawler.revalidate(Conn(),'anchor','Reference','EU','recrawl',client=object(),rival_id=str(uuid4()))
