@@ -1,0 +1,43 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4N24KRTV34MZS9N1VAHT0GT",
+  "session_id": "01a126d2-8d4f-7750-92d9-6df554c403bf",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-11T08:44:16.039923391Z",
+  "branch": "fix/competitor-web-scraping",
+  "checkpoints_count": 4,
+  "save_step_count": 1,
+  "files_touched": [
+    "docs/architecture/08-scaling-and-config.md",
+    "docs/architecture/10-competitor-benchmarking.md",
+    "docs/architecture/11-knowledge-layer.md",
+    "docs/decisions/0031-recoverable-competitor-collection.md",
+    "docs/decisions/README.md"
+  ],
+  "agent": "Codex",
+  "model": "gpt-6.1-sol",
+  "turn_id": "4b1af1323bb6",
+  "compact_transcript_start": 0,
+  "token_usage": {
+    "input_tokens": 2623333,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 82313027,
+    "output_tokens": 558934,
+    "api_call_count": 718
+  },
+  "session_metrics": {
+    "turn_count": 10
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-11T08:44:15.682976019Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 673,
+    "human_modified": 6,
+    "human_removed": 0,
+    "total_committed": 673,
+    "total_lines_changed": 745,
+    "agent_percentage": 0,
+    "metric_version": 2
+  }
+}

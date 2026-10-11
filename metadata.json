@@ -1,0 +1,30 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4N24KRTV34MZS9N1VAHT0GT",
+  "strategy": "manual-commit",
+  "branch": "fix/competitor-web-scraping",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "docs/architecture/08-scaling-and-config.md",
+    "docs/architecture/10-competitor-benchmarking.md",
+    "docs/architecture/11-knowledge-layer.md",
+    "docs/decisions/0031-recoverable-competitor-collection.md",
+    "docs/decisions/README.md"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": "/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 2623333,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 82313027,
+    "output_tokens": 558934,
+    "api_call_count": 718
+  }
+}
