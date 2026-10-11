@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4N08H82H8DAX4A233S8ASAV",
+  "strategy": "manual-commit",
+  "branch": "codex/market-impact-map",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "backend/app/api/market_impact.py",
+    "backend/app/api/schemas.py",
+    "backend/app/knowledge/tools.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0/metadata.json",
+      "transcript": "/0/full.jsonl",
+      "compact_transcript": "/0/transcript.jsonl",
+      "content_hash": "/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 99059,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 5107404,
+    "output_tokens": 44147,
+    "api_call_count": 33
+  }
+}

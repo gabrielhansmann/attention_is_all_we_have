@@ -1,0 +1,42 @@
+{
+  "cli_version": "0.11.4",
+  "checkpoint_id": "01M4N08H82H8DAX4A233S8ASAV",
+  "session_id": "01a1270a-ba6f-7140-883a-a90d56720a43",
+  "strategy": "manual-commit",
+  "created_at": "2026-10-11T08:11:27.122125Z",
+  "branch": "codex/market-impact-map",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "backend/app/api/market_impact.py",
+    "backend/app/api/schemas.py",
+    "backend/app/knowledge/tools.py"
+  ],
+  "agent": "Codex",
+  "model": "gpt-6.1-sol",
+  "turn_id": "6360e8ac76b7",
+  "checkpoint_transcript_start": 1540,
+  "transcript_lines_at_start": 1540,
+  "compact_transcript_start": 172,
+  "token_usage": {
+    "input_tokens": 99059,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 5107404,
+    "output_tokens": 44147,
+    "api_call_count": 33
+  },
+  "session_metrics": {
+    "turn_count": 10
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-10-11T08:11:26.981099Z",
+    "agent_lines": 56,
+    "agent_removed": 6,
+    "human_added": 1641,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1697,
+    "total_lines_changed": 1714,
+    "agent_percentage": 3.6172695449241536,
+    "metric_version": 2
+  }
+}
